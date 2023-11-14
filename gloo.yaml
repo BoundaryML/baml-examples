@@ -1,0 +1,4 @@
+---
+output_dir: "./generated"
+gloo_dir: "./gloo"
+version: 0.2.4
