@@ -1,16 +1,6 @@
 generator default {
     language python
 }
-
-client<llm> GPT35Client {
-    provider baml-openai-chat
-    options {
-        
-        model gpt-3.5-turbo
-        temperature 0
-        api_key env.OPENAI_API_KEY
-    }
-}
     
 client<llm> GPT4Client {
     provider baml-openai-chat
@@ -27,34 +17,42 @@ function AnswerPrompt {
     output  string
 }
 
+enum ClassifyPrompt {
+    CLARIFICATION @alias("clarification") @description("If the query is a clarification request")
+    INFO @alias("info") @description("If the query is request new information")
+}
+
 function PromptType{
     input string
-    output string
+    output ClassifyPrompt
 }
 function ClarifyPrompt {
-    input  (query: string, response: string[])
+    input  (query: string, response: string, info: string)
     output string
 }
 impl<llm, PromptType> v1 {
     client GPT4Client
     prompt #"
 
-    Given the following prompt, classify it as a clarification request (1) or a query about new information (2)
+    Given the following prompt, classify it as a clarification request or a query about new information
 
         Prompt: {#input}
         
-        Output:
+        Please return one of the following classes:
+        {#print_enum(ClassifyPrompt)}
     "#
 }
 impl<llm, ClarifyPrompt> v1 {
     client GPT4Client
     prompt #"
 
-    Given the following clarification prompt and a list of previous responses, clarify the most recent related response
+    Answer the following clarification query appropriately given the response the query is about. The information the response was generated from is also provided.
 
         Prompt: {#input.query}
 
-        Previous Responses: {#input.response}
+        Response: {#input.response}
+
+        Information: {#input.info}
         
         Output:
     "#
