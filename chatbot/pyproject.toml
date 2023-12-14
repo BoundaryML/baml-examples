@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "chatbot"
+version = "0.1.0"
+description = ""
+authors = ["None"]
+
+[[tool.poetry.packages]]
+include = "py_baml_example"
+from = "."
+
+[tool.poetry.dependencies]
+python = "^3.9"
+baml = {version = "^0.6.0.dev6", allow-prereleases = true}
+termcolor = "^2.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
