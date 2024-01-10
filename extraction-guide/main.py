@@ -13,10 +13,10 @@ async def main():
   ))
 
   # This is all fully typed for you:
-  if order_info.cost > 1000:
+  if order_info is not None and order_info.cost is not None and order_info.cost > 1000:
       print("You spent a lot of money!")
-  elif order_info.cost > 500:
-      print("You spent a moderate amount of money!")
+  elif order_info is not None and order_info.cost is not None and order_info.cost > 500:
+      print("You spent a chunk of money!")
   else:
       print("You spent a little money!")
 

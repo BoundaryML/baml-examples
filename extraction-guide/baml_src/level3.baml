@@ -1,5 +1,5 @@
 // This uses nested enums
-// https://docs.boundary.com/v3/guides/entity_extraction/level3
+// https://docs.boundaryml.com/v3/guides/entity_extraction/level3
 
 enum OrderStatus {
   ORDERED
