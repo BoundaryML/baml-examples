@@ -24,7 +24,7 @@ impl<llm, ExtractVerbs> version1 {
   client GPT4
   prompt #"
     Extract the verbs from this INPUT:
-
+ 
     INPUT:
     ---
     {#input}
