@@ -44,3 +44,7 @@ pip-wheel-metadata
 
 poetry/core/*
 .infisical.json
+
+# Ignoring this to keep this repo clean, but don't add this line for your own baml
+# project or your code won't be able to import the baml_client package
+baml_client/

@@ -1,9 +1,9 @@
 [tool.poetry]
-name = "baml_example"
+name = "app"
 version = "0.1.0"
 description = ""
 authors = ["Boundary Team <contact@boundaryml.com>"]
-readme = "baml_README.md"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4.0"
