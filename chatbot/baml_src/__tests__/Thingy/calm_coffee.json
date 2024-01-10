@@ -1,0 +1,14 @@
+{
+  "input": {
+    "attendees": [
+      {
+        "name": "sefsef",
+        "email": "sefsefse"
+      }
+    ],
+    "topic": {
+      "name": "asdfsf",
+      "other": 1
+    }
+  }
+}

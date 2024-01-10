@@ -1,0 +1,22 @@
+{
+  "input": {
+    "list_of_documents": [
+      {
+        "title": "asfaef",
+        "topic": "asef",
+        "text": "asef",
+        "author": "asef",
+        "raw_url": "asef",
+        "date_created": "asefasef"
+      },
+      {
+        "title": "asefaefs",
+        "topic": "asef",
+        "text": "asefaesf",
+        "author": "asefasef",
+        "raw_url": "asef\"hello\"",
+        "date_created": "asefasefsef"
+      }
+    ]
+  }
+}
