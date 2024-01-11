@@ -1,26 +1,26 @@
 // https://docs.boundaryml.com/v3/guides/classification/level3
-class IntentWithReasoning {
+class CategoryWithReasoning {
   reasoning_steps string @description(#"
     Some clues and reasoning steps to help the user
-    understand why the intent was chosen.
+    understand why the category was chosen.
   "#)
-  intent Intent @alias(chosen_intent) @description(#"
-    The intent identifier or name.
+  category Category @alias(chosen_category) @description(#"
+    The category identifier or name.
   "#)
 }
 
-impl<llm, ClassifyIntent> version3 {
+impl<llm, ClassifyMessage> version3 {
   client GPT4
 
   // see tutorial for explanation.
-  adapter<IntentWithReasoning, output> python#"
-     return arg.intent
+  adapter<CategoryWithReasoning, output> python#"
+     return arg.category
   "#
 
   prompt #"
-    Classify the following INPUT into the best Intent.
+    Classify the following INPUT into the best Category.
 
-    {#print_enum(Intent)}
+    {#print_enum(Category)}
 
     INPUT: {#input}
 

@@ -14,7 +14,7 @@ client<llm> GPT4 {
   }
 }
 
-enum Intent {
+enum Category {
     Refund
     @alias("k1")
     @description("Customer wants to refund a product")
@@ -37,52 +37,22 @@ enum Intent {
 }
 
  
-function ClassifyIntent { 
+function ClassifyMessage { 
   input string
-  output Intent
-  default_impl level1
+  output Category
+  default_impl version3
 }
 
-impl<llm, ClassifyIntent> level1 {
+impl<llm, ClassifyMessage> level1 {
   client GPT4
   prompt #"
     Classify the following INPUT into ONE
-    of the following Intents:
-    {#print_enum(Intent)}
+    of the following Categories:
+    {#print_enum(Category)}
 
     INPUT: {#input}
 
     Respond only with the name / identifier. Not any other description.
-    Intent:
+    Category:
   "#
 }
-
-// Overrides are currently not supported well:
-// impl<llm, ClassifyIntent> level2 {
-//   client GPT4
-
-//   override Intent {
-//     TechnicalSupport
-//     @alias("technical-support")
-//     @description("Customer needs help with a technical issue unrelated to account creation")
-
-//     AccountIssue
-//     @alias("account-issue")
-//     @description("Specifically relates to account-creation")
-
-//     Question
-//     @skip
-//   }
-
-//   prompt #"
-//     Classify the following INPUT into ONE
-//     of the following Intents:
-
-//     {#print_enum(Intent)}
-
-//     INPUT: {#input}
-
-//     Respond only with the name / identifier. Not any other description.
-//     Intent:
-//   "#
-// }
