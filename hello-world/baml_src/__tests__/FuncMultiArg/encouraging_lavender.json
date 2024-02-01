@@ -1,0 +1,15 @@
+{
+  "input": {
+    "arg1": "asdfasdf",
+    "arg2": {
+      "mylist": [
+        "123"
+      ],
+      "mybool": true,
+      "mystring": "sefe",
+      "myint": 1,
+      "myfloat": 2,
+      "myenum": "A"
+    }
+  }
+}

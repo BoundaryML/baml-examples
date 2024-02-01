@@ -9,7 +9,7 @@ client<llm> GPT4 {
   provider baml-openai-chat
   options {
     // Add any params the openai client takes in here
-    model gpt-4-1106-preview
+    model gpt-3.5-turbo
     api_key env.OPENAI_API_KEY
   }
 }
@@ -28,7 +28,7 @@ class OrderInfo {
   product_name string?
   @description("The name of the first product listed")
   cost float?
-  @description("The cost, in dollars, without currency symbols")
+  @description("The cost, in dollars, without currency symbols.")
 }
 
 function GetOrderInfo {
@@ -49,5 +49,25 @@ impl<llm, GetOrderInfo> level1 {
     {#print_type(output)}
 
     JSON:
+  "#
+} 
+
+function Hello {
+  input string
+  output string
+  default_impl level1
+}
+
+impl<llm, Hello> level1 {
+  client GPT4
+  prompt #"
+    Generate a sentence about {#input}.
+  "#
+}
+
+impl<llm, Hello> level2 {
+  client GPT4
+  prompt #"
+    Generate a haiku about {#input}.
   "#
 }

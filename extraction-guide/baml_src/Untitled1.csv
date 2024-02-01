@@ -1,0 +1,7 @@
+function_name,test_name,impl_name,input,output_raw,output_parsed,output_error,status,url
+GetOrderInfo,continuous_violet,level1,"{""subject"":""eeee"",""body"":""Dear Valued Customer,\n\nThank you for your recent purchase at GalaxyGadgets.com! We are thrilled to inform you that your order #GG123456 has been successfully processed.\n\nOrder Details:\n     ID: 12345\n    Product: Ultra-Slim Smartwatch (Model XZ-2)\n    Quantity: 1\n    Price: $299.99\n\nYour order will be shipped to the address provided within the next 3-5 business days. You will receive another email with the tracking information once your order is dispatched.\n\nIf you have any questions or need to make any changes to your order, please contact us at support@galaxygadgets.com or call our customer service hotline at 1-800-555-GADGET.\n\nThank you for choosing GalaxyGadgets.com for your tech needs!\n\nWarm regards,\n\nThe GalaxyGadgets Team""}","{
+  ""order_id"": ""GG123456"",
+  ""date"": null,
+  ""product_name"": ""Ultra-Slim Smartwatch (Model XZ-2)"",
+  ""cost"": 299.99
+}","{""id"": ""GG123456"", ""date"": null, ""product_name"": ""Ultra-Slim Smartwatch (Model XZ-2)"", ""cost"": 299.99}",,PASSED,https://app.trygloo.com/dashboard/projects/proj_7a9833d3-e585-4ac0-8e21-ff5cfe46f556/drilldown?process_id=eae4db77-f72d-49ec-9237-35c44027d452&test=true&start_time=2024-01-29T02:16:20.388Z&s_eid=91ae9421-1b55-4724-aac3-1f8b61db912b&eid=46cd1e2d-6aa5-4b3c-bdda-13a33bee7595
