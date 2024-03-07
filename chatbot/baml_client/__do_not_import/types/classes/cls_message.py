@@ -10,6 +10,7 @@
 from ..enums.enm_usertype import UserType
 from baml_lib._impl.deserializer import register_deserializer
 from pydantic import BaseModel
+from typing import Optional
 
 
 @register_deserializer({  })

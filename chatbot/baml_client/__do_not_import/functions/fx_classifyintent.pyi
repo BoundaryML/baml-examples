@@ -8,7 +8,8 @@
 # fmt: off
 
 from ..types.enums.enm_intent import Intent
-from typing import List, Protocol, runtime_checkable
+from baml_core.stream import AsyncStream
+from typing import Callable, List, Protocol, runtime_checkable
 
 
 import typing
@@ -40,18 +41,42 @@ class IClassifyIntent(Protocol):
     async def __call__(self, *, query: str) -> List[Intent]:
         ...
 
+   
 
+@runtime_checkable
+class IClassifyIntentStream(Protocol):
+    """
+    This is the interface for a stream function.
+
+    Args:
+        query: str
+
+    Returns:
+        AsyncStream[List[Intent], List[Intent]]
+    """
+
+    def __call__(self, *, query: str
+) -> AsyncStream[List[Intent], List[Intent]]:
+        ...
 class BAMLClassifyIntentImpl:
     async def run(self, *, query: str) -> List[Intent]:
+        ...
+    
+    def stream(self, *, query: str
+) -> AsyncStream[List[Intent], List[Intent]]:
         ...
 
 class IBAMLClassifyIntent:
     def register_impl(
         self, name: ImplName
-    ) -> typing.Callable[[IClassifyIntent], IClassifyIntent]:
+    ) -> typing.Callable[[IClassifyIntent, IClassifyIntentStream], None]:
         ...
 
     async def __call__(self, *, query: str) -> List[Intent]:
+        ...
+
+    def stream(self, *, query: str
+) -> AsyncStream[List[Intent], List[Intent]]:
         ...
 
     def get_impl(self, name: ImplName) -> BAMLClassifyIntentImpl:
@@ -97,7 +122,7 @@ class IBAMLClassifyIntent:
         ...
 
     @typing.overload
-    def test(self, *, exclude_impl: typing.Iterable[ImplName]) -> pytest.MarkDecorator:
+    def test(self, *, exclude_impl: typing.Iterable[ImplName] = [], stream: bool = False) -> pytest.MarkDecorator:
         """
         Provides a pytest.mark.parametrize decorator to facilitate testing different implementations of
         the ClassifyIntentInterface.
@@ -105,14 +130,25 @@ class IBAMLClassifyIntent:
         Args:
             exclude_impl : Iterable[ImplName]
                 The names of the implementations to exclude from testing.
+            stream: bool
+                If set, will return a streamable version of the test function.
 
         Usage:
             ```python
-            # All implementations except "simple" will be tested.
+            # All implementations except the given impl will be tested.
 
-            @baml.ClassifyIntent.test(exclude_impl=["simple"])
+            @baml.ClassifyIntent.test(exclude_impl=["implname"])
             async def test_logic(ClassifyIntentImpl: IClassifyIntent) -> None:
                 result = await ClassifyIntentImpl(...)
+            ```
+
+            ```python
+            # Streamable version of the test function.
+
+            @baml.ClassifyIntent.test(stream=True)
+            async def test_logic(ClassifyIntentImpl: IClassifyIntentStream) -> None:
+                async for result in ClassifyIntentImpl(...):
+                    ...
             ```
         """
         ...

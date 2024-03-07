@@ -15,12 +15,10 @@ from .clients.client_main import Main
 from .functions.fx_classifyintent import BAMLClassifyIntent
 from .functions.fx_extractmeetingrequestinfo import BAMLExtractMeetingRequestInfo
 from .functions.fx_extractmeetingrequestinfopartial import BAMLExtractMeetingRequestInfoPartial
-from .functions.fx_generateuserchatprompts import BAMLGenerateUserChatPrompts
 from .functions.fx_getnextquestion import BAMLGetNextQuestion
-from .functions.fx_thingy import BAMLThingy
 from baml_core.otel import add_message_transformer_hook, flush_trace_logs
+from baml_core.provider_manager import LLMManager
 from baml_core.services import LogSchema
-from baml_core.services.api_types import LogSchema
 from baml_lib import DeserializerException, baml_init
 from typing import Callable, List, Optional
 
@@ -29,9 +27,7 @@ class BAMLClient:
     ClassifyIntent = BAMLClassifyIntent
     ExtractMeetingRequestInfo = BAMLExtractMeetingRequestInfo
     ExtractMeetingRequestInfoPartial = BAMLExtractMeetingRequestInfoPartial
-    GenerateUserChatPrompts = BAMLGenerateUserChatPrompts
     GetNextQuestion = BAMLGetNextQuestion
-    Thingy = BAMLThingy
     GPT35 = GPT35
     GPT35_YES_NO = GPT35_YES_NO
     GPT4 = GPT4
@@ -39,6 +35,7 @@ class BAMLClient:
     Main = Main
 
     def __init__(self):
+        LLMManager.validate()
         baml_init()
 
     def configure(

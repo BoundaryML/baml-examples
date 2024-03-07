@@ -8,15 +8,11 @@
 # fmt: off
 
 from .classes.cls_attendee import Attendee
-from .classes.cls_audience import Audience
 from .classes.cls_conversation import Conversation
 from .classes.cls_meetingrequest import MeetingRequest
 from .classes.cls_meetingrequestpartial import MeetingRequestPartial
 from .classes.cls_message import Message
-from .classes.cls_thing import Thing
 from .classes.cls_validation import Validation
-from .classes.cls_zenfetchbotdocumentbase import ZenfetchBotDocumentBase
-from .classes.cls_zenfetchbotdocumentbaselist import ZenfetchBotDocumentBaseList
 from .enums.enm_intent import Intent
 from .enums.enm_usertype import UserType
 
@@ -25,15 +21,11 @@ from .enums.enm_usertype import UserType
 
 __all__ = [
     'Attendee',
-    'Audience',
     'Conversation',
+    'Intent',
     'MeetingRequest',
     'MeetingRequestPartial',
     'Message',
-    'Thing',
-    'Validation',
-    'ZenfetchBotDocumentBase',
-    'ZenfetchBotDocumentBaseList',
-    'Intent',
-    'UserType'
+    'UserType',
+    'Validation'
 ]

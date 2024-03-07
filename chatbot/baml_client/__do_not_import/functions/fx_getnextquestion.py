@@ -9,8 +9,11 @@
 
 from ..types.classes.cls_meetingrequestpartial import MeetingRequestPartial
 from ..types.classes.cls_validation import Validation
+from ..types.partial.classes.cls_meetingrequestpartial import PartialMeetingRequestPartial
+from ..types.partial.classes.cls_validation import PartialValidation
+from baml_core.stream import AsyncStream
 from baml_lib._impl.functions import BaseBAMLFunction
-from typing import Protocol, runtime_checkable
+from typing import AsyncIterator, Callable, Protocol, runtime_checkable
 
 
 IGetNextQuestionOutput = Validation
@@ -30,8 +33,23 @@ class IGetNextQuestion(Protocol):
     async def __call__(self, arg: MeetingRequestPartial, /) -> Validation:
         ...
 
+   
 
-class IBAMLGetNextQuestion(BaseBAMLFunction[Validation]):
+@runtime_checkable
+class IGetNextQuestionStream(Protocol):
+    """
+    This is the interface for a stream function.
+
+    Args:
+        arg: MeetingRequestPartial
+
+    Returns:
+        AsyncStream[Validation, PartialValidation]
+    """
+
+    def __call__(self, arg: MeetingRequestPartial, /) -> AsyncStream[Validation, PartialValidation]:
+        ...
+class IBAMLGetNextQuestion(BaseBAMLFunction[Validation, PartialValidation]):
     def __init__(self) -> None:
         super().__init__(
             "GetNextQuestion",
@@ -41,6 +59,10 @@ class IBAMLGetNextQuestion(BaseBAMLFunction[Validation]):
 
     async def __call__(self, *args, **kwargs) -> Validation:
         return await self.get_impl("v1").run(*args, **kwargs)
+    
+    def stream(self, *args, **kwargs) -> AsyncStream[Validation, PartialValidation]:
+        res = self.get_impl("v1").stream(*args, **kwargs)
+        return res
 
 BAMLGetNextQuestion = IBAMLGetNextQuestion()
 

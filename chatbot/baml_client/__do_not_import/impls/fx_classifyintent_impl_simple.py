@@ -10,14 +10,16 @@
 from ..clients.client_main import Main
 from ..functions.fx_classifyintent import BAMLClassifyIntent
 from ..types.enums.enm_intent import Intent
+from baml_core.provider_manager.llm_response import LLMResponse
+from baml_core.stream import AsyncStream
 from baml_lib._impl.deserializer import Deserializer
 from typing import List
 
 
+import typing
 # Impl: simple
 # Client: Main
-# An implementation of .
-
+# An implementation of ClassifyIntent.
 
 __prompt_template = """\
 Given the question, which of the intents is the user attempting to do?
@@ -47,13 +49,27 @@ __input_replacers = {
 # for inline SpecialForms like Optional, Union, List.
 __deserializer = Deserializer[List[Intent]](List[Intent])  # type: ignore
 
+# Add a deserializer that handles stream responses, which are all Partial types
+__partial_deserializer = Deserializer[List[Intent]](List[Intent])  # type: ignore
 
 
 
 
 
-@BAMLClassifyIntent.register_impl("simple")
+
+
 async def simple(*, query: str) -> List[Intent]:
     response = await Main.run_prompt_template(template=__prompt_template, replacers=__input_replacers, params=dict(query=query))
     deserialized = __deserializer.from_string(response.generated)
     return deserialized
+
+
+def simple_stream(*, query: str
+) -> AsyncStream[List[Intent], List[Intent]]:
+    def run_prompt() -> typing.AsyncIterator[LLMResponse]:
+        raw_stream = Main.run_prompt_template_stream(template=__prompt_template, replacers=__input_replacers, params=dict(query=query))
+        return raw_stream
+    stream = AsyncStream(stream_cb=run_prompt, partial_deserializer=__partial_deserializer, final_deserializer=__deserializer)
+    return stream
+
+BAMLClassifyIntent.register_impl("simple")(simple, simple_stream)

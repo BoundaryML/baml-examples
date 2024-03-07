@@ -45,99 +45,10 @@ class Attendee {
     email string
 }
 
-class Thing {
-    name string
-    other int
-}
 
-class Audience {
-    attendees Attendee[]
-    topic Thing
-} 
-
-class ZenfetchBotDocumentBase {
-    title string?
-    topic string?
-    text string?
-    author string?
-    raw_url string?
-    date_created string
-
-    display string @get(
-        python#"
-            return f"""
-            #### Document:
-                - Title: {self.title}
-                - Topic: {self.topic}
-                - Text: {self.text}
-                - Author: {self.author}
-                - URL: {self.raw_url}
-                - Date Created: {self.date_created}
-            """.strip()
-        "#
-    )
-}
-
-
-class ZenfetchBotDocumentBaseList {
-    list_of_documents ZenfetchBotDocumentBase[]
-
-    display string @get(
-        python#"
-            ret = []
-            if self.list_of_documents:
-                for doc in list_of_documents:
-                    ret.append(doc.display)
-            return "\n".join(ret)
-        "#
-    )
-}
-
-function GenerateUserChatPrompts {
-    input ZenfetchBotDocumentBaseList
-    output string
-}
-impl<llm, GenerateUserChatPrompts> version {
-    client Main
- 
-    prompt #"
-        Given a user is trying to schedule a meeting, extract the relevant
-        information from the query.
-        JSON:
-    "#
-}
-
-function Thingy {
-    input Audience
-    output string
-}
-
-impl<llm, Thingy> simple {
-    client Main
-
-    prompt #"
-        Given a user is trying to schedule a meeting, extract the relevant
-        information from the query.
-
-        Context:
-        ```
-      
-        ``` 
-
-        Conversation:
-        ```
-        
-        ```
-
-        Output JSON:
-        {#print_type(output)}
-
-        JSON:
-    "#
-}
 
 // Now similar to classification, we need to implement the function.
-// Don't forget to open the playground to see what the final prompt looks like.
+// Don't forget to open the playground to see what the final prompt looks like. 
 impl<llm, ExtractMeetingRequestInfo> simple {
     client Main
 

@@ -11,8 +11,12 @@ from ..types.classes.cls_conversation import Conversation
 from ..types.classes.cls_meetingrequestpartial import MeetingRequestPartial
 from ..types.classes.cls_message import Message
 from ..types.enums.enm_usertype import UserType
+from ..types.partial.classes.cls_conversation import PartialConversation
+from ..types.partial.classes.cls_meetingrequestpartial import PartialMeetingRequestPartial
+from ..types.partial.classes.cls_message import PartialMessage
+from baml_core.stream import AsyncStream
 from baml_lib._impl.functions import BaseBAMLFunction
-from typing import Protocol, runtime_checkable
+from typing import AsyncIterator, Callable, Protocol, runtime_checkable
 
 
 IExtractMeetingRequestInfoPartialOutput = MeetingRequestPartial
@@ -33,8 +37,25 @@ class IExtractMeetingRequestInfoPartial(Protocol):
     async def __call__(self, *, convo: Conversation, now: str) -> MeetingRequestPartial:
         ...
 
+   
 
-class IBAMLExtractMeetingRequestInfoPartial(BaseBAMLFunction[MeetingRequestPartial]):
+@runtime_checkable
+class IExtractMeetingRequestInfoPartialStream(Protocol):
+    """
+    This is the interface for a stream function.
+
+    Args:
+        convo: Conversation
+        now: str
+
+    Returns:
+        AsyncStream[MeetingRequestPartial, PartialMeetingRequestPartial]
+    """
+
+    def __call__(self, *, convo: Conversation, now: str
+) -> AsyncStream[MeetingRequestPartial, PartialMeetingRequestPartial]:
+        ...
+class IBAMLExtractMeetingRequestInfoPartial(BaseBAMLFunction[MeetingRequestPartial, PartialMeetingRequestPartial]):
     def __init__(self) -> None:
         super().__init__(
             "ExtractMeetingRequestInfoPartial",
@@ -44,6 +65,10 @@ class IBAMLExtractMeetingRequestInfoPartial(BaseBAMLFunction[MeetingRequestParti
 
     async def __call__(self, *args, **kwargs) -> MeetingRequestPartial:
         return await self.get_impl("v1").run(*args, **kwargs)
+    
+    def stream(self, *args, **kwargs) -> AsyncStream[MeetingRequestPartial, PartialMeetingRequestPartial]:
+        res = self.get_impl("v1").stream(*args, **kwargs)
+        return res
 
 BAMLExtractMeetingRequestInfoPartial = IBAMLExtractMeetingRequestInfoPartial()
 

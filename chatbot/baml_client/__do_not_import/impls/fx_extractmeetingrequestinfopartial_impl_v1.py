@@ -13,13 +13,18 @@ from ..types.classes.cls_conversation import Conversation
 from ..types.classes.cls_meetingrequestpartial import MeetingRequestPartial
 from ..types.classes.cls_message import Message
 from ..types.enums.enm_usertype import UserType
+from ..types.partial.classes.cls_conversation import PartialConversation
+from ..types.partial.classes.cls_meetingrequestpartial import PartialMeetingRequestPartial
+from ..types.partial.classes.cls_message import PartialMessage
+from baml_core.provider_manager.llm_response import LLMResponse
+from baml_core.stream import AsyncStream
 from baml_lib._impl.deserializer import Deserializer
 
 
+import typing
 # Impl: v1
 # Client: Main
-# An implementation of .
-
+# An implementation of ExtractMeetingRequestInfoPartial.
 
 __prompt_template = """\
 Given a user is trying to schedule a meeting, extract the relevant
@@ -61,13 +66,27 @@ __input_replacers = {
 # for inline SpecialForms like Optional, Union, List.
 __deserializer = Deserializer[MeetingRequestPartial](MeetingRequestPartial)  # type: ignore
 
+# Add a deserializer that handles stream responses, which are all Partial types
+__partial_deserializer = Deserializer[PartialMeetingRequestPartial](PartialMeetingRequestPartial)  # type: ignore
 
 
 
 
 
-@BAMLExtractMeetingRequestInfoPartial.register_impl("v1")
+
+
 async def v1(*, convo: Conversation, now: str) -> MeetingRequestPartial:
     response = await Main.run_prompt_template(template=__prompt_template, replacers=__input_replacers, params=dict(convo=convo, now=now))
     deserialized = __deserializer.from_string(response.generated)
     return deserialized
+
+
+def v1_stream(*, convo: Conversation, now: str
+) -> AsyncStream[MeetingRequestPartial, PartialMeetingRequestPartial]:
+    def run_prompt() -> typing.AsyncIterator[LLMResponse]:
+        raw_stream = Main.run_prompt_template_stream(template=__prompt_template, replacers=__input_replacers, params=dict(convo=convo, now=now))
+        return raw_stream
+    stream = AsyncStream(stream_cb=run_prompt, partial_deserializer=__partial_deserializer, final_deserializer=__deserializer)
+    return stream
+
+BAMLExtractMeetingRequestInfoPartial.register_impl("v1")(v1, v1_stream)

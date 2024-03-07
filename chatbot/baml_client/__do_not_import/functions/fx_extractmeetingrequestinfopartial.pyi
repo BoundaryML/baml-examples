@@ -11,7 +11,11 @@ from ..types.classes.cls_conversation import Conversation
 from ..types.classes.cls_meetingrequestpartial import MeetingRequestPartial
 from ..types.classes.cls_message import Message
 from ..types.enums.enm_usertype import UserType
-from typing import Protocol, runtime_checkable
+from ..types.partial.classes.cls_conversation import PartialConversation
+from ..types.partial.classes.cls_meetingrequestpartial import PartialMeetingRequestPartial
+from ..types.partial.classes.cls_message import PartialMessage
+from baml_core.stream import AsyncStream
+from typing import Callable, Protocol, runtime_checkable
 
 
 import typing
@@ -44,18 +48,43 @@ class IExtractMeetingRequestInfoPartial(Protocol):
     async def __call__(self, *, convo: Conversation, now: str) -> MeetingRequestPartial:
         ...
 
+   
 
+@runtime_checkable
+class IExtractMeetingRequestInfoPartialStream(Protocol):
+    """
+    This is the interface for a stream function.
+
+    Args:
+        convo: Conversation
+        now: str
+
+    Returns:
+        AsyncStream[MeetingRequestPartial, PartialMeetingRequestPartial]
+    """
+
+    def __call__(self, *, convo: Conversation, now: str
+) -> AsyncStream[MeetingRequestPartial, PartialMeetingRequestPartial]:
+        ...
 class BAMLExtractMeetingRequestInfoPartialImpl:
     async def run(self, *, convo: Conversation, now: str) -> MeetingRequestPartial:
+        ...
+    
+    def stream(self, *, convo: Conversation, now: str
+) -> AsyncStream[MeetingRequestPartial, PartialMeetingRequestPartial]:
         ...
 
 class IBAMLExtractMeetingRequestInfoPartial:
     def register_impl(
         self, name: ImplName
-    ) -> typing.Callable[[IExtractMeetingRequestInfoPartial], IExtractMeetingRequestInfoPartial]:
+    ) -> typing.Callable[[IExtractMeetingRequestInfoPartial, IExtractMeetingRequestInfoPartialStream], None]:
         ...
 
     async def __call__(self, *, convo: Conversation, now: str) -> MeetingRequestPartial:
+        ...
+
+    def stream(self, *, convo: Conversation, now: str
+) -> AsyncStream[MeetingRequestPartial, PartialMeetingRequestPartial]:
         ...
 
     def get_impl(self, name: ImplName) -> BAMLExtractMeetingRequestInfoPartialImpl:
@@ -101,7 +130,7 @@ class IBAMLExtractMeetingRequestInfoPartial:
         ...
 
     @typing.overload
-    def test(self, *, exclude_impl: typing.Iterable[ImplName]) -> pytest.MarkDecorator:
+    def test(self, *, exclude_impl: typing.Iterable[ImplName] = [], stream: bool = False) -> pytest.MarkDecorator:
         """
         Provides a pytest.mark.parametrize decorator to facilitate testing different implementations of
         the ExtractMeetingRequestInfoPartialInterface.
@@ -109,14 +138,25 @@ class IBAMLExtractMeetingRequestInfoPartial:
         Args:
             exclude_impl : Iterable[ImplName]
                 The names of the implementations to exclude from testing.
+            stream: bool
+                If set, will return a streamable version of the test function.
 
         Usage:
             ```python
-            # All implementations except "v1" will be tested.
+            # All implementations except the given impl will be tested.
 
-            @baml.ExtractMeetingRequestInfoPartial.test(exclude_impl=["v1"])
+            @baml.ExtractMeetingRequestInfoPartial.test(exclude_impl=["implname"])
             async def test_logic(ExtractMeetingRequestInfoPartialImpl: IExtractMeetingRequestInfoPartial) -> None:
                 result = await ExtractMeetingRequestInfoPartialImpl(...)
+            ```
+
+            ```python
+            # Streamable version of the test function.
+
+            @baml.ExtractMeetingRequestInfoPartial.test(stream=True)
+            async def test_logic(ExtractMeetingRequestInfoPartialImpl: IExtractMeetingRequestInfoPartialStream) -> None:
+                async for result in ExtractMeetingRequestInfoPartialImpl(...):
+                    ...
             ```
         """
         ...

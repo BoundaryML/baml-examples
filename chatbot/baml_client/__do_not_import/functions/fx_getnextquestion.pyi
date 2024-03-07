@@ -9,7 +9,10 @@
 
 from ..types.classes.cls_meetingrequestpartial import MeetingRequestPartial
 from ..types.classes.cls_validation import Validation
-from typing import Protocol, runtime_checkable
+from ..types.partial.classes.cls_meetingrequestpartial import PartialMeetingRequestPartial
+from ..types.partial.classes.cls_validation import PartialValidation
+from baml_core.stream import AsyncStream
+from typing import Callable, Protocol, runtime_checkable
 
 
 import typing
@@ -41,18 +44,39 @@ class IGetNextQuestion(Protocol):
     async def __call__(self, arg: MeetingRequestPartial, /) -> Validation:
         ...
 
+   
 
+@runtime_checkable
+class IGetNextQuestionStream(Protocol):
+    """
+    This is the interface for a stream function.
+
+    Args:
+        arg: MeetingRequestPartial
+
+    Returns:
+        AsyncStream[Validation, PartialValidation]
+    """
+
+    def __call__(self, arg: MeetingRequestPartial, /) -> AsyncStream[Validation, PartialValidation]:
+        ...
 class BAMLGetNextQuestionImpl:
     async def run(self, arg: MeetingRequestPartial, /) -> Validation:
+        ...
+    
+    def stream(self, arg: MeetingRequestPartial, /) -> AsyncStream[Validation, PartialValidation]:
         ...
 
 class IBAMLGetNextQuestion:
     def register_impl(
         self, name: ImplName
-    ) -> typing.Callable[[IGetNextQuestion], IGetNextQuestion]:
+    ) -> typing.Callable[[IGetNextQuestion, IGetNextQuestionStream], None]:
         ...
 
     async def __call__(self, arg: MeetingRequestPartial, /) -> Validation:
+        ...
+
+    def stream(self, arg: MeetingRequestPartial, /) -> AsyncStream[Validation, PartialValidation]:
         ...
 
     def get_impl(self, name: ImplName) -> BAMLGetNextQuestionImpl:
@@ -98,7 +122,7 @@ class IBAMLGetNextQuestion:
         ...
 
     @typing.overload
-    def test(self, *, exclude_impl: typing.Iterable[ImplName]) -> pytest.MarkDecorator:
+    def test(self, *, exclude_impl: typing.Iterable[ImplName] = [], stream: bool = False) -> pytest.MarkDecorator:
         """
         Provides a pytest.mark.parametrize decorator to facilitate testing different implementations of
         the GetNextQuestionInterface.
@@ -106,14 +130,25 @@ class IBAMLGetNextQuestion:
         Args:
             exclude_impl : Iterable[ImplName]
                 The names of the implementations to exclude from testing.
+            stream: bool
+                If set, will return a streamable version of the test function.
 
         Usage:
             ```python
-            # All implementations except "v1" will be tested.
+            # All implementations except the given impl will be tested.
 
-            @baml.GetNextQuestion.test(exclude_impl=["v1"])
+            @baml.GetNextQuestion.test(exclude_impl=["implname"])
             async def test_logic(GetNextQuestionImpl: IGetNextQuestion) -> None:
                 result = await GetNextQuestionImpl(...)
+            ```
+
+            ```python
+            # Streamable version of the test function.
+
+            @baml.GetNextQuestion.test(stream=True)
+            async def test_logic(GetNextQuestionImpl: IGetNextQuestionStream) -> None:
+                async for result in GetNextQuestionImpl(...):
+                    ...
             ```
         """
         ...

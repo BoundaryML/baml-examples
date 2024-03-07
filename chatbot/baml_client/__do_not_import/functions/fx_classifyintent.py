@@ -8,8 +8,9 @@
 # fmt: off
 
 from ..types.enums.enm_intent import Intent
+from baml_core.stream import AsyncStream
 from baml_lib._impl.functions import BaseBAMLFunction
-from typing import List, Protocol, runtime_checkable
+from typing import AsyncIterator, Callable, List, Protocol, runtime_checkable
 
 
 IClassifyIntentOutput = List[Intent]
@@ -29,8 +30,24 @@ class IClassifyIntent(Protocol):
     async def __call__(self, *, query: str) -> List[Intent]:
         ...
 
+   
 
-class IBAMLClassifyIntent(BaseBAMLFunction[List[Intent]]):
+@runtime_checkable
+class IClassifyIntentStream(Protocol):
+    """
+    This is the interface for a stream function.
+
+    Args:
+        query: str
+
+    Returns:
+        AsyncStream[List[Intent], List[Intent]]
+    """
+
+    def __call__(self, *, query: str
+) -> AsyncStream[List[Intent], List[Intent]]:
+        ...
+class IBAMLClassifyIntent(BaseBAMLFunction[List[Intent], List[Intent]]):
     def __init__(self) -> None:
         super().__init__(
             "ClassifyIntent",
@@ -40,6 +57,10 @@ class IBAMLClassifyIntent(BaseBAMLFunction[List[Intent]]):
 
     async def __call__(self, *args, **kwargs) -> List[Intent]:
         return await self.get_impl("simple").run(*args, **kwargs)
+    
+    def stream(self, *args, **kwargs) -> AsyncStream[List[Intent], List[Intent]]:
+        res = self.get_impl("simple").stream(*args, **kwargs)
+        return res
 
 BAMLClassifyIntent = IBAMLClassifyIntent()
 
