@@ -7,7 +7,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0"
-baml = "^0.17.0"
+baml = "^0.17.1"
 
 
 [build-system]
