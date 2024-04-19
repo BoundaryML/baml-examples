@@ -43,7 +43,7 @@ async def extract_resume():
     - Wrote code in Python and Java
     """
     async def stream_resume(resume):
-        async with b.ExtractResume.stream(resume) as stream:
+        async with b.ExtractResume.stream(raw_text=resume) as stream:
             async for chunk in stream.parsed_stream:
                 print(chunk.delta)
                 if chunk.is_parseable:

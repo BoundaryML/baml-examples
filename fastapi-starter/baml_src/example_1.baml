@@ -10,23 +10,18 @@ class Education {
   year int
 }
 
-function ExtractResume {
-  input string
-  output Resume
-}
-
-impl<llm, ExtractResume> version1 {
+function ExtractResume(raw_text: string) -> Resume {
   client GPT4
   prompt #"
     Parse the following resume and return a structured representation of the data in the schema below.
 
     Resume:
     ---
-    {#input}
+    {{raw_text}}
     ---
 
     Output JSON format (only include these fields, and no others):
-    {#print_type(output)}
+    {{ ctx.output_format(prefix=null) }}
 
     Output JSON:
   "#
