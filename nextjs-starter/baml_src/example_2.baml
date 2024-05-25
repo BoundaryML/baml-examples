@@ -42,6 +42,22 @@ function ClassifyMessage(convo: Message[]) -> Category[] {
     {% endfor %}
 
     {{ _.chat('assistant') }}
-    JSON array of categories that match:
+    Here's a short hakiu to help you remember the categories before you classify:
   "#
+}
+
+test blue_dolphin {
+  functions [ClassifyMessage]
+  args {
+    convo [
+      { 
+        role Customer
+        content "I would like to cancel my order."
+      }
+      { 
+        role Assistant
+        content "I'm sorry to hear that. Can you provide me with your order number?"
+      }
+    ]
+  }
 }

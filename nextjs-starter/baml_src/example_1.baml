@@ -22,7 +22,42 @@ function ExtractResume(raw_text: string) -> Resume {
 
     Output JSON format (only include these fields, and no others):
     {{ ctx.output_format(prefix=null) }}
-
-    Output JSON:
   "#
+}
+
+test sarah {
+  functions [ExtractResume]
+  args {
+    raw_text #"
+      Sarah Montez
+      Harvard University
+      May 2015-2019
+      3.92 GPA
+      Google
+      Software Engineer
+      June 2019-Present
+      - Backend engineer
+      - Rewrote search and uplifted metrics by 120%
+      - Used C++ and Python
+      Microsoft
+      Software Intern
+      June 2018-August 2018
+      - Worked on the Windows team
+      - Updated the UI
+      - Used C++
+    "#
+  }
+}
+
+test jason {
+  functions [ExtractResume]
+  args {
+    raw_text #"
+    Jason Doe
+    Python, Rust
+    University of California, Berkeley, B.S.
+    in Computer Science, 2020
+    Also an expert in Tableau, SQL, and C++
+    "#
+  }
 }
