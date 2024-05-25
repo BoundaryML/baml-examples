@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@boundaryml/baml':
-    specifier: 0.0.8
-    version: 0.0.8
+    specifier: 0.0.9
+    version: 0.0.9
   next:
     specifier: 14.1.2
     version: 14.1.2(@babel/core@7.24.4)(react-dom@18.2.0)(react@18.2.0)
@@ -403,8 +403,8 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: true
 
-  /@boundaryml/baml-darwin-arm64@0.0.8:
-    resolution: {integrity: sha512-5yLoMZXwtQaEVrV9gpcBOr50Uz0CtWYfEgTgAow/Irzq31kOjtCzB1OA2l1SrpQyHfFGKV0ZPCxHw6ALOd6Qtg==}
+  /@boundaryml/baml-darwin-arm64@0.0.9:
+    resolution: {integrity: sha512-X/BXYUYeFgJ39u+h3sp0QFc75botiRVYknrD4OrDjIh0XtpdQVTpML26BmqaRyjIDH+SrL/tUoeXEBK5bUK2nQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
@@ -412,12 +412,62 @@ packages:
     dev: false
     optional: true
 
-  /@boundaryml/baml@0.0.8:
-    resolution: {integrity: sha512-qME8M3YKpvLtozTXqWpgECdm2B9FT8LCNch9pMnZFxTQCOnudCjzOi/XxIXyG1loTBf4F9Jq/Q8WFZ6BYC09ZQ==}
+  /@boundaryml/baml-darwin-x64@0.0.9:
+    resolution: {integrity: sha512-PTGlHB5I0SVqFcpWLanF7X7LN1rJ93DqWRLebOfYq2FYDsH51VeVd7iRc2tmZfplouEJ/O22NVQV+fmtpncm0Q==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@boundaryml/baml-linux-arm64-gnu@0.0.9:
+    resolution: {integrity: sha512-hf1L+bAu5t14qYhVTWEPz/VSXMtEp9HSJOlW1v7K+yWkM/e2YFcufAe0K5y6nwLDNXD8npMvNG85Wj6aY2SvIQ==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@boundaryml/baml-linux-x64-gnu@0.0.9:
+    resolution: {integrity: sha512-J5jeWB0A4tAVOyBBxF/D2v6RDPbtZ+Al/So1CKGz3y4m4vS0YuZRYAkIWJx/QkrfIQ6DtHJUeuUSIcSIPVWccA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@boundaryml/baml-win32-arm64-msvc@0.0.9:
+    resolution: {integrity: sha512-Bpj7LAm4h2o4evvnx7ul5Nt6Q/+2ErUnfYjdJEPPPzCFdgjZjpJMaQ9aqSfceYFOuxjOP/tkFSAUOrIYxPhpCg==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@boundaryml/baml-win32-x64-msvc@0.0.9:
+    resolution: {integrity: sha512-uP7v4B8DIX4Pr4M+mfKVRmvXc50BqNC5FM4CoJBujBk1cgC54w0KfRS8auACCC5U1VtxIv6zV3PBgc2WT4XiIA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [win32]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /@boundaryml/baml@0.0.9:
+    resolution: {integrity: sha512-10fsUtrijSzmmBRTURDyhNFpAV9CoOMD2ER+KZ2aJYKeDrof963ELwMNNs6CRXGFwSx4HJYdhWMGLDXhDQlpkw==}
     engines: {node: '>= 10'}
     hasBin: true
     optionalDependencies:
-      '@boundaryml/baml-darwin-arm64': 0.0.8
+      '@boundaryml/baml-darwin-arm64': 0.0.9
+      '@boundaryml/baml-darwin-x64': 0.0.9
+      '@boundaryml/baml-linux-arm64-gnu': 0.0.9
+      '@boundaryml/baml-linux-x64-gnu': 0.0.9
+      '@boundaryml/baml-win32-arm64-msvc': 0.0.9
+      '@boundaryml/baml-win32-x64-msvc': 0.0.9
     dev: false
 
   /@cspotcode/source-map-support@0.8.1:
