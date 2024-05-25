@@ -1,0 +1,9 @@
+{
+  "input": {
+    "email": {
+      "subject": "hello there",
+      "body": "the order id 1234 is a blue apron and costs $130.0. The order has been shipped and will arrive in 2024-08-10",
+      "from_address": "john@doe.com"
+    }
+  }
+}

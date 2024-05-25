@@ -44,7 +44,7 @@ test sarah {
       June 2018-August 2018
       - Worked on the Windows team
       - Updated the UI
-      - Used C++
+      - Used C++  
     "#
   }
 }
