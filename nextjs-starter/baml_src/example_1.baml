@@ -24,7 +24,8 @@ function ExtractResume(raw_text: string) -> Resume {
     {{ ctx.output_format(prefix=null) }}
   "#
 }
-
+ 
+        
 test sarah {
   functions [ExtractResume]
   args {
@@ -47,8 +48,8 @@ test sarah {
       - Used C++  
     "#
   }
-} 
-
+}  
+ 
 test jason {
   functions [ExtractResume]
   args {

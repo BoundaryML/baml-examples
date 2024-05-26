@@ -2,9 +2,9 @@
 
 Welcome to Baml! To use this generated code, please run one of the following:
 
-$ npm install baml_ts
-$ yarn add baml_ts
-$ pnpm add baml_ts
+$ npm install @boundaryml/baml
+$ yarn add @boundaryml/baml
+$ pnpm add @boundaryml/baml
 
 *************************************************************************************************/
 
@@ -17,10 +17,12 @@ $ pnpm add baml_ts
 /* eslint-disable */
 import { BamlCtxManager, BamlRuntimePy } from '@boundaryml/baml'
 import { BamlClient } from './client'
+import { getBamlFiles } from './inlinedbaml'
 
 
-const _DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME = BamlRuntimePy.fromDirectory(
-  process.env.BAML_SRC_PATH ?? "./baml_src",
+const _DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME = BamlRuntimePy.fromFiles(
+  'baml_src',
+  getBamlFiles(),
   process.env
 )
 export const DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX = new BamlCtxManager(_DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
