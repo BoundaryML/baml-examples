@@ -10,7 +10,7 @@
     "baml-test": "jest"
   },
   "dependencies": {
-    "@boundaryml/baml": "0.0.13",
+    "@boundaryml/baml": "0.0.14",
     "next": "14.1.2",
     "react": "^18",
     "react-dom": "^18"
