@@ -32,8 +32,8 @@ function ClassifyMessage(convo: Message[]) -> Category[] {
       Prompts are auto-dedented and trimmed.
       We use JINJA for our prompt syntax
       (but we added some static analysis to make sure it's valid!)
-    #}
-
+    #} 
+ ```hello
     {{ ctx.output_format(prefix="Classify with the following json:") }}
 
     {% for c in convo %}

@@ -1,9 +1,12 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI
 import os
-from baml_client import baml as b
+from baml_client import b
 
 from fastapi.responses import StreamingResponse
-
 
 app = FastAPI()
 
@@ -43,11 +46,9 @@ async def extract_resume():
     - Wrote code in Python and Java
     """
     async def stream_resume(resume):
-        async with b.ExtractResume.stream(raw_text=resume) as stream:
-            async for chunk in stream.parsed_stream:
-                print(chunk.delta)
-                if chunk.is_parseable:
-                    yield str(chunk.parsed.model_dump_json()) + "\n"
+        stream = b.stream.ExtractResume(resume)
+        async for chunk in stream:
+            yield str(chunk.model_dump_json()) + "\n"
                 
     return StreamingResponse(stream_resume(resume), media_type="text/plain")
 

@@ -9,7 +9,7 @@ class Education {
   degree string
   year int
 }
-
+ 
 function ExtractResume(raw_text: string) -> Resume {
   client GPT4
   prompt #"
