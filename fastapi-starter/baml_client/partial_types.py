@@ -29,15 +29,15 @@ from . import types
 
 
 class Education(BaseModel):
-    school: Optional[str]
-    degree: Optional[str]
-    year: Optional[int]
+    school: Optional[str] = None
+    degree: Optional[str] = None
+    year: Optional[int] = None
 
 class Message(BaseModel):
-    role: Optional[types.Role]
-    content: Optional[str]
+    role: Optional[types.Role] = None
+    content: Optional[str] = None
 
 class Resume(BaseModel):
-    name: Optional[str]
+    name: Optional[str] = None
     education: List["Education"]
     skills: List[Optional[str]]

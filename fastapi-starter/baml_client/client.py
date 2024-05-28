@@ -17,33 +17,29 @@ from typing import Any, Generic, List, Optional, TypeVar, Union
 import pprint
 
 import baml_py
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, ValidationError, create_model
 
 from . import partial_types, types
 
 OutputType = TypeVar('OutputType')
 
-class BamlOutputWrapper(BaseModel, Generic[OutputType]):
-    wrapped: OutputType
-    
-    @classmethod
-    def coerce(cls, parsed: Any) -> OutputType:
-      try:
-        return cls.model_validate(obj={'wrapped': parsed}).wrapped
-      except ValidationError as e:
-        
-        raise TypeError(
-          "Internal BAML error while casting output type:\n{}".format(
-            pprint.pformat(parsed)
-          )
-        ) from e
+def coerce(cls: BaseModel, parsed: Any) -> Any:
+  try:
+    return cls.model_validate({"inner": parsed}).inner
+  except ValidationError as e:
+    raise TypeError(
+      "Internal BAML error while casting output to {}\n{}".format(
+        cls.__name__,
+        pprint.pformat(parsed)
+      )
+    ) from e
 
 class BamlClient:
-    __runtime: baml_py.BamlRuntimePy
+    __runtime: baml_py.BamlRuntime
     __ctx_manager: baml_py.BamlCtxManager
     __stream_client: "BamlStreamClient"
 
-    def __init__(self, runtime: baml_py.BamlRuntimePy, ctx_manager: baml_py.BamlCtxManager):
+    def __init__(self, runtime: baml_py.BamlRuntime, ctx_manager: baml_py.BamlCtxManager):
       self.__runtime = runtime
       self.__ctx_manager = ctx_manager
       self.__stream_client = BamlStreamClient(self.__runtime, self.__ctx_manager)
@@ -64,7 +60,8 @@ class BamlClient:
         },
         self.__ctx_manager.get(),
       )
-      return BamlOutputWrapper[List[types.Category]].coerce(raw.parsed())
+      mdl = create_model("ClassifyMessageReturnType", inner=(List[types.Category], ...))
+      return coerce(mdl, raw.parsed())
     
     async def ExtractResume(
         self,
@@ -77,14 +74,15 @@ class BamlClient:
         },
         self.__ctx_manager.get(),
       )
-      return BamlOutputWrapper[types.Resume].coerce(raw.parsed())
+      mdl = create_model("ExtractResumeReturnType", inner=(types.Resume, ...))
+      return coerce(mdl, raw.parsed())
     
 
 class BamlStreamClient:
-    __runtime: baml_py.BamlRuntimePy
+    __runtime: baml_py.BamlRuntime
     __ctx_manager: baml_py.BamlCtxManager
 
-    def __init__(self, runtime: baml_py.BamlRuntimePy, ctx_manager: baml_py.BamlCtxManager):
+    def __init__(self, runtime: baml_py.BamlRuntime, ctx_manager: baml_py.BamlCtxManager):
       self.__runtime = runtime
       self.__ctx_manager = ctx_manager
 
@@ -101,10 +99,15 @@ class BamlStreamClient:
         None,
         self.__ctx_manager.get(),
       )
+
+      mdl = create_model("ClassifyMessageReturnType", inner=(List[types.Category], ...))
+      partial_mdl = create_model("ClassifyMessagePartialReturnType", inner=(List[Optional[types.Category]], ...))
+
+
       return baml_py.BamlStream[List[Optional[types.Category]], List[types.Category]](
         raw,
-        BamlOutputWrapper[List[Optional[types.Category]]].coerce,
-        BamlOutputWrapper[List[types.Category]].coerce,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
         self.__ctx_manager.get(),
       )
     
@@ -120,10 +123,15 @@ class BamlStreamClient:
         None,
         self.__ctx_manager.get(),
       )
+
+      mdl = create_model("ExtractResumeReturnType", inner=(types.Resume, ...))
+      partial_mdl = create_model("ExtractResumePartialReturnType", inner=(partial_types.Resume, ...))
+
+
       return baml_py.BamlStream[partial_types.Resume, types.Resume](
         raw,
-        BamlOutputWrapper[partial_types.Resume].coerce,
-        BamlOutputWrapper[types.Resume].coerce,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
         self.__ctx_manager.get(),
       )
     

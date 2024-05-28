@@ -5,7 +5,7 @@ load_dotenv()
 from fastapi import FastAPI
 import os
 from baml_client import b
-
+from baml_client.types import Message, Role
 from fastapi.responses import StreamingResponse
 
 app = FastAPI()
@@ -16,10 +16,15 @@ def index():
 
 @app.get("/extract_resume")
 async def extract_resume():
+
+    classify_response = await b.ClassifyMessage(
+        convo=[Message(role=Role.Customer, content="I would like to cancel my order.")],
+    )
+    print(f"Got {classify_response} from BAML")
     
     resume = """
     John Doe
-    1234 Elm Street
+    1234 Elm Street 
     Springfield, IL 62701
     (123) 456-7890
 
@@ -51,4 +56,5 @@ async def extract_resume():
             yield str(chunk.model_dump_json()) + "\n"
                 
     return StreamingResponse(stream_resume(resume), media_type="text/plain")
+
 
