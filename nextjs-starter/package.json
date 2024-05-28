@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "BAML_LOG=baml_events next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "baml-test": "jest"
+    "generate": "baml-cli generate --from ./baml_src"
   },
   "dependencies": {
-    "@boundaryml/baml": "^0.0.22",
+    "@boundaryml/baml": "^0.0.24",
     "next": "14.1.2",
     "react": "^18",
     "react-dom": "^18"
