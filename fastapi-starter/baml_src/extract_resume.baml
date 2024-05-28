@@ -27,3 +27,24 @@ function ExtractResume(raw_text: string) -> Resume {
     Output JSON:
   "#
 }
+
+test TestName {
+  functions [ExtractResume]
+  args {
+    raw_text #"
+      John Doe
+      Education
+      ---
+      University of California, Berkeley
+      B.S. in Computer Science
+      2010
+      ---
+      Skills
+      ---
+      Java
+      Python
+      C++
+      ---
+    "#
+  }
+}

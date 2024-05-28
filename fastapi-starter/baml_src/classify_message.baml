@@ -34,8 +34,6 @@ function ClassifyMessage(convo: Message[]) -> Category[] {
       (but we added some static analysis to make sure it's valid!)
     #}
 
-    "Classify the following messages into categories."
-    """hi there
     {{ ctx.output_format(prefix="Classify with the following json:") }}
 
     {% for c in convo %}
