@@ -5,7 +5,7 @@ enum Category {
     AccountIssue
     Question
 }
-
+ 
 class Message {
   role Role
   content string
@@ -14,17 +14,17 @@ class Message {
 enum Role {
   Customer
   Assistant
-}  
+}
   
-
+  
 template_string PrintMessage(msg: Message, prefix: string?) #"
   {{ _.chat('user' if msg.role == "Customer" else 'assistant') }}
   {% if prefix %}
   {{ prefix }}
   {% endif %}
-  {{ msg.content }}
-"#
-
+  {{ msg.content }} 
+"# 
+ 
 function ClassifyMessage(convo: Message[]) -> Category[] {
   client GPT4
   prompt #"
@@ -32,8 +32,8 @@ function ClassifyMessage(convo: Message[]) -> Category[] {
       Prompts are auto-dedented and trimmed.
       We use JINJA for our prompt syntax
       (but we added some static analysis to make sure it's valid!)
-    #} 
- ```hello
+    #}
+
     {{ ctx.output_format(prefix="Classify with the following json:") }}
 
     {% for c in convo %}
@@ -43,7 +43,7 @@ function ClassifyMessage(convo: Message[]) -> Category[] {
     {% endfor %}
 
     {{ _.chat('assistant') }}
-    Here's a short hakiu to help you remember the categories before you classify:
+    JSON array of categories that match:
   "#
 }
 

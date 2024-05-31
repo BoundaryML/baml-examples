@@ -13,11 +13,19 @@
 # flake8: noqa: E501,F401
 # pylint: disable=unused-import,line-too-long
 # fmt: off
-from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX
+import typing
+from baml_py.type_builder import FieldType, TypeBuilder as _TypeBuilder, ClassPropertyBuilder, EnumValueBuilder, EnumBuilder, ClassBuilder
 
-trace = DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX.trace_fn
-set_tags = DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX.upsert_tags
-flush = DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX.flush
+class TypeBuilder(_TypeBuilder):
+    def __init__(self):
+        super().__init__(classes=set(
+          ["Education","Message","Resume",]
+        ), enums=set(
+          ["Category","Role",]
+        ))
 
 
-__all__ = ['trace', 'set_tags', "flush"]
+
+
+
+__all__ = ["TypeBuilder"]

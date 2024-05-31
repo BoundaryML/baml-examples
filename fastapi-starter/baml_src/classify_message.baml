@@ -46,3 +46,20 @@ function ClassifyMessage(convo: Message[]) -> Category[] {
     JSON array of categories that match:
   "#
 }
+
+
+test blue_dolphin {
+  functions [ClassifyMessage]
+  args {
+    convo [
+      { 
+        role Customer
+        content "I would like to cancel my order."
+      }
+      { 
+        role Assistant
+        content "I'm sorry to hear that. Can you provide me with your order number?"
+      }
+    ]
+  }
+}

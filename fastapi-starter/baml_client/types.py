@@ -15,11 +15,12 @@
 # fmt: off
 import baml_py
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional, Union
 
 
 class Category(str, Enum):
+    
     Refund = "Refund"
     CancelOrder = "CancelOrder"
     TechnicalSupport = "TechnicalSupport"
@@ -27,19 +28,26 @@ class Category(str, Enum):
     Question = "Question"
 
 class Role(str, Enum):
+    
     Customer = "Customer"
     Assistant = "Assistant"
 
 class Education(BaseModel):
+    
+    
     school: str
     degree: str
     year: int
 
 class Message(BaseModel):
+    
+    
     role: "Role"
     content: str
 
 class Resume(BaseModel):
+    
+    
     name: str
     education: List["Education"]
     skills: List[str]
