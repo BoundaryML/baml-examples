@@ -16,7 +16,7 @@ enum Role {
   Assistant
 }
   
- 
+  
 template_string PrintMessage(msg: Message, prefix: string?) #"
   {{ _.chat('user' if msg.role == "Customer" else 'assistant') }}
   {% if prefix %}

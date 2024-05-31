@@ -6,8 +6,8 @@ settings:
 
 dependencies:
   '@boundaryml/baml':
-    specifier: ^0.0.27
-    version: 0.0.27
+    specifier: ^0.32.0
+    version: 0.32.0
   '@radix-ui/react-avatar':
     specifier: ^1.0.4
     version: 1.0.4(@types/react-dom@18.2.25)(@types/react@18.2.79)(react-dom@18.2.0)(react@18.2.0)
@@ -451,8 +451,8 @@ packages:
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
     dev: true
 
-  /@boundaryml/baml-darwin-arm64@0.0.27:
-    resolution: {integrity: sha512-F4sGUuCWh3OHHFLUqo8DSbHwpdKFHcAZBvRRb045JTgLzYDyxWfZzUixKzOX9/twCvU6Fx6XKS/orelWZfppeg==}
+  /@boundaryml/baml-darwin-arm64@0.32.0:
+    resolution: {integrity: sha512-Nttglg+zJCVKS1xpj6IgiSHPp8gSvP3JgK8+qZcFtEX9k98SyvO87ZPzJNP4xITbZwaHz8I3UoKhphcnA7SH3g==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
@@ -460,8 +460,8 @@ packages:
     dev: false
     optional: true
 
-  /@boundaryml/baml-linux-x64-gnu@0.0.27:
-    resolution: {integrity: sha512-j8+NZhkdadUtqjPldtWFNPvj3StBCbp2GvHWl6/hrG4xWg+/4c9OKIpedF0+0b5pzrA7WCfrrxBm2ELOLBOuHA==}
+  /@boundaryml/baml-linux-x64-gnu@0.32.0:
+    resolution: {integrity: sha512-hchRJhOxELtK7LTICzN1NmEaV4WG0vtRYT0gdch3AtP1ip5fAl1Ure6MgeVkuOW87XJ1uOZf5ego+XXB7eBaqg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -469,8 +469,8 @@ packages:
     dev: false
     optional: true
 
-  /@boundaryml/baml-win32-x64-msvc@0.0.27:
-    resolution: {integrity: sha512-Dpwrlpj6pj+spvFgSIWv14OgsMStSqzUqtSINAt8oVg3oZgg7lRetoiSiCg+lQqiiQMRnSMJWNrJEtMzst5BwQ==}
+  /@boundaryml/baml-win32-x64-msvc@0.32.0:
+    resolution: {integrity: sha512-nnjPD4S7k37BiUFrF2c8uvqFN0+XSUrGO6a/eoRoj0wKMOKInsnHP3Hfb8TFhW3Zn7Lytm62AvYjkNCM8CHzRQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -478,14 +478,14 @@ packages:
     dev: false
     optional: true
 
-  /@boundaryml/baml@0.0.27:
-    resolution: {integrity: sha512-KL4xJpZePgZN2BmGU4vEQiGQpClOIptBHnvp4i00tU6lhA3b1MXDu5sbKaQeaKvnki12bkvCjLbTSkpUvIecaw==}
+  /@boundaryml/baml@0.32.0:
+    resolution: {integrity: sha512-Yhc5gGDm3et33sm4vKjLu2zQLQHrAB+mwGXcZFN5z9jzZ8kkZePC0ekUSD1e44ojjiXe4GMQ4rMetxfNJ5DCvA==}
     engines: {node: '>= 10'}
     hasBin: true
     optionalDependencies:
-      '@boundaryml/baml-darwin-arm64': 0.0.27
-      '@boundaryml/baml-linux-x64-gnu': 0.0.27
-      '@boundaryml/baml-win32-x64-msvc': 0.0.27
+      '@boundaryml/baml-darwin-arm64': 0.32.0
+      '@boundaryml/baml-linux-x64-gnu': 0.32.0
+      '@boundaryml/baml-win32-x64-msvc': 0.32.0
     dev: false
 
   /@cspotcode/source-map-support@0.8.1:
