@@ -33,15 +33,18 @@ export interface Education {
   school: string
   degree: string
   year: number
+  
 }
 
 export interface Message {
   role: Role
   content: string
+  
 }
 
 export interface Resume {
   name: string
   education: Education[]
   skills: string[]
+  
 }

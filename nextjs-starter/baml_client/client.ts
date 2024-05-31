@@ -17,6 +17,7 @@ $ pnpm add @boundaryml/baml
 /* eslint-disable */
 import { BamlRuntime, FunctionResult, BamlCtxManager, BamlStream, Image } from "@boundaryml/baml"
 import {Education, Message, Resume, Category, Role} from "./types"
+import TypeBuilder from "./type_builder"
 
 export class BamlClient {
   private stream_client: BamlStreamClient
@@ -31,7 +32,8 @@ export class BamlClient {
 
   
   async ClassifyMessage(
-      convo: Message[]
+      convo: Message[],
+      __baml_options__?: { tb?: TypeBuilder }
   ): Promise<Category[]> {
     const raw = await this.runtime.callFunction(
       "ClassifyMessage",
@@ -39,12 +41,14 @@ export class BamlClient {
         "convo": convo
       },
       this.ctx_manager.get(),
+      __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as Category[]
   }
   
   async ExtractResume(
-      raw_text: string
+      raw_text: string,
+      __baml_options__?: { tb?: TypeBuilder }
   ): Promise<Resume> {
     const raw = await this.runtime.callFunction(
       "ExtractResume",
@@ -52,6 +56,7 @@ export class BamlClient {
         "raw_text": raw_text
       },
       this.ctx_manager.get(),
+      __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as Resume
   }
@@ -63,7 +68,8 @@ class BamlStreamClient {
 
   
   ClassifyMessage(
-      convo: Message[]
+      convo: Message[],
+      __baml_options__?: { tb?: TypeBuilder }
   ): BamlStream<(Category | null)[], Category[]> {
     const raw = this.runtime.streamFunction(
       "ClassifyMessage",
@@ -72,17 +78,20 @@ class BamlStreamClient {
       },
       undefined,
       this.ctx_manager.get(),
+      __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<(Category | null)[], Category[]>(
       raw,
       (a): a is (Category | null)[] => a,
       (a): a is Category[] => a,
       this.ctx_manager.get(),
+      __baml_options__?.tb?.__tb(),
     )
   }
   
   ExtractResume(
-      raw_text: string
+      raw_text: string,
+      __baml_options__?: { tb?: TypeBuilder }
   ): BamlStream<(Partial<Resume> | null), Resume> {
     const raw = this.runtime.streamFunction(
       "ExtractResume",
@@ -91,12 +100,14 @@ class BamlStreamClient {
       },
       undefined,
       this.ctx_manager.get(),
+      __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<(Partial<Resume> | null), Resume>(
       raw,
       (a): a is (Partial<Resume> | null) => a,
       (a): a is Resume => a,
       this.ctx_manager.get(),
+      __baml_options__?.tb?.__tb(),
     )
   }
   
