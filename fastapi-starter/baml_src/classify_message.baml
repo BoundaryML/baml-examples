@@ -5,6 +5,7 @@ enum Category {
     AccountIssue
     Question
 }
+ 
 
 class Message {
   role Role
@@ -21,8 +22,9 @@ template_string PrintMessage(msg: Message, prefix: string?) #"
   {% if prefix %}
   {{ prefix }}
   {% endif %}
-  {{ msg.content }}
-"#
+  {{ msg.content }} 
+"# 
+ 
 
 function ClassifyMessage(convo: Message[]) -> Category[] {
   client GPT4
@@ -44,4 +46,21 @@ function ClassifyMessage(convo: Message[]) -> Category[] {
     {{ _.chat('assistant') }}
     JSON array of categories that match:
   "#
+}
+
+
+test blue_dolphin {
+  functions [ClassifyMessage]
+  args {
+    convo [
+      { 
+        role Customer
+        content "I would like to cancel my order."
+      }
+      { 
+        role Assistant
+        content "I'm sorry to hear that. Can you provide me with your order number?"
+      }
+    ]
+  }
 }

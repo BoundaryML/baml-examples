@@ -1,7 +1,9 @@
+import CopyPlugin from "copy-webpack-plugin";
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["@boundaryml/baml-core"],
+    serverComponentsExternalPackages: ["@boundaryml/baml"],
   },
   webpack: (config, { dev, isServer, webpack, nextRuntime }) => {
     config.module.rules.push({
@@ -15,6 +17,7 @@ const nextConfig = {
         },
       ],
     });
+
     return config;
   },
 };
