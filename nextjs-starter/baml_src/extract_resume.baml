@@ -9,13 +9,11 @@ class Education {
   degree string
   year int
 }
- 
+
 
 function ExtractResume(raw_text: string) -> Resume {
   client GPT4
   prompt #"
-    {{ ctx }}
-
     Parse the following resume and return a structured representation of the data in the schema below.
 
     Resume:
