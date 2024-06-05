@@ -5,7 +5,6 @@ enum Category {
     AccountIssue
     Question
 }
- 
 
 class Message {
   role Role
@@ -16,7 +15,8 @@ enum Role {
   Customer
   Assistant
 }
-
+  
+  
 template_string PrintMessage(msg: Message, prefix: string?) #"
   {{ _.chat('user' if msg.role == "Customer" else 'assistant') }}
   {% if prefix %}
@@ -24,7 +24,6 @@ template_string PrintMessage(msg: Message, prefix: string?) #"
   {% endif %}
   {{ msg.content }} 
 "# 
- 
 
 function ClassifyMessage(convo: Message[]) -> Category[] {
   client GPT4
@@ -48,7 +47,6 @@ function ClassifyMessage(convo: Message[]) -> Category[] {
   "#
 }
 
-
 test blue_dolphin {
   functions [ClassifyMessage]
   args {
@@ -64,3 +62,4 @@ test blue_dolphin {
     ]
   }
 }
+

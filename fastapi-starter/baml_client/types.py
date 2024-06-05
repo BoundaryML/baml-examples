@@ -32,6 +32,26 @@ class Role(str, Enum):
     Customer = "Customer"
     Assistant = "Assistant"
 
+class BookAnalysis(BaseModel):
+    
+    
+    bookNames: List[str]
+    popularityOverTime: List["PopularityOverTime"]
+
+class CharacterDescription(BaseModel):
+    
+    
+    name: str
+    clothingItems: List[str]
+    hairColor: Optional[str] = None
+    smellDescription: str
+    spells: List["Spells"]
+
+class DynamicOutput(BaseModel):
+    
+    model_config = ConfigDict(extra='allow')
+    
+
 class Education(BaseModel):
     
     
@@ -45,9 +65,39 @@ class Message(BaseModel):
     role: "Role"
     content: str
 
+class PopularityOverTime(BaseModel):
+    
+    
+    bookName: str
+    scores: List["Score"]
+
+class Ranking(BaseModel):
+    
+    
+    bookName: str
+    score: int
+
 class Resume(BaseModel):
     
     
     name: str
     education: List["Education"]
     skills: List[str]
+
+class Score(BaseModel):
+    
+    
+    year: int
+    score: int
+
+class Spells(BaseModel):
+    
+    
+    name: str
+    description: str
+
+class WordCount(BaseModel):
+    
+    
+    bookName: str
+    count: int

@@ -29,6 +29,21 @@ export enum Role {
   Assistant = "Assistant",
 }
 
+export interface BookAnalysis {
+  bookNames: string[]
+  popularityOverTime: PopularityOverTime[]
+  
+}
+
+export interface CharacterDescription {
+  name: string
+  clothingItems: string[]
+  hairColor?: string | null
+  smellDescription: string
+  spells: Spells[]
+  
+}
+
 export interface Education {
   school: string
   degree: string
@@ -42,9 +57,39 @@ export interface Message {
   
 }
 
+export interface PopularityOverTime {
+  bookName: string
+  scores: Score[]
+  
+}
+
+export interface Ranking {
+  bookName: string
+  score: number
+  
+}
+
 export interface Resume {
   name: string
   education: Education[]
   skills: string[]
+  
+}
+
+export interface Score {
+  year: number
+  score: number
+  
+}
+
+export interface Spells {
+  name: string
+  description: string
+  
+}
+
+export interface WordCount {
+  bookName: string
+  count: number
   
 }

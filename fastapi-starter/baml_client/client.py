@@ -55,6 +55,28 @@ class BamlClient:
       return self.__stream_client
 
     
+    async def AnalyzeBooks(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> types.BookAnalysis:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+
+      raw = await self.__runtime.call_function(
+        "AnalyzeBooks",
+        {
+          "input": input,
+        },
+        self.__ctx_manager.get(),
+        tb,
+      )
+      mdl = create_model("AnalyzeBooksReturnType", inner=(types.BookAnalysis, ...))
+      return coerce(mdl, raw.parsed())
+    
     async def ClassifyMessage(
         self,
         convo: List[types.Message],
@@ -75,6 +97,28 @@ class BamlClient:
         tb,
       )
       mdl = create_model("ClassifyMessageReturnType", inner=(List[types.Category], ...))
+      return coerce(mdl, raw.parsed())
+    
+    async def DescribeCharacter(
+        self,
+        first_image: baml_py.Image,
+        baml_options: BamlCallOptions = {},
+    ) -> types.CharacterDescription:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+
+      raw = await self.__runtime.call_function(
+        "DescribeCharacter",
+        {
+          "first_image": first_image,
+        },
+        self.__ctx_manager.get(),
+        tb,
+      )
+      mdl = create_model("DescribeCharacterReturnType", inner=(types.CharacterDescription, ...))
       return coerce(mdl, raw.parsed())
     
     async def ExtractResume(
@@ -109,6 +153,38 @@ class BamlStreamClient:
       self.__ctx_manager = ctx_manager
 
     
+    def AnalyzeBooks(
+        self,
+        input: str,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.BookAnalysis, types.BookAnalysis]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+
+      raw = self.__runtime.stream_function(
+        "AnalyzeBooks",
+        {
+          "input": input,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+      )
+
+      mdl = create_model("AnalyzeBooksReturnType", inner=(types.BookAnalysis, ...))
+      partial_mdl = create_model("AnalyzeBooksPartialReturnType", inner=(partial_types.BookAnalysis, ...))
+
+      return baml_py.BamlStream[partial_types.BookAnalysis, types.BookAnalysis](
+        raw,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
+        self.__ctx_manager.get(),
+        tb,
+      )
+    
     def ClassifyMessage(
         self,
         convo: List[types.Message],
@@ -134,6 +210,38 @@ class BamlStreamClient:
       partial_mdl = create_model("ClassifyMessagePartialReturnType", inner=(List[Optional[types.Category]], ...))
 
       return baml_py.BamlStream[List[Optional[types.Category]], List[types.Category]](
+        raw,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
+        self.__ctx_manager.get(),
+        tb,
+      )
+    
+    def DescribeCharacter(
+        self,
+        first_image: baml_py.Image,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[partial_types.CharacterDescription, types.CharacterDescription]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+
+      raw = self.__runtime.stream_function(
+        "DescribeCharacter",
+        {
+          "first_image": first_image,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+      )
+
+      mdl = create_model("DescribeCharacterReturnType", inner=(types.CharacterDescription, ...))
+      partial_mdl = create_model("DescribeCharacterPartialReturnType", inner=(partial_types.CharacterDescription, ...))
+
+      return baml_py.BamlStream[partial_types.CharacterDescription, types.CharacterDescription](
         raw,
         lambda x: coerce(partial_mdl, x),
         lambda x: coerce(mdl, x),
