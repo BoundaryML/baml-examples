@@ -32,13 +32,12 @@ class BookAnalysis {
   popularityOverTime PopularityOverTime[] @description(#"
     Print the popularity of EACH BOOK over time.
   "#) @alias("popularityData")
-  // popularityRankings Ranking[] @description(#"
-  //   A list of the book's popularity rankings over time. 
-  //   The first element is the top ranking
-  // "#)
- 
-  // wordCounts WordCount[]
-}
+  popularityRankings Ranking[] @description(#"
+    A list of the book's popularity rankings over time. 
+    The first element is the top ranking
+  "#)
+  wordCounts WordCount[]
+} 
 
 function AnalyzeBooks(input: string) -> BookAnalysis {
   client GPT4

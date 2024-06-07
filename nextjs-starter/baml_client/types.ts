@@ -29,9 +29,17 @@ export enum Role {
   Assistant = "Assistant",
 }
 
+export interface Answer {
+  answersInText: Citation[]
+  answer: string
+  
+}
+
 export interface BookAnalysis {
   bookNames: string[]
   popularityOverTime: PopularityOverTime[]
+  popularityRankings: Ranking[]
+  wordCounts: WordCount[]
   
 }
 
@@ -41,6 +49,26 @@ export interface CharacterDescription {
   hairColor?: string | null
   smellDescription: string
   spells: Spells[]
+  
+}
+
+export interface Citation {
+  documentTitle: string
+  sourceLink: string
+  relevantTextFromDocument: string
+  number: number
+  
+}
+
+export interface Context {
+  documents: Document[]
+  
+}
+
+export interface Document {
+  title: string
+  text: string
+  link: string
   
 }
 
