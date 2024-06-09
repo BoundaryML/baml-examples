@@ -4,6 +4,7 @@ import { Answer, BookAnalysis } from "@/baml_client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { sortJsonRecursive } from "@/lib/utils";
 import { readStreamableValue } from "ai/rsc";
 import Link from "next/link";
 import { useState } from "react";
@@ -100,7 +101,7 @@ export default function Home() {
               <div className="font-semibold">Parsed JSON from LLM response</div>
               <Textarea
                 className="w-[600px] h-[160px] mt-4"
-                value={JSON.stringify(answer, null, 2) ?? ""}
+                value={JSON.stringify(sortJsonRecursive(answer), null, 2) ?? ""}
                 readOnly
                 draggable={false}
                 contentEditable={false}

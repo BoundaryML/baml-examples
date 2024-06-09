@@ -10,7 +10,7 @@ class Citation {
 class Answer {
   answersInText Citation[]
   answer string @description(#"
-    When you answer, ensure to add citations from the documents in the CONTEXT with a [number] that corresponds to the documentsCited array.
+    When you answer, ensure to add citations from the documents in the CONTEXT with a number that corresponds to the answersInText array.
   "#)
 }
 

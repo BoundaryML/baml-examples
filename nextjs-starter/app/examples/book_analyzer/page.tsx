@@ -23,10 +23,26 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@react-hook/debounce";
 
-function sortJsonRecursive(obj: any) {
-  if (obj instanceof Array) {
-    return obj.map(sortJsonRecursive);
-  } else if (obj instanceof Object) {
+function sortJsonRecursive(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(sortJsonRecursive).sort((a, b) => {
+      if (typeof a === "object" && typeof b === "object") {
+        const aKeys = Object.keys(a).sort();
+        const bKeys = Object.keys(b).sort();
+        for (let i = 0; i < Math.min(aKeys.length, bKeys.length); i++) {
+          const compare = aKeys[i].localeCompare(bKeys[i]);
+          if (compare !== 0) return compare;
+          const valueCompare = sortJsonRecursive(a[aKeys[i]])
+            .toString()
+            .localeCompare(sortJsonRecursive(b[bKeys[i]]).toString());
+          if (valueCompare !== 0) return valueCompare;
+        }
+        return aKeys.length - bKeys.length;
+      } else {
+        return a.toString().localeCompare(b.toString());
+      }
+    });
+  } else if (typeof obj === "object" && obj !== null) {
     return Object.keys(obj)
       .sort()
       .reduce((result: any, key) => {
