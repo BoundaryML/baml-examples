@@ -23,6 +23,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@react-hook/debounce";
 
+export const dynamic = "force-dynamic";
+
 function sortJsonRecursive(obj: any): any {
   if (Array.isArray(obj)) {
     return obj.map(sortJsonRecursive).sort((a, b) => {

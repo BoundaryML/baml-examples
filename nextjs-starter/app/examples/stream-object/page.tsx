@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ClipLoader } from "react-spinners";
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   const [resume, setExtractedResume] = useState<Partial<Resume>>();

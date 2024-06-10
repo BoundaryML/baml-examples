@@ -9,6 +9,7 @@ import { readStreamableValue } from "ai/rsc";
 import Link from "next/link";
 import { useState } from "react";
 import { ClipLoader } from "react-spinners";
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   const [text, setText] =
