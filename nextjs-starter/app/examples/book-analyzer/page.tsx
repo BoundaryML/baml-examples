@@ -5,6 +5,7 @@ import {
   BarList,
   Button,
   Card,
+  LineChart,
   TextInput,
   Textarea,
 } from "@tremor/react";
@@ -21,43 +22,11 @@ import { readStreamableValue } from "ai/rsc";
 import { ClipLoader } from "react-spinners";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useDebounce } from "@react-hook/debounce";
-import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
-
-function sortJsonRecursive(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(sortJsonRecursive).sort((a, b) => {
-      if (typeof a === "object" && typeof b === "object") {
-        const aKeys = Object.keys(a).sort();
-        const bKeys = Object.keys(b).sort();
-        for (let i = 0; i < Math.min(aKeys.length, bKeys.length); i++) {
-          const compare = aKeys[i].localeCompare(bKeys[i]);
-          if (compare !== 0) return compare;
-          const valueCompare = sortJsonRecursive(a[aKeys[i]])
-            .toString()
-            .localeCompare(sortJsonRecursive(b[bKeys[i]]).toString());
-          if (valueCompare !== 0) return valueCompare;
-        }
-        return aKeys.length - bKeys.length;
-      } else {
-        return a.toString().localeCompare(b.toString());
-      }
-    });
-  } else if (typeof obj === "object" && obj !== null) {
-    return Object.keys(obj)
-      .sort()
-      .reduce((result: any, key) => {
-        result[key] = sortJsonRecursive(obj[key]);
-        return result;
-      }, {});
-  }
-  return obj;
-}
+export const maxDuration = 60;
 
 export default function Home() {
-  noStore();
   const [text, setText] = useState(`The Great Gatsby
 Three Body Problem
 The Lord of the Rings`);
@@ -72,47 +41,52 @@ The Lord of the Rings`);
     <>
       <div className="h-screen w-screen bg-slate-50 overflow-y-scroll">
         <div className="p-10 gap-y-4 flex flex-col">
-          <div className="font-semibold text-2xl">Book AI Analyzer</div>
-          <div className="font-semibold ">
-            Add / Remove books from this list!
+          <div className="font-semibold text-2xl">
+            How popular is your book compared to others?
           </div>
+          <div className="text-muted-foreground">(according to AI)</div>
+          <div className="font-semibold ">Add books below!</div>
 
           <Textarea
             defaultValue={text}
             onValueChange={setText}
             className="h-24"
           />
-          <Button
-            disabled={isLoading}
-            onClick={async () => {
-              const { object } = await analyzeBook(text);
-              setIsLoading(true);
-              for await (const partialObject of readStreamableValue(object)) {
-                setBookAnalysis(partialObject);
-              }
-              setIsLoading(false);
-            }}
-          >
-            Analyze
-          </Button>
-          {isLoading && (
-            <div className="absolute top-0 bottom-0 right-0">
-              <ClipLoader color="gray" />
-            </div>
-          )}
+          <div className="flex flex-row items-center gap-x-3">
+            <Button
+              className="w-fit flex mt-2"
+              disabled={isLoading}
+              onClick={async () => {
+                const { object } = await analyzeBook(text);
+                setIsLoading(true);
+                for await (const partialObject of readStreamableValue(object)) {
+                  setBookAnalysis(partialObject);
+                }
+                setIsLoading(false);
+              }}
+            >
+              Analyze
+            </Button>
+            {isLoading && (
+              <div className="">
+                <ClipLoader color="gray" />
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center space-x-2">
             <Switch
               id="airplane-mode"
               checked={showRaw}
               onCheckedChange={setShowRaw}
             />
-            <Label htmlFor="airplane-mode">Show Raw JSON</Label>
+            <Label htmlFor="airplane-mode">
+              Show Raw JSON being streamed in
+            </Label>
           </div>
           {showRaw ? (
-            <div className="bg-white p-4 rounded-lg shadow-md dark:bg-gray-800 dark:text-gray-200">
-              <pre>
-                {JSON.stringify(sortJsonRecursive(bookAnalysis), null, 2)}
-              </pre>
+            <div className="bg-white p-4 text-xs rounded-lg shadow-md dark:bg-gray-800 dark:text-gray-200 min-h-[300px]">
+              <pre>{JSON.stringify(bookAnalysis, null, 2)}</pre>
             </div>
           ) : (
             <div>
@@ -150,7 +124,7 @@ const PopularityLineChart = ({
   // Populate the dictionary
   popularityData.forEach((book) => {
     book.scores?.forEach((score) => {
-      if (score?.year?.toString().length !== 4) return; // valid year since it's streaming in
+      if (score?.year?.toString().length !== 4) return; // wait for valid year as it streams in
       if (!dataByYear[score.year]) {
         dataByYear[score.year] = { date: `Year ${score.year}` };
       }
@@ -160,13 +134,18 @@ const PopularityLineChart = ({
     });
   });
 
+  console.log(dataByYear);
+
   // Convert dictionary to array format required
   const chartData = Object.values(dataByYear);
+  console.log(books);
+  console.log(chartData);
 
   return (
     <Card className="">
       <h3 className="text-tremor-title ">Popularity over time</h3>{" "}
-      <AreaChart
+      <LineChart
+        connectNulls
         className="h-[150px]"
         data={chartData}
         index="date"

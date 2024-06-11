@@ -31,24 +31,26 @@ class BookAnalysis {
   "#)
   popularityOverTime PopularityOverTime[] @description(#"
     Print the popularity of EACH BOOK over time.
-  "#) @alias("popularityData")
+    Make sure you add datapoints up to the current year. Try to use a max of 10 datapoints to 
+    represent the whole timeline for all books (so 10 handpicked years).
+  "#) @alias(popularityData)
   popularityRankings Ranking[] @description(#"
     A list of the book's popularity rankings over time. 
-    The first element is the top ranking
+    The first element is the top ranking.
   "#)
   wordCounts WordCount[]
 } 
-
+  
 function AnalyzeBooks(input: string) -> BookAnalysis {
-  client GPT4
+  client GPT4o
   prompt #"
     Analyze the following book list and provide the information in the schema. If you don't know the exact answer, take a guess.
-    BOOK_LIST:
+    BOOK_LIST: 
     {{ input }}
 
     {{ ctx.output_format }}
   "#
-}
+} 
 
 test TestName {
   functions [AnalyzeBooks]

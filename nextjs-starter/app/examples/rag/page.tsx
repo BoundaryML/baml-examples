@@ -4,7 +4,6 @@ import { Answer, BookAnalysis } from "@/baml_client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { sortJsonRecursive } from "@/lib/utils";
 import { readStreamableValue } from "ai/rsc";
 import Link from "next/link";
 import { useState } from "react";
@@ -90,6 +89,7 @@ export default function Home() {
                     >
                       <span className="font-semibold">[{answer.number}]</span>{" "}
                       {answer.relevantTextFromDocument}
+                      {/* links can cause exceptions if the link is incomplete, so we render it at the end */}
                       {!isLoading && (
                         <Link
                           href={answer.sourceLink ?? "/"}

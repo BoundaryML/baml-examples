@@ -13,7 +13,7 @@ class Spells {
   name string
   description string
 
-}
+} 
 
 function DescribeCharacter(first_image: image) -> CharacterDescription {
   client GPT4o

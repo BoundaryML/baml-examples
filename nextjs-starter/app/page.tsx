@@ -8,18 +8,24 @@ export default function Home() {
       <div className="font-semibold text-3xl h-fit flex">
         NextJS Generative UI Demos
       </div>
-      <div>
+      <div className="flex flex-col gap-y-4 pt-12">
         <Link
-          className={buttonVariants({ variant: "outline" })}
+          className={buttonVariants({ variant: "default" })}
           href="/examples/stream-object"
         >
-          Extract resume
+          Streaming simple objects
         </Link>
         <Link
-          className={buttonVariants({ variant: "outline" })}
+          className={buttonVariants({ variant: "default" })}
           href="/examples/rag"
         >
-          RAG UI
+          RAG
+        </Link>
+        <Link
+          className={buttonVariants({ variant: "default" })}
+          href="/examples/book-analyzer"
+        >
+          Streaming charts
         </Link>
       </div>
     </main>
