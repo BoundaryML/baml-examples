@@ -79,6 +79,16 @@ export interface Education {
   
 }
 
+export interface Experience {
+  company: string
+  title?: string | null
+  start_date: string
+  end_date?: string | null
+  description: string[]
+  company_url?: string | null
+  
+}
+
 export interface Ingredient {
   name: string
   amount: number
@@ -127,8 +137,11 @@ export interface Recipe {
 
 export interface Resume {
   name: string
+  links: string[]
   education: Education[]
+  experience: Experience[]
   skills: string[]
+  why_hire: string[]
   
 }
 

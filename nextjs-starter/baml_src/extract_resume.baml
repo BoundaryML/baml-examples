@@ -1,7 +1,14 @@
 class Resume {
   name string
+  links string[] @description(#"
+    Any links to the candidate's online profiles (e.g. LinkedIn, GitHub, Email).
+  "#)
   education Education[]
+  experience Experience[]
   skills string[]
+  why_hire string[] @description(#"
+    3 points of why the candidate is a great hire (use fun and exciting language!).
+  "#)
 }
 
 class Education {
@@ -10,9 +17,19 @@ class Education {
   year int
 }
 
+class Experience {
+  company string
+  title string?
+  start_date string
+  end_date string?
+  description string[]
+  company_url string? @description(#"
+    Best guess of the company's website URL.
+  "#)
+}
 
 function ExtractResume(raw_text: string) -> Resume {
-  client GPT4
+  client GPT4o
   prompt #"
     Parse the following resume and return a structured representation of the data in the schema below.
 
@@ -25,10 +42,24 @@ function ExtractResume(raw_text: string) -> Resume {
     {{ ctx.output_format(prefix=null) }}
   "#
 }
+
+
+function ExtractResumeNoStructure(raw_text: string) -> string {
+  client GPT4o
+  prompt #"
+    Parse the following resume and return their education, experience, and skills.
+
+    Resume:
+    ---
+    {{raw_text}}
+    ---
+  "#
+}
  
+
         
 test sarah {
-  functions [ExtractResume]
+  functions [ExtractResume, ExtractResumeNoStructure]
   args {
     raw_text #"
       Sarah Montez
