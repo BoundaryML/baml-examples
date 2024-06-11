@@ -146,11 +146,11 @@ const PopularityLineChart = ({
       <h3 className="text-tremor-title ">Popularity over time</h3>{" "}
       <LineChart
         connectNulls
-        className="h-[150px]"
+        className="h-[240px]"
         data={chartData}
         index="date"
         categories={books ?? []}
-        colors={["blue", "green", "magenta", "red"]}
+        colors={["blue", "green", "red"]}
         yAxisWidth={12}
         showYAxis={false}
       />

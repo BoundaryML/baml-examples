@@ -79,9 +79,29 @@ export interface Education {
   
 }
 
+export interface Ingredient {
+  name: string
+  amount: number
+  unit: string
+  description?: string | null
+  
+}
+
 export interface Message {
   role: Role
   content: string
+  
+}
+
+export interface PartIngredient {
+  title: string
+  ingredients: Ingredient[]
+  
+}
+
+export interface PartSteps {
+  title: string
+  steps: string[]
   
 }
 
@@ -94,6 +114,14 @@ export interface PopularityOverTime {
 export interface Ranking {
   bookName: string
   score: number
+  
+}
+
+export interface Recipe {
+  number_of_servings: number
+  ingredients: PartIngredient[] | Ingredient[]
+  instructions: PartSteps[] | string[]
+  serving_tips: string[]
   
 }
 
