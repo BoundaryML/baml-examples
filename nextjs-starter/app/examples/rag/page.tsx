@@ -12,6 +12,7 @@ import { ClipLoader } from "react-spinners";
 import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export default function Home() {
   noStore();
