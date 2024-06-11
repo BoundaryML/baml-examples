@@ -9,9 +9,12 @@ import { readStreamableValue } from "ai/rsc";
 import Link from "next/link";
 import { useState } from "react";
 import { ClipLoader } from "react-spinners";
+import { unstable_noStore as noStore } from "next/cache";
+
 export const dynamic = "force-dynamic";
 
 export default function Home() {
+  noStore();
   const [text, setText] =
     useState(`What achievements did spacex accomplish before anyone else?
   `);

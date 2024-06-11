@@ -22,6 +22,7 @@ import { ClipLoader } from "react-spinners";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useDebounce } from "@react-hook/debounce";
+import { unstable_noStore as noStore } from "next/cache";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,7 @@ function sortJsonRecursive(obj: any): any {
 }
 
 export default function Home() {
+  noStore();
   const [text, setText] = useState(`The Great Gatsby
 Three Body Problem
 The Lord of the Rings`);

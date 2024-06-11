@@ -9,9 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ClipLoader } from "react-spinners";
+import { unstable_noStore as noStore } from "next/cache";
+
 export const dynamic = "force-dynamic";
 
 export default function Home() {
+  noStore();
+
   const [resume, setExtractedResume] = useState<Partial<Resume>>();
   const [resumeText, setResumeText] = useState<string>(
     "Sarah Montez\nHarvard University\nMay 2015-2019\n3.92 GPA\nGoogle\nSoftware Engineer\nJune 2019-Present\n- Backend engineer\n- Rewrote search and uplifted metrics by 120%\n- Used C++ and Python\nMicrosoft\nSoftware Intern\nJune 2018-August 2018\n- Worked on the Windows team\n- Updated the UI\n- Used C++"
