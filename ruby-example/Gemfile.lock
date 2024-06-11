@@ -1,0 +1,33 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    baml (0.38.0-aarch64-linux)
+    baml (0.38.0-arm64-darwin)
+    baml (0.38.0-x86_64-darwin)
+    baml (0.38.0-x86_64-linux)
+    bigdecimal (3.1.8)
+    sorbet (0.5.11428)
+      sorbet-static (= 0.5.11428)
+    sorbet-runtime (0.5.11428)
+    sorbet-static (0.5.11428-aarch64-linux)
+    sorbet-static (0.5.11428-universal-darwin)
+    sorbet-static (0.5.11428-x86_64-linux)
+    sorbet-struct-comparable (1.3.0)
+      sorbet-runtime (>= 0.5)
+
+PLATFORMS
+  aarch64-linux
+  arm64-darwin
+  universal-darwin
+  x86_64-darwin
+  x86_64-linux
+
+DEPENDENCIES
+  baml (>= 0.38.0)
+  bigdecimal
+  sorbet
+  sorbet-runtime
+  sorbet-struct-comparable
+
+BUNDLED WITH
+   2.5.11
