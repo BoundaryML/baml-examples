@@ -31,7 +31,7 @@ class Ingredient {
         Optional description of the ingredient like 'diced' or 'chopped'
     "#)
 }  
-
+ 
 function GetRecipe(arg: string) -> Recipe {
     client GPT4o
     prompt #"

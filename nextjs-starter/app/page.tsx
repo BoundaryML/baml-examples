@@ -27,6 +27,12 @@ export default function Home() {
         >
           Streaming charts
         </Link>
+        <Link
+          className={buttonVariants({ variant: "default" })}
+          href="/examples/get-recipe"
+        >
+          Streaming union types
+        </Link>
       </div>
     </main>
   );
