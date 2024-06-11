@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export default function Home() {
-  noStore();
+  // noStore();
   const [text, setText] =
     useState(`What achievements did spacex accomplish before anyone else?
   `);
