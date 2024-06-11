@@ -92,7 +92,7 @@ export default function Home() {
                       {answer.relevantTextFromDocument}
                       {!isLoading && (
                         <Link
-                          href={answer.sourceLink ?? ""}
+                          href={answer.sourceLink ?? "/"}
                           className="text-blue-500"
                         >
                           {answer.documentTitle}
