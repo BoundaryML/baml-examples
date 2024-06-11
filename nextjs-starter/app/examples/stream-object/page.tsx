@@ -14,7 +14,7 @@ import { unstable_noStore as noStore } from "next/cache";
 export const dynamic = "force-dynamic";
 
 export default function Home() {
-  noStore();
+  // noStore();
 
   const [resume, setExtractedResume] = useState<Partial<Resume>>();
   const [resumeText, setResumeText] = useState<string>(
@@ -37,12 +37,17 @@ export default function Home() {
         <Button
           disabled={isLoading}
           onClick={async () => {
-            const { object } = await extractResume(resumeText);
             setIsLoading(true);
-            for await (const partialObject of readStreamableValue(object)) {
-              setExtractedResume(partialObject);
+            try {
+              const { object } = await extractResume(resumeText);
+              for await (const partialObject of readStreamableValue(object)) {
+                setExtractedResume(partialObject);
+              }
+            } catch (e) {
+              console.error("Error extracting resume", e);
+            } finally {
+              setIsLoading(false);
             }
-            setIsLoading(false);
           }}
         >
           Extract Resume!
