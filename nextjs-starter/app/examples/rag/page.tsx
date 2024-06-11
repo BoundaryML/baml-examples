@@ -89,13 +89,15 @@ export default function Home() {
                       className="whitespace-pre-wrap break-words"
                     >
                       <span className="font-semibold">[{answer.number}]</span>{" "}
-                      {answer.relevantTextFromDocument} --{" "}
-                      <Link
-                        href={answer.sourceLink ?? ""}
-                        className="text-blue-500"
-                      >
-                        {answer.documentTitle}
-                      </Link>
+                      {answer.relevantTextFromDocument}
+                      {!isLoading && (
+                        <Link
+                          href={answer.sourceLink ?? ""}
+                          className="text-blue-500"
+                        >
+                          {answer.documentTitle}
+                        </Link>
+                      )}
                     </span>
                   ))}
                 </div>
@@ -106,7 +108,7 @@ export default function Home() {
               <div className="font-semibold">Parsed JSON from LLM response</div>
               <Textarea
                 className="w-[600px] h-[160px] mt-4"
-                value={JSON.stringify(sortJsonRecursive(answer), null, 2) ?? ""}
+                value={JSON.stringify(answer, null, 2) ?? ""}
                 readOnly
                 draggable={false}
                 contentEditable={false}
