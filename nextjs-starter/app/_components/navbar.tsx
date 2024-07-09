@@ -11,15 +11,27 @@ export const NavBar = () => {
   return (
     <div>
       <nav
-        className="flex items-center justify-between h-[50px] px-4 border-b-[1px] border-b-primary/10"
+        className="flex flex-row  w-full h-[50px] px-4 border-b-[1px] border-b-primary/10"
         aria-label="Global"
       >
-        <div className="flex lg:flex-1">
+        <div className="flex w-1/3">
+          {" "}
           {pathname !== "/" && (
             <Link className={buttonVariants({ variant: "ghost" })} href="/">
               {"More examples"}
             </Link>
           )}
+        </div>
+        <div className="text-muted-foreground flex items-center justify-center  text-center w-1/3 whitespace-nowrap">
+          These examples are built with{" "}
+          <Link
+            href={"https://docs.boundaryml.com"}
+            className="px-1 underline text-blue-600"
+            target="_blank"
+          >
+            {" "}
+            BAML
+          </Link>{" "}
         </div>
         <div className="flex lg:hidden">
           {/* <button
@@ -31,7 +43,7 @@ export const NavBar = () => {
               <Bars3Icon className="h-6 w-6" aria-hidden="true" />
             </button> */}
         </div>
-        <div className="hidden lg:flex lg:gap-x-12">
+        <div className="hidden lg:flex lg:gap-x-12 justify-end items-center w-[33%]">
           <>
             {/* {navigation.map((item) => (
                 <a
