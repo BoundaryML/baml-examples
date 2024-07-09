@@ -13,7 +13,7 @@ export async function extractResume(resumeText: string) {
     for await (const event of stream) {
       console.log(event);
       if (event) {
-        resumeStream.update(event);
+        resumeStream.update(event as Partial<Resume>);
       }
     }
 
@@ -52,7 +52,7 @@ export async function analyzeBook(booklist: string) {
 
     for await (const event of stream) {
       if (event) {
-        bookStream.update(event);
+        bookStream.update(event as Partial<BookAnalysis>);
       }
     }
 
@@ -74,7 +74,7 @@ export async function answerQuestion(question: string) {
 
     for await (const event of stream) {
       if (event) {
-        answerStream.update(event);
+        answerStream.update(event as Partial<Answer>);
       }
     }
 
@@ -92,7 +92,7 @@ export async function getRecipe(arg: string) {
 
     for await (const event of stream) {
       if (event) {
-        answerStream.update(event);
+        answerStream.update(event as Partial<Recipe>);
       }
     }
 
