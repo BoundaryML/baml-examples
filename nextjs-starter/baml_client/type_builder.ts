@@ -21,17 +21,23 @@ import { TypeBuilder as _TypeBuilder, EnumBuilder, ClassBuilder } from '@boundar
 export default class TypeBuilder {
     private tb: _TypeBuilder;
     
+    Person: ClassBuilder<'Person'>;
+    
     
 
     constructor() {
         this.tb = new _TypeBuilder({
           classes: new Set([
-            "Answer","BookAnalysis","CharacterDescription","Citation","Context","Document","Education","Experience","Ingredient","Message","PartIngredient","PartSteps","PopularityOverTime","Ranking","Recipe","Resume","Score","Spells","WordCount",
+            "Answer","BookAnalysis","CharacterDescription","Citation","Context","Document","Education","Experience","Ingredient","Message","PartIngredient","PartSteps","Person","PopularityOverTime","Ranking","Recipe","Resume","Score","Spells","WordCount",
           ]),
           enums: new Set([
             "Category","Role",
           ])
         });
+        
+        this.Person = this.tb.classBuilder("Person", [
+          
+        ]);
         
         
     }

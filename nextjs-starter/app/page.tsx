@@ -4,7 +4,7 @@ import { buttonVariants } from "@/components/ui/button";
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center p-24 gap-y-2 overflow-y-scroll">
+    <div className="flex h-full flex-col items-center p-24 gap-y-2 overflow-y-auto">
       <div className="font-semibold text-3xl h-fit flex">
         NextJS Generative UI Demos
       </div>
@@ -34,6 +34,6 @@ export default function Home() {
           Streaming union types
         </Link>
       </div>
-    </main>
+    </div>
   );
 }

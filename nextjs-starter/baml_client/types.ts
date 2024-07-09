@@ -115,6 +115,11 @@ export interface PartSteps {
   
 }
 
+export interface Person {
+  
+  [key: string]: any;
+}
+
 export interface PopularityOverTime {
   bookName: string
   scores: Score[]
