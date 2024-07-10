@@ -1,0 +1,25 @@
+{
+  "name": "rest-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "sst dev",
+    "prepare-layer": "node prepare-layer.js",
+    "build": "sst build",
+    "deploy": "npm run prepare-layer && sst deploy",
+    "remove": "sst remove",
+    "console": "sst console",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "sst": "^2.43.3",
+    "aws-cdk-lib": "2.142.1",
+    "constructs": "10.3.0",
+    "typescript": "^5.5.3",
+    "@tsconfig/node18": "^18.2.4"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}
