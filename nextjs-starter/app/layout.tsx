@@ -20,7 +20,7 @@ export default function RootLayout({
       <div></div>
       <body className={inter.className + " overflow-y-clip max-h-screen"}>
         <NavBar />
-        <div style={{ height: "calc(100vh - 500px)" }}>{children}</div>
+        <div style={{ height: "calc(100vh - 60px)" }}>{children}</div>
       </body>
     </html>
   );
