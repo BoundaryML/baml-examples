@@ -1,16 +1,18 @@
 class Citation {
-  documentTitle string
-  sourceLink string
-  relevantTextFromDocument string
   number int @description(#"
     the index in this array
+  "#)
+  documentTitle string
+  sourceLink string
+  relevantTextFromDocument string @description(#"
+    The relevant text from the document that supports the answer. This is a citation. You must quote it EXACTLY as it appears in the document with any special characters it contains. The text should be contiguous and not broken up. You may NOT summarize or skip sentences. If you need to skip a sentence, start a new citation instead.
   "#)
 }
 
 class Answer {
   answersInText Citation[]
   answer string @description(#"
-    When you answer, ensure to add citations from the documents in the CONTEXT with a number that corresponds to the answersInText array.
+    An answer to the user's question that MUST cite sources from the answersInText. Like [0]. If multiple citations are needed, write them like [0][1][2].
   "#)
 }
 

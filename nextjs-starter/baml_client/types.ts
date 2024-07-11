@@ -53,10 +53,10 @@ export interface CharacterDescription {
 }
 
 export interface Citation {
+  number: number
   documentTitle: string
   sourceLink: string
   relevantTextFromDocument: string
-  number: number
   
 }
 

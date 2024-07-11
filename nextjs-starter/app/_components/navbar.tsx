@@ -9,9 +9,9 @@ export const NavBar = () => {
   const pathname = usePathname();
   console.log(pathname);
   return (
-    <div>
-      <nav
-        className="flex flex-row  w-full h-[50px] px-4 border-b-[1px] border-b-primary/10"
+    <div className="">
+      <div
+        className="flex flex-row w-full h-[50px] px-4 border-b-[1px] border-b-primary/10 "
         aria-label="Global"
       >
         <div className="flex w-1/3">
@@ -75,7 +75,7 @@ export const NavBar = () => {
             <div>Join the community</div>
           </Link>
         </div>
-      </nav>
+      </div>
     </div>
   );
 };
