@@ -26,9 +26,13 @@ export type RecursivePartialNull<T> = T extends object
   : T | null;
 
 export class BamlClient {
+  private runtime: BamlRuntime
+  private ctx_manager: BamlCtxManager
   private stream_client: BamlStreamClient
 
-  constructor(private runtime: BamlRuntime, private ctx_manager: BamlCtxManager) {
+  constructor(runtime: BamlRuntime, ctx_manager: BamlCtxManager) {
+    this.runtime = runtime
+    this.ctx_manager = ctx_manager
     this.stream_client = new BamlStreamClient(runtime, ctx_manager)
   }
 
@@ -46,7 +50,7 @@ export class BamlClient {
       {
         "input": input
       },
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as BookAnalysis
@@ -61,7 +65,7 @@ export class BamlClient {
       {
         "question": question,"context": context
       },
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as Answer
@@ -76,7 +80,7 @@ export class BamlClient {
       {
         "convo": convo
       },
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as Category[]
@@ -91,7 +95,7 @@ export class BamlClient {
       {
         "first_image": first_image
       },
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as CharacterDescription
@@ -106,7 +110,7 @@ export class BamlClient {
       {
         "input": input
       },
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as Person
@@ -121,7 +125,7 @@ export class BamlClient {
       {
         "raw_text": raw_text
       },
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as Resume
@@ -136,7 +140,7 @@ export class BamlClient {
       {
         "raw_text": raw_text
       },
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as string
@@ -151,7 +155,7 @@ export class BamlClient {
       {
         "arg": arg
       },
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return raw.parsed() as Recipe
@@ -173,14 +177,14 @@ class BamlStreamClient {
         "input": input
       },
       undefined,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<RecursivePartialNull<BookAnalysis>, BookAnalysis>(
       raw,
       (a): a is RecursivePartialNull<BookAnalysis> => a,
       (a): a is BookAnalysis => a,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
   }
@@ -195,14 +199,14 @@ class BamlStreamClient {
         "question": question,"context": context
       },
       undefined,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<RecursivePartialNull<Answer>, Answer>(
       raw,
       (a): a is RecursivePartialNull<Answer> => a,
       (a): a is Answer => a,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
   }
@@ -217,14 +221,14 @@ class BamlStreamClient {
         "convo": convo
       },
       undefined,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<RecursivePartialNull<Category[]>, Category[]>(
       raw,
       (a): a is RecursivePartialNull<Category[]> => a,
       (a): a is Category[] => a,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
   }
@@ -239,14 +243,14 @@ class BamlStreamClient {
         "first_image": first_image
       },
       undefined,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<RecursivePartialNull<CharacterDescription>, CharacterDescription>(
       raw,
       (a): a is RecursivePartialNull<CharacterDescription> => a,
       (a): a is CharacterDescription => a,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
   }
@@ -261,14 +265,14 @@ class BamlStreamClient {
         "input": input
       },
       undefined,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<RecursivePartialNull<Person>, Person>(
       raw,
       (a): a is RecursivePartialNull<Person> => a,
       (a): a is Person => a,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
   }
@@ -283,14 +287,14 @@ class BamlStreamClient {
         "raw_text": raw_text
       },
       undefined,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<RecursivePartialNull<Resume>, Resume>(
       raw,
       (a): a is RecursivePartialNull<Resume> => a,
       (a): a is Resume => a,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
   }
@@ -305,14 +309,14 @@ class BamlStreamClient {
         "raw_text": raw_text
       },
       undefined,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<RecursivePartialNull<string>, string>(
       raw,
       (a): a is RecursivePartialNull<string> => a,
       (a): a is string => a,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
   }
@@ -327,14 +331,14 @@ class BamlStreamClient {
         "arg": arg
       },
       undefined,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
     return new BamlStream<RecursivePartialNull<Recipe>, Recipe>(
       raw,
       (a): a is RecursivePartialNull<Recipe> => a,
       (a): a is Recipe => a,
-      this.ctx_manager.get(),
+      this.ctx_manager.cloneContext(),
       __baml_options__?.tb?.__tb(),
     )
   }

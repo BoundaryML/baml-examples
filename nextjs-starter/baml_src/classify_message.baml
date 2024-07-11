@@ -4,7 +4,7 @@ enum Category {
     TechnicalSupport
     AccountIssue
     Question
-}
+} 
 
 class Message {
   role Role
