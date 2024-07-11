@@ -4,15 +4,15 @@ class Citation {
   "#)
   documentTitle string
   sourceLink string
-  relevantTextFromDocument string @description(#"
+  relevantTextFromDocument string @alias("relevantSentenceFromDocument") @description(#"
     The relevant text from the document that supports the answer. This is a citation. You must quote it EXACTLY as it appears in the document with any special characters it contains. The text should be contiguous and not broken up. You may NOT summarize or skip sentences. If you need to skip a sentence, start a new citation instead.
   "#)
 }
 
 class Answer {
-  answersInText Citation[]
+  answersInText Citation[] @alias("relevantSentencesFromText")
   answer string @description(#"
-    An answer to the user's question that MUST cite sources from the answersInText. Like [0]. If multiple citations are needed, write them like [0][1][2].
+    An answer to the user's question that MUST cite sources from the relevantSentencesFromText. Like [0]. If multiple citations are needed, write them like [0][1][2].
   "#)
 }
 

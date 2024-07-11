@@ -29,7 +29,9 @@ export default function Home() {
   const [showRaw, setShowRaw] = useState(false);
 
   const getCitationContext = (citation: Citation, documents: Document[]) => {
-    const document = documents.find((d) => d.title === citation.documentTitle);
+    const document = documents.find(
+      (d) => d.title.toLowerCase() === citation.documentTitle.toLowerCase()
+    );
     if (!document) return null;
 
     const citedText = citation.relevantTextFromDocument;
@@ -110,7 +112,7 @@ export default function Home() {
         if (!citation) return part;
         const context = getCitationContext(citation, documents);
         return (
-          <HoverCard openDelay={100} closeDelay={0} key={index}>
+          <HoverCard openDelay={100} closeDelay={100} key={index}>
             <HoverCardTrigger asChild>
               <sup
                 className={clsx(
@@ -207,20 +209,21 @@ export default function Home() {
               </span>
             </div>
 
-            {answer?.answer ? (
-              <div className="max-h-[400px] overflow-y-auto border-[1px] border-border break-words whitespace-pre-wrap py-3 rounded-md max-w-[600px] text-sm text-foreground/80">
-                {renderAnswer(answer.answer)}
-              </div>
-            ) : (
-              <div className="min-h-[50px]">
-                {isLoading && (
-                  <div>
-                    Gathering {numCitations > 0 ? numCitations.toString() : ""}{" "}
-                    citations...
-                  </div>
-                )}
-              </div>
-            )}
+            <div className="max-h-[400px] overflow-y-auto border-[1px] border-border break-words whitespace-pre-wrap py-3 rounded-md max-w-[600px] text-sm text-foreground/80 shadow-md bg-slate-100 px-3">
+              {answer?.answer ? (
+                <>{renderAnswer(answer.answer)}</>
+              ) : (
+                <div className="min-h-[50px]">
+                  {isLoading && (
+                    <div>
+                      Gathering{" "}
+                      {numCitations > 0 ? numCitations.toString() : ""}{" "}
+                      citations...
+                    </div>
+                  )}
+                </div>
+              )}{" "}
+            </div>
 
             <div>
               <div className="flex flex-col w-full">
