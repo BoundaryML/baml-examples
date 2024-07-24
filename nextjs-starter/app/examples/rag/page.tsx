@@ -132,9 +132,9 @@ export default function Home() {
                 <>
                   <h4 className="font-semibold mb-2">{context.title}</h4>
                   <p>
-                    {context.before}
+                    ...{context.before}
                     <span className="bg-yellow-200">{context.cited}</span>
-                    {context.after}
+                    {context.after}...
                   </p>
                   <a
                     href={createWikipediaLink(context.link, context.cited)}
