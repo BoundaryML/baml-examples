@@ -13,7 +13,7 @@
 # flake8: noqa: E501,F401
 # pylint: disable=unused-import,line-too-long
 # fmt: off
-from typing import Any, List, Optional, TypeVar, Union, TypedDict, Type
+from typing import Any, Dict, List, Optional, TypeVar, Union, TypedDict, Type
 from typing_extensions import NotRequired
 import pprint
 
@@ -22,6 +22,7 @@ from pydantic import BaseModel, ValidationError, create_model
 
 from . import partial_types, types
 from .type_builder import TypeBuilder
+from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME
 
 OutputType = TypeVar('OutputType')
 
@@ -39,8 +40,9 @@ def coerce(cls: Type[BaseModel], parsed: Any) -> Any:
 # Define the TypedDict with optional parameters having default values
 class BamlCallOptions(TypedDict, total=False):
     tb: NotRequired[TypeBuilder]
+    client_registry: NotRequired[baml_py.baml_py.ClientRegistry]
 
-class BamlClient:
+class BamlSyncClient:
     __runtime: baml_py.BamlRuntime
     __ctx_manager: baml_py.BamlCtxManager
     __stream_client: "BamlStreamClient"
@@ -55,7 +57,7 @@ class BamlClient:
       return self.__stream_client
 
     
-    async def AnalyzeBooks(
+    def AnalyzeBooks(
         self,
         input: str,
         baml_options: BamlCallOptions = {},
@@ -65,19 +67,45 @@ class BamlClient:
         tb = __tb__._tb
       else:
         tb = None
+      __cr__ = baml_options.get("client_registry", None)
 
-      raw = await self.__runtime.call_function(
+      raw = self.__runtime.call_function_sync(
         "AnalyzeBooks",
         {
           "input": input,
         },
         self.__ctx_manager.get(),
         tb,
+        __cr__,
       )
       mdl = create_model("AnalyzeBooksReturnType", inner=(types.BookAnalysis, ...))
       return coerce(mdl, raw.parsed())
     
-    async def ClassifyMessage(
+    def AnswerQuestion(
+        self,
+        question: str,context: types.Context,
+        baml_options: BamlCallOptions = {},
+    ) -> types.Answer:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.call_function_sync(
+        "AnswerQuestion",
+        {
+          "question": question,"context": context,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      mdl = create_model("AnswerQuestionReturnType", inner=(types.Answer, ...))
+      return coerce(mdl, raw.parsed())
+    
+    def ClassifyMessage(
         self,
         convo: List[types.Message],
         baml_options: BamlCallOptions = {},
@@ -87,19 +115,21 @@ class BamlClient:
         tb = __tb__._tb
       else:
         tb = None
+      __cr__ = baml_options.get("client_registry", None)
 
-      raw = await self.__runtime.call_function(
+      raw = self.__runtime.call_function_sync(
         "ClassifyMessage",
         {
           "convo": convo,
         },
         self.__ctx_manager.get(),
         tb,
+        __cr__,
       )
       mdl = create_model("ClassifyMessageReturnType", inner=(List[types.Category], ...))
       return coerce(mdl, raw.parsed())
     
-    async def DescribeCharacter(
+    def DescribeCharacter(
         self,
         first_image: baml_py.Image,
         baml_options: BamlCallOptions = {},
@@ -109,19 +139,21 @@ class BamlClient:
         tb = __tb__._tb
       else:
         tb = None
+      __cr__ = baml_options.get("client_registry", None)
 
-      raw = await self.__runtime.call_function(
+      raw = self.__runtime.call_function_sync(
         "DescribeCharacter",
         {
           "first_image": first_image,
         },
         self.__ctx_manager.get(),
         tb,
+        __cr__,
       )
       mdl = create_model("DescribeCharacterReturnType", inner=(types.CharacterDescription, ...))
       return coerce(mdl, raw.parsed())
     
-    async def ExtractResume(
+    def ExtractResume(
         self,
         raw_text: str,
         baml_options: BamlCallOptions = {},
@@ -131,18 +163,22 @@ class BamlClient:
         tb = __tb__._tb
       else:
         tb = None
+      __cr__ = baml_options.get("client_registry", None)
 
-      raw = await self.__runtime.call_function(
+      raw = self.__runtime.call_function_sync(
         "ExtractResume",
         {
           "raw_text": raw_text,
         },
         self.__ctx_manager.get(),
         tb,
+        __cr__,
       )
       mdl = create_model("ExtractResumeReturnType", inner=(types.Resume, ...))
       return coerce(mdl, raw.parsed())
     
+
+
 
 class BamlStreamClient:
     __runtime: baml_py.BamlRuntime
@@ -157,14 +193,15 @@ class BamlStreamClient:
         self,
         input: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlStream[partial_types.BookAnalysis, types.BookAnalysis]:
+    ) -> baml_py.BamlSyncStream[partial_types.BookAnalysis, types.BookAnalysis]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb
       else:
         tb = None
+      __cr__ = baml_options.get("client_registry", None)
 
-      raw = self.__runtime.stream_function(
+      raw = self.__runtime.stream_function_sync(
         "AnalyzeBooks",
         {
           "input": input,
@@ -172,31 +209,66 @@ class BamlStreamClient:
         None,
         self.__ctx_manager.get(),
         tb,
+        __cr__,
       )
 
       mdl = create_model("AnalyzeBooksReturnType", inner=(types.BookAnalysis, ...))
       partial_mdl = create_model("AnalyzeBooksPartialReturnType", inner=(partial_types.BookAnalysis, ...))
 
-      return baml_py.BamlStream[partial_types.BookAnalysis, types.BookAnalysis](
+      return baml_py.BamlSyncStream[partial_types.BookAnalysis, types.BookAnalysis](
         raw,
         lambda x: coerce(partial_mdl, x),
         lambda x: coerce(mdl, x),
         self.__ctx_manager.get(),
+      )
+    
+    def AnswerQuestion(
+        self,
+        question: str,context: types.Context,
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlSyncStream[partial_types.Answer, types.Answer]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function_sync(
+        "AnswerQuestion",
+        {
+          "question": question,
+          "context": context,
+        },
+        None,
+        self.__ctx_manager.get(),
         tb,
+        __cr__,
+      )
+
+      mdl = create_model("AnswerQuestionReturnType", inner=(types.Answer, ...))
+      partial_mdl = create_model("AnswerQuestionPartialReturnType", inner=(partial_types.Answer, ...))
+
+      return baml_py.BamlSyncStream[partial_types.Answer, types.Answer](
+        raw,
+        lambda x: coerce(partial_mdl, x),
+        lambda x: coerce(mdl, x),
+        self.__ctx_manager.get(),
       )
     
     def ClassifyMessage(
         self,
         convo: List[types.Message],
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlStream[List[Optional[types.Category]], List[types.Category]]:
+    ) -> baml_py.BamlSyncStream[List[Optional[types.Category]], List[types.Category]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb
       else:
         tb = None
+      __cr__ = baml_options.get("client_registry", None)
 
-      raw = self.__runtime.stream_function(
+      raw = self.__runtime.stream_function_sync(
         "ClassifyMessage",
         {
           "convo": convo,
@@ -204,31 +276,32 @@ class BamlStreamClient:
         None,
         self.__ctx_manager.get(),
         tb,
+        __cr__,
       )
 
       mdl = create_model("ClassifyMessageReturnType", inner=(List[types.Category], ...))
       partial_mdl = create_model("ClassifyMessagePartialReturnType", inner=(List[Optional[types.Category]], ...))
 
-      return baml_py.BamlStream[List[Optional[types.Category]], List[types.Category]](
+      return baml_py.BamlSyncStream[List[Optional[types.Category]], List[types.Category]](
         raw,
         lambda x: coerce(partial_mdl, x),
         lambda x: coerce(mdl, x),
         self.__ctx_manager.get(),
-        tb,
       )
     
     def DescribeCharacter(
         self,
         first_image: baml_py.Image,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlStream[partial_types.CharacterDescription, types.CharacterDescription]:
+    ) -> baml_py.BamlSyncStream[partial_types.CharacterDescription, types.CharacterDescription]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb
       else:
         tb = None
+      __cr__ = baml_options.get("client_registry", None)
 
-      raw = self.__runtime.stream_function(
+      raw = self.__runtime.stream_function_sync(
         "DescribeCharacter",
         {
           "first_image": first_image,
@@ -236,31 +309,32 @@ class BamlStreamClient:
         None,
         self.__ctx_manager.get(),
         tb,
+        __cr__,
       )
 
       mdl = create_model("DescribeCharacterReturnType", inner=(types.CharacterDescription, ...))
       partial_mdl = create_model("DescribeCharacterPartialReturnType", inner=(partial_types.CharacterDescription, ...))
 
-      return baml_py.BamlStream[partial_types.CharacterDescription, types.CharacterDescription](
+      return baml_py.BamlSyncStream[partial_types.CharacterDescription, types.CharacterDescription](
         raw,
         lambda x: coerce(partial_mdl, x),
         lambda x: coerce(mdl, x),
         self.__ctx_manager.get(),
-        tb,
       )
     
     def ExtractResume(
         self,
         raw_text: str,
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlStream[partial_types.Resume, types.Resume]:
+    ) -> baml_py.BamlSyncStream[partial_types.Resume, types.Resume]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb
       else:
         tb = None
+      __cr__ = baml_options.get("client_registry", None)
 
-      raw = self.__runtime.stream_function(
+      raw = self.__runtime.stream_function_sync(
         "ExtractResume",
         {
           "raw_text": raw_text,
@@ -268,16 +342,20 @@ class BamlStreamClient:
         None,
         self.__ctx_manager.get(),
         tb,
+        __cr__,
       )
 
       mdl = create_model("ExtractResumeReturnType", inner=(types.Resume, ...))
       partial_mdl = create_model("ExtractResumePartialReturnType", inner=(partial_types.Resume, ...))
 
-      return baml_py.BamlStream[partial_types.Resume, types.Resume](
+      return baml_py.BamlSyncStream[partial_types.Resume, types.Resume](
         raw,
         lambda x: coerce(partial_mdl, x),
         lambda x: coerce(mdl, x),
         self.__ctx_manager.get(),
-        tb,
       )
     
+
+b = BamlSyncClient(DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX)
+
+__all__ = ["b"]

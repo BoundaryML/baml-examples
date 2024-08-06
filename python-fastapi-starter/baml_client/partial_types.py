@@ -15,8 +15,8 @@
 # fmt: off
 import baml_py
 from enum import Enum
-from pydantic import BaseModel
-from typing import List, Optional, Union
+from pydantic import BaseModel, ConfigDict
+from typing import Dict, List, Optional, Union
 
 from . import types
 
@@ -28,49 +28,98 @@ from . import types
 ###############################################################################
 
 
+class Answer(BaseModel):
+    
+    
+    answersInText: List["Citation"]
+    answer: Optional[str] = None
+
 class BookAnalysis(BaseModel):
+    
+    
     bookNames: List[Optional[str]]
     popularityOverTime: List["PopularityOverTime"]
 
 class CharacterDescription(BaseModel):
+    
+    
     name: Optional[str] = None
     clothingItems: List[Optional[str]]
     hairColor: Optional[str] = None
     smellDescription: Optional[str] = None
     spells: List["Spells"]
 
+class Citation(BaseModel):
+    
+    
+    documentTitle: Optional[str] = None
+    sourceLink: Optional[str] = None
+    relevantTextFromDocument: Optional[str] = None
+    number: Optional[int] = None
+
+class Context(BaseModel):
+    
+    
+    documents: List["Document"]
+
+class Document(BaseModel):
+    
+    
+    title: Optional[str] = None
+    text: Optional[str] = None
+    link: Optional[str] = None
+
 class DynamicOutput(BaseModel):
+    
+    model_config = ConfigDict(extra='allow')
+    
 
 class Education(BaseModel):
+    
+    
     school: Optional[str] = None
     degree: Optional[str] = None
     year: Optional[int] = None
 
 class Message(BaseModel):
+    
+    
     role: Optional[types.Role] = None
     content: Optional[str] = None
 
 class PopularityOverTime(BaseModel):
+    
+    
     bookName: Optional[str] = None
     scores: List["Score"]
 
 class Ranking(BaseModel):
+    
+    
     bookName: Optional[str] = None
     score: Optional[int] = None
 
 class Resume(BaseModel):
+    
+    
     name: Optional[str] = None
     education: List["Education"]
     skills: List[Optional[str]]
 
 class Score(BaseModel):
+    
+    
     year: Optional[int] = None
     score: Optional[int] = None
 
 class Spells(BaseModel):
+    
+    
     name: Optional[str] = None
     description: Optional[str] = None
 
 class WordCount(BaseModel):
+    
+    
     bookName: Optional[str] = None
     count: Optional[int] = None

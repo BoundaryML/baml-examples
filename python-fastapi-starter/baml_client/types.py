@@ -16,7 +16,7 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 
 class Category(str, Enum):
@@ -32,6 +32,12 @@ class Role(str, Enum):
     Customer = "Customer"
     Assistant = "Assistant"
 
+class Answer(BaseModel):
+    
+    
+    answersInText: List["Citation"]
+    answer: str
+
 class BookAnalysis(BaseModel):
     
     
@@ -46,6 +52,26 @@ class CharacterDescription(BaseModel):
     hairColor: Optional[str] = None
     smellDescription: str
     spells: List["Spells"]
+
+class Citation(BaseModel):
+    
+    
+    documentTitle: str
+    sourceLink: str
+    relevantTextFromDocument: str
+    number: int
+
+class Context(BaseModel):
+    
+    
+    documents: List["Document"]
+
+class Document(BaseModel):
+    
+    
+    title: str
+    text: str
+    link: str
 
 class DynamicOutput(BaseModel):
     

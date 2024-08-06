@@ -19,7 +19,7 @@ from baml_py.type_builder import FieldType, TypeBuilder as _TypeBuilder, ClassPr
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
         super().__init__(classes=set(
-          ["BookAnalysis","CharacterDescription","DynamicOutput","Education","Message","PopularityOverTime","Ranking","Resume","Score","Spells","WordCount",]
+          ["Answer","BookAnalysis","CharacterDescription","Citation","Context","Document","DynamicOutput","Education","Message","PopularityOverTime","Ranking","Resume","Score","Spells","WordCount",]
         ), enums=set(
           ["Category","Role",]
         ))
@@ -27,6 +27,7 @@ class TypeBuilder(_TypeBuilder):
 
 
     @property
+    
     def DynamicOutput(self) -> "DynamicOutputBuilder":
         return DynamicOutputBuilder(self)
 

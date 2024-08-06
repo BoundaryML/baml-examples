@@ -10,7 +10,7 @@
     "generate": "baml-cli generate --from ./baml_src"
   },
   "dependencies": {
-    "@boundaryml/baml": "^0.51.3",
+    "@boundaryml/baml": "^0.53.0",
     "@headlessui/react": "^2.0.4",
     "@headlessui/tailwindcss": "^0.2.1",
     "@radix-ui/react-avatar": "^1.0.4",
