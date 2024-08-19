@@ -1,6 +1,6 @@
 # baml-examples
 
-This repository contains BAML example code used in the Documentation [Tutorials](https://boundaryml.com/v3/guides/hello_world/level0). Check them out first to get started!
+This repository contains BAML example code used in the Documentation [Tutorials](https://docs.boundaryml.com/docs/get-started/quickstart/python). Check them out first to get started!
 
 Clone the repo to see syntax highlights using the BAML VSCode extension!
 
