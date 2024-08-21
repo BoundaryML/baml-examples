@@ -1,5 +1,3 @@
-import CopyPlugin from "copy-webpack-plugin";
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -17,6 +15,15 @@ const nextConfig = {
         },
       ],
     });
+
+    // You can ignore this block -- it's just to run the baml compiler on the web for the PDF demo:
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+      syncWebAssembly: true,
+      layers: true,
+      topLevelAwait: true,
+    };
 
     return config;
   },

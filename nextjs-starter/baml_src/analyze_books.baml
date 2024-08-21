@@ -7,12 +7,12 @@ class Score {
     1 to 100
   "#)
 }
-
+ 
 class PopularityOverTime {
   bookName string
   scores Score[]
 }
-
+ 
 class WordCount {
   bookName string
   count int

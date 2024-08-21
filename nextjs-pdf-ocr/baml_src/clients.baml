@@ -13,7 +13,7 @@ client<llm> GPT4Turbo {
     api_key env.OPENAI_API_KEY
   }
 }
- 
+
 client<llm> GPT4o {
   provider openai
   options {

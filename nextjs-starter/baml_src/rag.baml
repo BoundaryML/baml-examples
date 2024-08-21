@@ -15,7 +15,7 @@ class Answer {
     An answer to the user's question that MUST cite sources from the relevantSentencesFromText. Like [0]. If multiple citations are needed, write them like [0][1][2].
   "#)
 }
-
+ 
 
 class Document {
   title string
