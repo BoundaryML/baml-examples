@@ -1,12 +1,18 @@
 "use client";
 import { answerQuestion } from "@/app/actions/streamable_objects";
-import { Answer, BookAnalysis, Citation, Document } from "@/baml_client";
-import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Answer,
+  BookAnalysis,
+  Citation,
+  Context,
+  Document,
+} from "@/baml_client";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { readStreamableValue } from "ai/rsc";
 import Link from "next/link";
 import { useState } from "react";
+import { useStream } from "@/app/_hooks/useStream";
 import { ClipLoader } from "react-spinners";
 import { unstable_noStore as noStore } from "next/cache";
 import {
@@ -21,12 +27,14 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export default function Home() {
-  const [text, setText] = useState(`What are 3 spacex achievements?
-  `);
-  const [answer, setAnswer] = useState<Partial<Answer> | undefined>(undefined);
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [showRaw, setShowRaw] = useState(false);
+  const [text, setText] = useState(`What are 3 spacex achievements?`);
+  const {
+    partialData: answer,
+    isLoading,
+    isError,
+    error,
+    mutate,
+  } = useStream(answerQuestion);
 
   const getCitationContext = (citation: Citation, documents: Document[]) => {
     const document = documents.find(
@@ -106,11 +114,11 @@ export default function Home() {
       if (part.match(/^\[\d+\]$/)) {
         const citationNumber = part.slice(1, -1);
         const citation = answer?.answersInText?.find(
-          (c) => c.number === parseInt(citationNumber)
+          (c) => c?.number === parseInt(citationNumber)
         );
 
         if (!citation) return part;
-        const context = getCitationContext(citation, documents);
+        const context = getCitationContext(citation as Citation, documents);
         return (
           <HoverCard openDelay={100} closeDelay={100} key={index}>
             <HoverCardTrigger asChild>
@@ -184,14 +192,7 @@ export default function Home() {
             />
             <Button
               disabled={isLoading}
-              onClick={async () => {
-                const { object } = await answerQuestion(text);
-                setIsLoading(true);
-                for await (const partialObject of readStreamableValue(object)) {
-                  setAnswer(partialObject);
-                }
-                setIsLoading(false);
-              }}
+              onClick={() => mutate(text, { documents })}
               className="w-fit flex mt-2"
             >
               Submit
@@ -200,13 +201,10 @@ export default function Home() {
           <div className="flex flex-col gap-y-4">
             <div className="font-semibold flex flex-row text-lg gap-x-1">
               <div>Answer</div>
-              <span>
-                {isLoading && (
-                  <div className="">
-                    <ClipLoader color="gray" size={12} />
-                  </div>
-                )}
-              </span>
+              {isLoading && <div>Loading...</div>}
+              {isError && (
+                <div className="text-red-500">Error: {error?.message}</div>
+              )}
             </div>
 
             <div className="max-h-[400px] overflow-y-auto border-[1px] border-border break-words whitespace-pre-wrap py-3 rounded-md max-w-[600px] text-sm text-foreground/80 shadow-md bg-slate-100 px-3">
@@ -217,12 +215,14 @@ export default function Home() {
                   {isLoading && (
                     <div>
                       Gathering{" "}
-                      {numCitations > 0 ? numCitations.toString() : ""}{" "}
+                      {(answer?.answersInText?.length ?? 0) > 0
+                        ? answer?.answersInText?.length.toString()
+                        : ""}{" "}
                       citations...
                     </div>
                   )}
                 </div>
-              )}{" "}
+              )}
             </div>
 
             <div>
@@ -235,15 +235,17 @@ export default function Home() {
                       className="whitespace-pre-wrap break-words flex flex-row"
                     >
                       <div className="">
-                        <span className="font-semibold">[{answer.number}]</span>{" "}
-                        {answer.relevantTextFromDocument}
+                        <span className="font-semibold">
+                          [{answer?.number}]
+                        </span>{" "}
+                        {answer?.relevantTextFromDocument}
                         {/* links can cause exceptions if the link is incomplete, so we render it at the end */}
                         {!isLoading && (
                           <Link
-                            href={answer.sourceLink ?? "/"}
+                            href={answer?.sourceLink ?? "/"}
                             className="text-blue-500 pl-1"
                           >
-                            {answer.documentTitle}
+                            {answer?.documentTitle}
                           </Link>
                         )}
                       </div>

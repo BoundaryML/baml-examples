@@ -29,22 +29,27 @@ async function streamHelper<T>(
 ): Promise<{
   object: StreamableValue<Partial<T>>;
 }> {
+  console.log("streamHelper", streamFunction, args);
   const stream = createStreamableValue<T>();
 
-  try {
-    const bamlStream = streamFunction(...args);
-    for await (const event of bamlStream) {
-      console.log("event", event);
-      if (event) {
-        stream.update(event as T);
+  (async () => {
+    try {
+      const bamlStream = streamFunction(...args);
+      for await (const event of bamlStream) {
+        console.log("event", event);
+        if (event) {
+          stream.update(event as T);
+        }
       }
+      const response = await bamlStream.getFinalResponse();
+      stream.update(response as T);
+      stream.done();
+    } catch (err) {
+      const errorMsg = truncateError((err as Error).message);
+      console.log("error", errorMsg);
+      stream.error(errorMsg);
     }
-    stream.done();
-  } catch (err) {
-    const errorMsg = truncateError((err as Error).message);
-    console.log("error", errorMsg);
-    stream.error(errorMsg);
-  }
+  })();
 
   return { object: stream.value };
 }
@@ -67,7 +72,11 @@ function createStreamableFunction<T extends StreamableFunctionName>(
   >;
 }> {
   return async (...args) =>
-    streamHelper(streamableFunctions[functionName] as any, ...args);
+    // need to bind to b.stream since we lose context here.
+    streamHelper(
+      streamableFunctions[functionName].bind(b.stream) as any,
+      ...args
+    );
 }
 
 export const extractResume = createStreamableFunction("extractResume");

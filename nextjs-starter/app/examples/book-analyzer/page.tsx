@@ -60,7 +60,7 @@ The Lord of the Rings`);
                 const { object } = await analyzeBook(text);
                 setIsLoading(true);
                 for await (const partialObject of readStreamableValue(object)) {
-                  setBookAnalysis(partialObject);
+                  setBookAnalysis(partialObject as Partial<BookAnalysis>);
                 }
                 setIsLoading(false);
               }}

@@ -43,7 +43,7 @@ export default function Home() {
 
                 const { object } = await getRecipe(text);
                 for await (const partialObject of readStreamableValue(object)) {
-                  setAnswer(partialObject);
+                  setAnswer(partialObject as Partial<Recipe>);
                 }
                 setIsLoading(false);
               }}
