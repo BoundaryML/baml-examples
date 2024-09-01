@@ -42,7 +42,7 @@ function ExtractResume(raw_text: string) -> Resume {
     {{ ctx.output_format(prefix=null) }}
   "#
 }
-
+ 
 
 function ExtractResumeNoStructure(raw_text: string) -> string {
   client GPT4o

@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { extractResume, extractUnstructuredResume } from "../../actions/streamable_objects";
+import {
+  extractResume,
+  extractUnstructuredResume,
+} from "../../actions/streamable_objects";
 import { readStreamableValue } from "ai/rsc";
 import { Resume } from "@/baml_client";
 import { Input } from "@/components/ui/input";
@@ -10,21 +13,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { ClipLoader } from "react-spinners";
 import { unstable_noStore as noStore } from "next/cache";
-import {
-  Tab,
-  TabGroup,
-  TabList,
-  TabPanel,
-  TabPanels,
-} from "@tremor/react";
-import { Callout } from '@tremor/react';
+import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@tremor/react";
+import { Callout } from "@tremor/react";
+import { useStream } from "@/app/_hooks/useStream";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 export default function Home() {
-  // noStore();
-
-  const [resume, setExtractedResume] = useState<Partial<Resume>>();
-  const [unstrucutredResume, setUnstructuredResume] = useState<string | undefined>();
   const [resumeText, setResumeText] = useState<string>(
     `
 Vaibhav Gupta
@@ -103,7 +97,21 @@ Aug 2012-May 2015
 Bachelors of Engineering, Integrated Circuits
 Bachelors of Computer Science`
   );
-  const [isLoading, setIsLoading] = useState(false);
+
+  const {
+    data: resume,
+    partialData: partialResume,
+    isLoading: isLoadingStructured,
+    mutate: extractStructuredResume,
+  } = useStream(extractResume);
+
+  const {
+    data: unstructuredResume,
+    isLoading: isLoadingUnstructured,
+    mutate: extractUnstructuredResumeData,
+  } = useStream(extractUnstructuredResume);
+
+  const isLoading = isLoadingStructured || isLoadingUnstructured;
 
   return (
     <div className="flex flex-col h-full w-full justify-center items-center mt-14">
@@ -122,31 +130,9 @@ Bachelors of Computer Science`
           <Button
             disabled={isLoading}
             onClick={async () => {
-              const structrued = async () => {
-                try {
-                  const { object } = await extractResume(resumeText);
-                  for await (const partialObject of readStreamableValue(object)) {
-                    setExtractedResume(partialObject);
-                  }
-                } catch (e) {
-                  console.error("Error extracting resume", e);
-                }
-              };
-
-              const unstructured = async () => {
-                try {
-                  const { object } = await extractUnstructuredResume(resumeText);
-                  for await (const partialObject of readStreamableValue(object)) {
-                    setUnstructuredResume(partialObject);
-                  }
-                } catch (e) {
-                  console.error("Error extracting resume", e);
-                }
-              }
-
-              setIsLoading(true);
-              await Promise.all([structrued(), unstructured()]);
-              setIsLoading(false);
+              console.log("clicked");
+              extractStructuredResume(resumeText);
+              extractUnstructuredResumeData(resumeText);
             }}
           >
             {isLoading && <ClipLoader color="gray" />} Extract Resume!
@@ -163,35 +149,39 @@ Bachelors of Computer Science`
               <TabPanel>
                 <Card className="bg-white rounded-lg shadow-md dark:bg-gray-800 dark:text-gray-200 w-[500px] h-[600px] p-4 overflow-y-auto">
                   <pre className="whitespace-pre-wrap">
-                    {unstrucutredResume}
+                    {unstructuredResume}
                   </pre>
                 </Card>
               </TabPanel>
               <TabPanel>
-
                 <Card className="bg-white rounded-lg shadow-md dark:bg-gray-800 dark:text-gray-200 w-[500px] h-[600px] overflow-y-auto p-4">
                   <CardContent>
                     <div>
-                      {
-                        resume?.why_hire && resume.why_hire.length > 0 && (
-                          <div className="bg-grp-2 rounded-md">
-                            <Callout
-                              className="mt-4"
-                              title="Why we should hire this person"
-                              color="teal"
-                            >
-                              {resume.why_hire.map((reason, index) => (
-                                <p key={index}>{reason}</p>
-                              ))}
-                            </Callout>
-
-                          </div>
-                        )
-                      }
-                      <h1 className="text-lg font-medium">Name: {resume?.name || "<unknown>"}</h1>
+                      {resume?.why_hire && resume.why_hire.length > 0 && (
+                        <div className="bg-grp-2 rounded-md">
+                          <Callout
+                            className="mt-4"
+                            title="Why we should hire this person"
+                            color="teal"
+                          >
+                            {resume.why_hire.map((reason, index) => (
+                              <p key={index}>{reason}</p>
+                            ))}
+                          </Callout>
+                        </div>
+                      )}
+                      <h1 className="text-lg font-medium">
+                        Name: {resume?.name || "<unknown>"}
+                      </h1>
                       <div className="flex text-xs flex-col">
                         {resume?.links?.map((link, index) => (
-                          <a key={index} href={link} target="_blank" rel="noreferrer" className="text-blue-400 underline">
+                          <a
+                            key={index}
+                            href={link ?? ""}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-400 underline"
+                          >
                             {link}
                           </a>
                         ))}
@@ -213,19 +203,22 @@ Bachelors of Computer Science`
                       <ul className="space-y-2 mt-2">
                         {(resume?.experience ?? []).map((item, index) => (
                           <li key={index}>
-                            <h4 className="font-medium">{item.title} @ {item.company}</h4>
-                            {item.company_url && (
-                              <a href={item.company_url} target="_blank" rel="noreferrer" className="text-blue-400 underline">
-                                {item.company_url}
+                            <h4 className="font-medium">
+                              {item?.title} @ {item?.company}
+                            </h4>
+                            {item?.company_url && (
+                              <a
+                                href={item?.company_url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-400 underline"
+                              >
+                                {item?.company_url}
                               </a>
                             )}
                             <ul className="grid grid-cols-2 gap-2 mt-2 text-muted-foreground text-xs">
                               {(item?.description ?? []).map((desc, num) => (
-                                <li
-                                  key={num}
-                                >
-                                  {desc}
-                                </li>
+                                <li key={num}>{desc}</li>
                               ))}
                             </ul>
                           </li>
@@ -237,12 +230,12 @@ Bachelors of Computer Science`
                       <ul className="space-y-2 mt-2">
                         {(resume?.education ?? []).map((item, index) => (
                           <li key={index}>
-                            <h4 className="font-medium">{item.degree}</h4>
+                            <h4 className="font-medium">{item?.degree}</h4>
                             <p className="text-gray-500 dark:text-gray-400">
-                              {item.school}
+                              {item?.school}
                             </p>
                             <p className="text-gray-500 dark:text-gray-400">
-                              {item.year}
+                              {item?.year}
                             </p>
                           </li>
                         ))}

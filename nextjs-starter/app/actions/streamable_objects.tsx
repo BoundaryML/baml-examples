@@ -1,103 +1,79 @@
 "use server";
-import { createStreamableValue } from "ai/rsc";
+import { createStreamableValue, StreamableValue } from "ai/rsc";
 import { Answer, b, BookAnalysis, Resume, Recipe } from "@/baml_client";
 import { documents } from "@/lib/rag-docs";
+import { BamlStream } from "@boundaryml/baml";
 
-export async function extractResume(resumeText: string) {
-  // Note, we will expose these partial types soon
-  const resumeStream = createStreamableValue<Partial<Resume>, any>();
+const MAX_ERROR_LENGTH = 3000;
+const TRUNCATION_MARKER = "[ERROR_LOG_TRUNCATED]";
 
-  (async () => {
-    const stream = b.stream.ExtractResume(resumeText);
+function truncateError(error: string): string {
+  if (error.length <= MAX_ERROR_LENGTH) return error;
+  const halfLength = Math.floor(
+    (MAX_ERROR_LENGTH - TRUNCATION_MARKER.length) / 2
+  );
+  return (
+    error.slice(0, halfLength) + TRUNCATION_MARKER + error.slice(-halfLength)
+  );
+}
+// type NullablePartial<T> = {
+//   [P in keyof T]?: T[P] | null;
+// };
+type BamlStreamReturnType<T> = T extends BamlStream<infer P, any> ? P : never;
 
-    for await (const event of stream) {
-      console.log(event);
+type StreamFunction<T> = (...args: any[]) => BamlStream<T, any>;
+
+async function streamHelper<T>(
+  streamFunction: (...args: any[]) => BamlStream<T, any>,
+  ...args: Parameters<typeof streamFunction>
+): Promise<{
+  object: StreamableValue<Partial<T>>;
+}> {
+  const stream = createStreamableValue<T>();
+
+  try {
+    const bamlStream = streamFunction(...args);
+    for await (const event of bamlStream) {
+      console.log("event", event);
       if (event) {
-        resumeStream.update(event as Partial<Resume>);
+        stream.update(event as T);
       }
     }
+    stream.done();
+  } catch (err) {
+    const errorMsg = truncateError((err as Error).message);
+    console.log("error", errorMsg);
+    stream.error(errorMsg);
+  }
 
-    resumeStream.done();
-  })();
-
-  return { object: resumeStream.value };
+  return { object: stream.value };
 }
 
-export async function extractUnstructuredResume(resumeText: string) {
-  // Note, we will expose these partial types soon
-  const resumeStream = createStreamableValue<string, any>();
+const streamableFunctions = {
+  extractResume: b.stream.ExtractResume,
+  extractUnstructuredResume: b.stream.ExtractResumeNoStructure,
+  analyzeBook: b.stream.AnalyzeBooks,
+  answerQuestion: b.stream.AnswerQuestion,
+  getRecipe: b.stream.GetRecipe,
+} as const;
 
-  (async () => {
-    const stream = b.stream.ExtractResumeNoStructure(resumeText);
+type StreamableFunctionName = keyof typeof streamableFunctions;
 
-    for await (const event of stream) {
-      console.log(event);
-      if (event) {
-        resumeStream.update(event);
-      }
-    }
-
-    resumeStream.done();
-  })();
-
-  return { object: resumeStream.value };
+function createStreamableFunction<T extends StreamableFunctionName>(
+  functionName: T
+): (...args: Parameters<(typeof streamableFunctions)[T]>) => Promise<{
+  object: StreamableValue<
+    Partial<BamlStreamReturnType<ReturnType<(typeof streamableFunctions)[T]>>>
+  >;
+}> {
+  return async (...args) =>
+    streamHelper(streamableFunctions[functionName] as any, ...args);
 }
 
-export async function analyzeBook(booklist: string) {
-  // Note, we will expose these partial types soon
-  const bookStream = createStreamableValue<Partial<BookAnalysis>, any>();
-
-  (async () => {
-    const stream = b.stream.AnalyzeBooks(booklist);
-
-    for await (const event of stream) {
-      if (event) {
-        bookStream.update(event as Partial<BookAnalysis>);
-      }
-    }
-
-    bookStream.done();
-  })();
-
-  return {
-    object: bookStream.value,
-  };
-}
-
-export async function answerQuestion(question: string) {
-  const answerStream = createStreamableValue<Partial<Answer>, any>();
-
-  (async () => {
-    const stream = b.stream.AnswerQuestion(question, {
-      documents: documents,
-    });
-
-    for await (const event of stream) {
-      if (event) {
-        answerStream.update(event as Partial<Answer>);
-      }
-    }
-
-    answerStream.done();
-  })();
-
-  return { object: answerStream.value };
-}
-
-export async function getRecipe(arg: string) {
-  const answerStream = createStreamableValue<Partial<Recipe>, any>();
-
-  (async () => {
-    const stream = b.stream.GetRecipe(arg);
-
-    for await (const event of stream) {
-      if (event) {
-        answerStream.update(event as Partial<Recipe>);
-      }
-    }
-
-    answerStream.done();
-  })();
-
-  return { object: answerStream.value };
-}
+export const extractResume = createStreamableFunction("extractResume");
+export const extractUnstructuredResume = createStreamableFunction(
+  "extractUnstructuredResume"
+);
+export const analyzeBook = createStreamableFunction("analyzeBook");
+export const answerQuestion = createStreamableFunction("answerQuestion");
+export const getRecipe = createStreamableFunction("getRecipe");

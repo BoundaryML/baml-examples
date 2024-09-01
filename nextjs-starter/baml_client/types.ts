@@ -24,6 +24,13 @@ export enum Category {
   Question = "Question",
 }
 
+export enum ReplyType {
+  HUMOROUS = "HUMOROUS",
+  SARCASTIC = "SARCASTIC",
+  CURIOUS = "CURIOUS",
+  INTELLECTUAL = "INTELLECTUAL",
+}
+
 export enum Role {
   Customer = "Customer",
   Assistant = "Assistant",
@@ -140,6 +147,12 @@ export interface Recipe {
   
 }
 
+export interface Reply {
+  reply_text: string
+  reply_type: ReplyType
+  
+}
+
 export interface Resume {
   name: string
   links: string[]
@@ -159,6 +172,12 @@ export interface Score {
 export interface Spells {
   name: string
   description: string
+  
+}
+
+export interface Tweet {
+  user: string
+  text: string
   
 }
 

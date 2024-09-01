@@ -34,7 +34,7 @@ OR open your browser in http://localhost:3000 to see the streaming examples
 
 This is already done in this repo in `nextjs.config.mjs`, but you can do the same in your own repository.
 
-1. Change nextConfig to enable the experimental feature: `serverComponentsExternalPackages: ["@boundaryml/baml-core"]`
+1. Change nextConfig to enable the experimental feature: `serverComponentsExternalPackages: ["@boundaryml/baml"]`
 2. For testing locally you'll also need to modify the webpack config:
 
 ```
