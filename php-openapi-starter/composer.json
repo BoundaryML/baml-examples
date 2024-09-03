@@ -1,0 +1,18 @@
+{
+    "name": "boundaryml/php-openapi-starter",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Boundaryml\\PhpOpenapiStarter\\": "src/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "baml_client"
+        }
+    ],
+    "require": {
+        "boundaryml/baml-client": "*@dev"
+    }
+}
