@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "../../golang-openapi-starter"
+		},
+		{
+			"path": "../../java-gradle-openapi-starter"
+		},
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"java.compile.nullAnalysis.mode": "automatic"
+	}
+}
