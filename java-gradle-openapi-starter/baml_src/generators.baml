@@ -15,5 +15,5 @@ generator target {
     // 'baml-cli generate' will run this after generating openapi.yaml, to generate your OpenAPI client
     // This command will be run from within $output_dir
     
-    on_generate "openapi-generator generate -i openapi.yaml -g java -o . --additional-properties generateApiTests=false,generateModelTests=false && cd ../baml_client && mvn clean install"
+    on_generate "openapi-generator generate -i openapi.yaml -g java -o . --additional-properties java8=true && cd ../baml_client && mvn clean install"
 }
