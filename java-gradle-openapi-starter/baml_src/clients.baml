@@ -24,12 +24,19 @@ client<llm> Sonnet {
   }
 }
 
-
 client<llm> Haiku {
   provider anthropic
   options {
     model "claude-3-haiku-20240307"
     api_key env.ANTHROPIC_API_KEY
+  }
+}
+
+client<llm> Gemini {
+  provider google-ai
+  options {
+    model "gemini-1.5-pro-001"
+    api_key env.GOOGLE_API_KEY
   }
 }
 

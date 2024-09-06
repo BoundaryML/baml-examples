@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "baml_client",
-                "reference": "9336bf2f3f52cd13647598a6cbcdc59bee4533bc"
+                "reference": "d615d58737573c6b24d4c89cb9193ebb4903b9bc"
             },
             "require": {
                 "ext-curl": "*",
@@ -29,12 +29,12 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "OpenAPI\\Client\\": "lib/"
+                    "BamlClient\\": "lib/"
                 }
             },
             "autoload-dev": {
                 "psr-4": {
-                    "OpenAPI\\Client\\Test\\": "test/"
+                    "BamlClient\\Test\\": "test/"
                 }
             },
             "license": [

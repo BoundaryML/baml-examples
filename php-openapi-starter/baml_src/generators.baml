@@ -15,5 +15,5 @@ generator target {
     // 'baml-cli generate' will run this after generating openapi.yaml, to generate your OpenAPI client
     // This command will be run from within $output_dir
     
-    on_generate "openapi-generator generate -i openapi.yaml -g php -o . --global-property apiTests=false,modelTests=false --additional-properties composerPackageName=boundaryml/baml-client"
+    on_generate "openapi-generator generate -i openapi.yaml -g php -o . --additional-properties composerPackageName=boundaryml/baml-client,invokerPackage=BamlClient"
 }

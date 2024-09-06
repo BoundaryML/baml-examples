@@ -15,5 +15,6 @@ generator target {
     // 'baml-cli generate' will run this after generating openapi.yaml, to generate your OpenAPI client
     // This command will be run from within $output_dir
     
-    on_generate "openapi-generator generate -i openapi.yaml -g rust -o . --global-property apiTests=false,modelTests=false --additional-properties packageName=baml-client"
+    on_generate "openapi-generator generate -i openapi.yaml -g rust -o . --additional-properties packageName=baml-client"
+
 }

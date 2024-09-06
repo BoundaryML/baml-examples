@@ -10,6 +10,5 @@ OPENAI_API_KEY=... npx @boundaryml/baml dev
 ```
 
 ```bash
-go get openapi  # you only need to run this once
 go run main.go
 ```
