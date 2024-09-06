@@ -168,6 +168,8 @@ EOD;
         } else {
             echo "<pre> Departure is an unknown type: " . print_r($departure, true) . "</pre>";
         }
+
+        echo "<pre> Baggage rules: " . print_r($resp->getBaggageRules(), true) . "</pre>";
     } elseif ($resp->getReceiptId() != null) {
         echo "<pre> ParseEmail was a GroceryReceipt: " . print_r($resp, true) . "</pre>";
     } else {

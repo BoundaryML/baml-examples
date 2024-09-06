@@ -111,6 +111,8 @@ Best regards,
                         dbg!(airport);
                     }
                 }
+
+                dbg!(flight_confirmation.baggage_rules);
             }
             ParseEmailResponse::GroceryReceipt(grocery_receipt) => {
                 dbg!(grocery_receipt);

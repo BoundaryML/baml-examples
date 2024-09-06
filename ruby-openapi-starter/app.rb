@@ -99,6 +99,8 @@ when BamlClient::FlightConfirmation
   when String
     puts "Departure airport string (i.e. airport code): #{departure}"
   end
+
+  pp resp.baggage_rules
 when BamlClient::GroceryReceipt
   puts "Grocery receipt: #{resp.store_name}"
 end
