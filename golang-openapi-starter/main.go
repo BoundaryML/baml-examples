@@ -152,6 +152,8 @@ Best regards,
 			if departure.String != nil {
 				log.Printf("Departure String: %v\n", *departure.String)
 			}
+
+			log.Printf("Baggage restrictions: %v\n", flight.BaggageRules)
 		}
 
 		if resp2.GroceryReceipt != nil {
