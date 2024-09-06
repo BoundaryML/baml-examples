@@ -58,6 +58,35 @@ func main() {
 		log.Printf("Education: %v, %v, %v\n", edu.School, edu.Degree, edu.Year)
 	}
 
+	// Example 3: classification / enums
+	{
+		req := baml.ClassifyMessageRequest{
+			Message: *baml.NewMessage("Alice", "I can't access my account using my login credentials. I havent received the promised reset password email. Please help."),
+		}
+		resp, _, err := b.ClassifyMessage(context.Background()).ClassifyMessageRequest(req).Execute()
+		if err != nil {
+			log.Printf("Error when calling ClassifyMessage: %v\n", err)
+			return
+		}
+		log.Printf("ClassifyMessage: %v\n", *resp)
+		if *resp == baml.CATEGORY_ACCOUNT_ISSUE {
+			log.Printf(" Category: Account Issue\n")
+		}
+		if *resp == baml.CATEGORY_CANCEL_ORDER {
+			log.Printf(" Category: Cancel Order\n")
+		}
+		if *resp == baml.CATEGORY_QUESTION {
+			log.Printf(" Category: Question\n")
+		}
+		if *resp == baml.CATEGORY_REFUND {
+			log.Printf(" Category: Refund\n")
+		}
+		if *resp == baml.CATEGORY_TECHNICAL_SUPPORT {
+			log.Printf(" Category: Technical Support\n")
+		}
+	}
+
+	// Example 4: working with unions
 	{
 		input := `
 	Dear [Your Name],
@@ -98,7 +127,7 @@ Best regards,
 		resp2, _, _ := b.ParseEmail(context.Background()).ParseEmailRequest(baml.ParseEmailRequest{
 			Input: input,
 		}).Execute()
-		log.Printf("Response for ParseEmail: %v\n", resp2)
+		log.Printf("Parsed email: %v\n", resp2)
 
 		if resp2.BookOrder != nil {
 			log.Printf("BookOrder: %v\n", resp2.BookOrder)
