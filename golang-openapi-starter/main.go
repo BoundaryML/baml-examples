@@ -58,7 +58,7 @@ func main() {
 		log.Printf("Education: %v, %v, %v\n", edu.School, edu.Degree, edu.Year)
 	}
 
-	// Example 3: classification / enums
+	// Example 3: see 03-classify-user-msg.baml
 	{
 		req := baml.ClassifyMessageRequest{
 			Message: *baml.NewMessage("Alice", "I can't access my account using my login credentials. I havent received the promised reset password email. Please help."),
@@ -86,7 +86,7 @@ func main() {
 		}
 	}
 
-	// Example 4: working with unions
+	// Example 4: working with unions, see parse-email.baml
 	{
 		input := `
 	Dear [Your Name],

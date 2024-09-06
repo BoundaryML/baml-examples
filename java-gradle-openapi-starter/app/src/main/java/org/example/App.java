@@ -3,11 +3,11 @@
  */
 package org.example;
 
-import org.openapitools.client.ApiClient;
-import org.openapitools.client.ApiException;
-import org.openapitools.client.Configuration;
-import org.openapitools.client.model.*;
-import org.openapitools.client.api.DefaultApi;
+import com.boundaryml.baml_client.ApiClient;
+import com.boundaryml.baml_client.ApiException;
+import com.boundaryml.baml_client.Configuration;
+import com.boundaryml.baml_client.model.*;
+import com.boundaryml.baml_client.api.DefaultApi;
 
 public class App {
     public static void main(String[] args) throws Exception {
@@ -53,8 +53,30 @@ public class App {
             e.printStackTrace();
         }
 
+        // Example 3: see 03-classify-user-msg.baml
+        {
+            var message = new Message().userName("Alice").message("I can't access my account using my login credentials. I havent received the promised reset password email. Please help.");
+            var req = new ClassifyMessageRequest().message(message);
+            var resp = b.classifyMessage(req);
+            System.out.printf("ClassifyMessage: %s\n", resp);
+            if (resp == Category.ACCOUNT_ISSUE) {
+                System.out.printf("Category: Account Issue\n");
+            }
+            if (resp == Category.CANCEL_ORDER) {
+                System.out.printf("Category: Cancel Order\n");
+            }
+            if (resp == Category.QUESTION) {
+                System.out.printf("Category: Question\n");
+            }
+            if (resp == Category.REFUND) {
+                System.out.printf("Category: Refund\n");
+            }
+            if (resp == Category.TECHNICAL_SUPPORT) {
+                System.out.printf("Category: Technical Support\n");
+            }
+        }
 
-        // Example 3: see parse-email.baml
+        // Example 4: working with unions, see parse-email.baml
         {
             var input = """
 Dear [Your Name],
@@ -113,7 +135,7 @@ Best regards,
                 var departure = flight.getDeparture().getActualInstance();
                 if (departure instanceof FlightEndpoint) {
                     var departureEndpoint = (FlightEndpoint) departure;
-                    System.out.printf("Departure airport and city: %s in %s\n", departureEndpoint.getAirport(), departureEndpoint.getCity());
+                    System.out.printf("Departure airport and city: %s in %s\n", departureEndpoint.getAirport(), departureEndpoint.getTime());
                 } else if (departure instanceof String) {
                     System.out.printf("Departure airport string (i.e. airport code): %s\n", (String) departure);
                 }
