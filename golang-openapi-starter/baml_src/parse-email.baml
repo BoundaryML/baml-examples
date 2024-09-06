@@ -1,6 +1,4 @@
 class BookOrder {
-  @@description("book order")
-
   orderId string @description(#"
     The ID of the book order
   "#)
@@ -16,8 +14,6 @@ class BookOrder {
 }
 
 class FlightEndpoint {
-  @@description("flight endpoint")
-
   airport string @description(#"
     Airport code (three letters)
   "#)
@@ -25,8 +21,6 @@ class FlightEndpoint {
 }
 
 class FlightConfirmation {
-  @@description("flight confirmation")
-
   confirmationNumber string @description(#"
     The flight confirmation number
   "#)
@@ -39,11 +33,21 @@ class FlightConfirmation {
   seatNumber string @description(#"
     The seat number assigned on the flight
   "#)
+  baggageRules map<string, BaggageRestriction> @description(#"
+    The baggage rules for the flight
+  "#)
+}
+
+class BaggageRestriction {
+  weightLimit float @description(#"
+    The weight of the baggage in kilograms
+  "#)
+  count int @description(#"
+    The number of bags allowed
+  "#)
 }
 
 class GroceryReceipt {
-  @@description("grocery receipt")
-
   receiptId string @description(#"
     The ID of the grocery receipt
   "#)

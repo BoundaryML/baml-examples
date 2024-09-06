@@ -139,6 +139,8 @@ Best regards,
                 } else if (departure instanceof String) {
                     System.out.printf("Departure airport string (i.e. airport code): %s\n", (String) departure);
                 }
+
+                System.out.printf("Baggage restrictions: %s\n", flight.getBaggageRules());
             } else if (resp instanceof GroceryReceipt) {
                 var receipt = (GroceryReceipt) resp;
                 System.out.printf("Grocery receipt: %s\n", receipt.getStoreName());
