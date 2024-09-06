@@ -10,5 +10,5 @@ OPENAI_API_KEY=... npx @boundaryml/baml dev
 ```
 
 ```bash
-go run main.go
+ruby -Ilib/baml_client app.rb
 ```

@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "golang-openapi-starter"
+		},
+		{
+			"path": "java-gradle-openapi-starter"
+		},
+		{
+			"path": "ruby-openapi-starter"
+		},
+		{
+			"path": "rust-openapi-starter"
+		}
+	],
+	"settings": {
+		"java.compile.nullAnalysis.mode": "automatic"
+	}
+}
