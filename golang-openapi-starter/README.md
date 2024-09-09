@@ -6,7 +6,7 @@
 To run this example, run these two commands in separate windows:
 
 ```bash
-OPENAI_API_KEY=... npx @boundaryml/baml dev
+OPENAI_API_KEY=... npx @boundaryml/baml dev --preview
 ```
 
 ```bash
