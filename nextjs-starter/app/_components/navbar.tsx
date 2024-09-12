@@ -14,7 +14,7 @@ export const NavBar = () => {
         className="flex flex-row w-full h-[50px] px-4 border-b-[1px] border-b-primary/10 "
         aria-label="Global"
       >
-        <div className="flex w-1/3">
+        <div className="flex w-1/3 gap-x-3">
           {" "}
           {pathname !== "/" && (
             <Link className={buttonVariants({ variant: "ghost" })} href="/">
@@ -55,6 +55,7 @@ export const NavBar = () => {
                 </a>
               ))} */}
           </>
+
           <Link
             className="flex flex-row items-center gap-x-2 text-base font-light leading-6 text-gray-700 hover:text-gray-500"
             href="https://github.com/boundaryml/baml"

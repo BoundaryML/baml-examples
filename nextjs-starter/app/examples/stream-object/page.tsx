@@ -5,7 +5,7 @@ import { b } from "@/baml_client";
 import {
   extractResume,
   extractUnstructuredResume,
-} from "../../actions/streamable_objects";
+} from "../../actions/extract";
 import { readStreamableValue } from "ai/rsc";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -124,9 +124,9 @@ Bachelors of Computer Science`
   console.log("isERror ", isError);
 
   return (
-    <div className="flex flex-col h-full w-full justify-center items-center pt-14 overflow-y-auto max-w-[100vw">
+    <div className="flex flex-col h-full w-full justify-start items-center pt-14 overflow-y-auto max-w-[100vw]">
       <div className="font-semibold text-3xl">Streaming Objects with BAML</div>
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center">
         {isError && (
           <div className="mt-4 max-w-2xl max-h-[100px] overflow-y-auto text-red-500">
             <p className="font-bold">Error</p>
@@ -139,17 +139,17 @@ Bachelors of Computer Science`
             </p>
           </div>
         )}
-        <div className="flex items-center justify-center h-full gap-8">
-          <div className="w-full max-w-2xl">
+        <div className="flex items-start justify-starth-full gap-8">
+          <div className="w-full max-w-2xl justify-start flex flex-col items-start">
             <Textarea
               value={resumeText}
               disabled={isLoading}
               onChange={(e) => setResumeText(e.target.value)}
               placeholder="Enter your resume text here..."
-              className="h-[600px] p-4 text-lg w-[400px] bg-white rounded-lg shadow-md dark:bg-gray-800 dark:text-gray-200"
+              className="h-[500px] mt-12 p-4 text-lg w-[400px] bg-white rounded-lg shadow-md dark:bg-gray-800 dark:text-gray-200"
             />
           </div>
-          <div className="flex-col items-center justify-center">
+          <div className="flex-col items-center justify-center h-full mt-24">
             <Button
               disabled={isLoading}
               onClick={async () => {
@@ -162,7 +162,7 @@ Bachelors of Computer Science`
             </Button>
           </div>
 
-          <div className="h-full">
+          <div className="h-full ">
             <TabGroup>
               <TabList className="mt-4">
                 <Tab>Unstructured</Tab>

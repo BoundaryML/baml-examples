@@ -1,5 +1,5 @@
 "use client";
-import { answerQuestion } from "@/app/actions/streamable_objects";
+import { answerQuestion } from "@/app/actions/extract";
 import {
   Answer,
   BookAnalysis,

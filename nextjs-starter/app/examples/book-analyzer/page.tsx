@@ -17,7 +17,7 @@ import {
   PopularityOverTime,
   Ranking,
 } from "@/baml_client";
-import { analyzeBook } from "@/app/actions/streamable_objects";
+import { analyzeBook } from "@/app/actions/extract";
 import { readStreamableValue } from "ai/rsc";
 import { ClipLoader } from "react-spinners";
 import { Switch } from "@/components/ui/switch";

@@ -1,27 +1,16 @@
-from dotenv import load_dotenv
-
-load_dotenv()
-
 from fastapi import FastAPI
 import os
 from baml_client import b
 from baml_client.types import Message, Role
-from fastapi.responses import StreamingResponse
 
-app = FastAPI()
 
-@app.get("/")
-def index():
-    return {"Hello": "World"}
-
-@app.get("/extract_resume")
 async def extract_resume():
 
     classify_response = await b.ClassifyMessage(
         convo=[Message(role=Role.Customer, content="I would like to cancel my order.")],
     )
     print(f"Got {classify_response} from BAML")
-    
+
     resume = """
     John Doe
     1234 Elm Street 
@@ -50,11 +39,10 @@ async def extract_resume():
     - Developed new features for the messenger app
     - Wrote code in Python and Java
     """
+
     async def stream_resume(resume):
         stream = b.stream.ExtractResume(resume)
         async for chunk in stream:
             yield str(chunk.model_dump_json()) + "\n"
-                
+
     return StreamingResponse(stream_resume(resume), media_type="text/plain")
-
-

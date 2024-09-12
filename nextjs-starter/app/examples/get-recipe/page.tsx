@@ -1,5 +1,5 @@
 "use client";
-import { answerQuestion, getRecipe } from "@/app/actions/streamable_objects";
+import { answerQuestion, getRecipe } from "@/app/actions/extract";
 import { Ingredient, PartIngredient, PartSteps, Recipe } from "@/baml_client";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
