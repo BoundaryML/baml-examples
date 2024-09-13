@@ -3,6 +3,7 @@ import {
   StreamableValue as BaseStreamableValue,
 } from "ai/rsc";
 import { BamlStream } from "@boundaryml/baml";
+import { b } from "@/baml_client"; // You can change the path of this.
 
 // ------------------------------
 // Helper functions
@@ -66,7 +67,8 @@ export function makeStreamable<
   object: BaseStreamableValue<StreamableValue<ReturnType<BamlStreamFunc>>>;
 }> {
   return async (...args) => {
-    const stream = func(...args);
+    const boundFunc = func.bind(b.stream);
+    const stream = boundFunc(...args);
     return streamHelper(stream);
   };
 }
