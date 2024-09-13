@@ -19,9 +19,7 @@ header('X-Accel-Buffering: no');
 use BamlClient\Api\DefaultApi;
 use BamlClient\Model\ExtractResumeRequest;
 use BamlClient\Model\BamlImage;
-use BamlClient\Model\BamlImageUrl;
 use BamlClient\Model\ExtractReceiptRequest;
-use BamlClient\Model\ExtractReceiptRequestReceipt;
 use BamlClient\Model\Message;
 use BamlClient\Model\ClassifyMessageRequest;
 use BamlClient\Model\Category;
@@ -35,10 +33,10 @@ $apiInstance = new DefaultApi( new GuzzleHttp\Client());
 
 // Example 1: see 01-extract-receipt.baml
 (function() use ($apiInstance) {
-    $receipt = new ExtractReceiptRequestReceipt();
-    $receipt->setUrl( "https://i.redd.it/adzt4bz4llfc1.jpeg");
+    $image = new BamlImage();
+    $image->setUrl( "https://i.redd.it/adzt4bz4llfc1.jpeg");
     $req = new ExtractReceiptRequest();
-    $req->setReceipt($receipt);
+    $req->setReceipt($image);
     $resp = $apiInstance->extractReceipt($req);
     echo "<pre> ExtractReceipt: " . print_r($resp, true) . "</pre>";
 })();

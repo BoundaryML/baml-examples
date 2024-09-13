@@ -14,11 +14,9 @@ func main() {
 	{
 		imageUrl := "https://i.redd.it/adzt4bz4llfc1.jpeg"
 		req := baml.ExtractReceiptRequest{
-			Receipt: baml.ExtractReceiptRequestReceipt{
-				BamlImage: &baml.BamlImage{
-					BamlImageUrl: &baml.BamlImageUrl{
-						Url: imageUrl,
-					},
+			Receipt: baml.BamlImage{
+				BamlImageUrl: &baml.BamlImageUrl{
+					Url: imageUrl,
 				},
 			},
 		}
