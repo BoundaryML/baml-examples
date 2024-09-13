@@ -1,5 +1,5 @@
 use anyhow::Result;
-use baml_client::models::{BamlImage, BamlImageUrl, ExtractReceiptRequest, ExtractReceiptRequestReceipt, ExtractResumeRequest, FlightConfirmationDeparture, FlightConfirmationFlightNumber, ParseEmailRequest, ParseEmailResponse};
+use baml_client::models::{BamlImage, BamlImageUrl, ExtractReceiptRequest, ExtractResumeRequest, FlightConfirmationDeparture, FlightConfirmationFlightNumber, ParseEmailRequest, ParseEmailResponse};
 use baml_client::apis::default_api as b;
 
 #[tokio::main]
@@ -11,10 +11,8 @@ async fn main() -> Result<()> {
         let image = BamlImage::BamlImageUrl(BamlImageUrl {
             url: "https://i.redd.it/adzt4bz4llfc1.jpeg".to_string(),
             media_type: None,
-        }.into()).into();
-        let req = ExtractReceiptRequest {
-            receipt: ExtractReceiptRequestReceipt::BamlImage(image).into(),
-        };
+        });
+        let req = ExtractReceiptRequest { receipt: image };
         let resp = b::extract_receipt(&config, req).await?;
         dbg!(resp);
     }
@@ -90,7 +88,7 @@ Best regards,
                 dbg!(book_order);
             }
             ParseEmailResponse::FlightConfirmation(flight_confirmation) => {
-                match flight_confirmation.flight_number.as_ref() {
+                match flight_confirmation.flight_number {
                     FlightConfirmationFlightNumber::Integer(flight_number) => {
                         println!("flight number as int");
                         dbg!(flight_number);
@@ -101,7 +99,7 @@ Best regards,
                     }
                 }
 
-                match flight_confirmation.departure.as_ref() {
+                match flight_confirmation.departure {
                     FlightConfirmationDeparture::FlightEndpoint(endpoint) => {
                         println!("departure as FlightEndpoint");
                         dbg!(endpoint);

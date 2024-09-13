@@ -17,8 +17,7 @@ public class App {
         // Example 1: see 01-extract-receipt.baml
         {
             var image = new BamlImage(new BamlImageUrl().url("https://i.redd.it/adzt4bz4llfc1.jpeg"));
-            var receipt = new ExtractReceiptRequestReceipt(image); 
-            var req = (new ExtractReceiptRequest().receipt(receipt));
+            var req = new ExtractReceiptRequest().receipt(image);
             var resp = b.extractReceipt(req);
             System.out.println(resp);
         }

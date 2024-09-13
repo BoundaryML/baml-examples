@@ -20,7 +20,7 @@ class Item {
  
 // This is our LLM function we can call in Python or Typescript
 // the receipt can be an image OR text here!
-function ExtractReceipt(receipt: image | string) -> Receipt {
+function ExtractReceipt(receipt: image) -> Receipt {
   // see clients.baml
   client GPT4o
   prompt #"
