@@ -21,7 +21,7 @@ class TypeBuilder(_TypeBuilder):
         super().__init__(classes=set(
           ["Answer","BookAnalysis","CharacterDescription","Citation","Context","Document","DynamicOutput","Education","Message","PopularityOverTime","Ranking","Resume","Score","Spells","WordCount",]
         ), enums=set(
-          ["Category","Role",]
+          ["Category","MyEnum","Role",]
         ))
 
 

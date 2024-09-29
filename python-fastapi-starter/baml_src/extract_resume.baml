@@ -6,8 +6,18 @@ class Resume {
 
 class Education {
   school string
-  degree string
+  degree string @description(#"
+    A description of this field, if necessary.
+  "#)
   year int
+}
+
+enum MyEnum {
+  VALUE1 @description(#"
+    Some optional description to describe the schema to the LLM.
+  "#)
+  VALUE2
+  VALUE3
 }
 
 
@@ -21,8 +31,7 @@ function ExtractResume(raw_text: string) -> Resume {
     {{raw_text}}
     ---
 
-    Output JSON format (only include these fields, and no others):
-    {{ ctx.output_format(prefix=null) }}
+    {{ ctx.output_format }}
   "#
 }
  
