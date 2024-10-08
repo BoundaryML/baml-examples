@@ -5,6 +5,9 @@ from baml_client.types import Message, Role
 from fastapi.responses import StreamingResponse
 import asyncio
 
+from dotenv import load_dotenv
+load_dotenv()
+
 app = FastAPI()
 
 @app.get("/")
