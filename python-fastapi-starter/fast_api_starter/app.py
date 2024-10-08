@@ -6,18 +6,14 @@ from fastapi.responses import StreamingResponse
 import asyncio
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 app = FastAPI()
 
+
 @app.get("/")
 async def extract_resume():
-
-    classify_response = b.ClassifyMessage(
-        convo=[Message(role=Role.Customer, content="I would like to cancel my order.")],
-    )
-    print(f"Got {classify_response} from BAML")
-
     resume = """
     John Doe
     1234 Elm Street 
@@ -52,6 +48,8 @@ async def extract_resume():
         for chunk in stream:
             print(f"Got chunk: {chunk}")
             yield (str(chunk.model_dump_json()) + "\n")
-            await asyncio.sleep(0)  # from https://github.com/encode/starlette/discussions/1776#discussioncomment-3207518
+            await asyncio.sleep(
+                0
+            )  # from https://github.com/encode/starlette/discussions/1776#discussioncomment-3207518
 
     return StreamingResponse(stream_resume(resume), media_type="text/event-stream")
