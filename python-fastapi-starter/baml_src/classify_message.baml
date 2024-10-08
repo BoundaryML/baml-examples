@@ -15,6 +15,7 @@ enum Role {
   Customer
   Assistant
 }
+
   
   
 template_string PrintMessage(msg: Message, prefix: string?) #"

@@ -33,18 +33,18 @@ trio = ["trio (>=0.26.1)"]
 
 [[package]]
 name = "baml-py"
-version = "0.57.0"
+version = "0.59.0"
 description = "BAML python bindings (pyproject.toml)"
 optional = false
 python-versions = "*"
 files = [
-    {file = "baml_py-0.57.0-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:fb62cbde8b4526d9a98a253a800c9dd203dfcf3d70550eea42ca9d4d66c1ad71"},
-    {file = "baml_py-0.57.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:3513afa230ffd83d3b07f630eaf810ed696d06035e3550ddd4a014719f6e0c7e"},
-    {file = "baml_py-0.57.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:06e94ccee42efbc37c28f7067bdbf7c57853f7cd2fc244afdfb3f64a254d462a"},
-    {file = "baml_py-0.57.0-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:9309f8c1b32d9b9a863ffb0e0809a36de556e424bb5572ba5f496d762ecf1131"},
-    {file = "baml_py-0.57.0-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:b966db87707b17c16f83681372e33b1dc14125312b96a056f20b7010a3b9a959"},
-    {file = "baml_py-0.57.0-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:c67c73e4c0148035c7405245f633e29a1fe229df3c57d307d30bdfc863471b99"},
-    {file = "baml_py-0.57.0-cp38-abi3-win_amd64.whl", hash = "sha256:ca5d9641c6e14033f446ad3e41d17e65a78d079bc3f48cb32a05575fd2ed47af"},
+    {file = "baml_py-0.59.0-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:d041162aa7ba9358454eb572358f0e07b84791f17598efaa74800edc532f9e85"},
+    {file = "baml_py-0.59.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:fda6ea905ebd40aaabb631d30bcb03f66e6c1c0b6fc7893cf5abf4e5a463976c"},
+    {file = "baml_py-0.59.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0b7eff48e002dc3f19c6378109bc05866e24b6f866375485db9762a5aac72403"},
+    {file = "baml_py-0.59.0-cp38-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:333bbb89c3f06a774f9105f2b09f20d358c7dd311c3520d9d57bd8842934a5fe"},
+    {file = "baml_py-0.59.0-cp38-abi3-musllinux_1_1_aarch64.whl", hash = "sha256:b9bd57bdeb8ea5f5d0d70630444ae6ba0700c0b54fbe74e70c111b30dcac7b7b"},
+    {file = "baml_py-0.59.0-cp38-abi3-musllinux_1_1_x86_64.whl", hash = "sha256:844ab58e3e3249d0c531eb092e6a9c13366abd6e97664446f03c1d719f17358d"},
+    {file = "baml_py-0.59.0-cp38-abi3-win_amd64.whl", hash = "sha256:64e6781a529b7765c5545addb3f4b2cbed9c74727965578b36c29a7cc74f5d7f"},
 ]
 
 [[package]]
@@ -74,22 +74,23 @@ files = [
 
 [[package]]
 name = "fastapi"
-version = "0.110.3"
+version = "0.115.0"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "fastapi-0.110.3-py3-none-any.whl", hash = "sha256:fd7600612f755e4050beb74001310b5a7e1796d149c2ee363124abdfa0289d32"},
-    {file = "fastapi-0.110.3.tar.gz", hash = "sha256:555700b0159379e94fdbfc6bb66a0f1c43f4cf7060f25239af3d84b63a656626"},
+    {file = "fastapi-0.115.0-py3-none-any.whl", hash = "sha256:17ea427674467486e997206a5ab25760f6b09e069f099b96f5b55a32fb6f1631"},
+    {file = "fastapi-0.115.0.tar.gz", hash = "sha256:f93b4ca3529a8ebc6fc3fcf710e5efa8de3df9b41570958abf1d97d843138004"},
 ]
 
 [package.dependencies]
 pydantic = ">=1.7.4,<1.8 || >1.8,<1.8.1 || >1.8.1,<2.0.0 || >2.0.0,<2.0.1 || >2.0.1,<2.1.0 || >2.1.0,<3.0.0"
-starlette = ">=0.37.2,<0.38.0"
+starlette = ">=0.37.2,<0.39.0"
 typing-extensions = ">=4.8.0"
 
 [package.extras]
-all = ["email_validator (>=2.0.0)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)", "jinja2 (>=2.11.2)", "orjson (>=3.2.1)", "pydantic-extra-types (>=2.0.0)", "pydantic-settings (>=2.0.0)", "python-multipart (>=0.0.7)", "pyyaml (>=5.3.1)", "ujson (>=4.0.1,!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0)", "uvicorn[standard] (>=0.12.0)"]
+all = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)", "jinja2 (>=2.11.2)", "orjson (>=3.2.1)", "pydantic-extra-types (>=2.0.0)", "pydantic-settings (>=2.0.0)", "python-multipart (>=0.0.7)", "pyyaml (>=5.3.1)", "ujson (>=4.0.1,!=4.0.2,!=4.1.0,!=4.2.0,!=4.3.0,!=5.0.0,!=5.1.0)", "uvicorn[standard] (>=0.12.0)"]
+standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "httpx (>=0.23.0)", "jinja2 (>=2.11.2)", "python-multipart (>=0.0.7)", "uvicorn[standard] (>=0.12.0)"]
 
 [[package]]
 name = "h11"
@@ -377,13 +378,13 @@ files = [
 
 [[package]]
 name = "starlette"
-version = "0.37.2"
+version = "0.38.6"
 description = "The little ASGI library that shines."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "starlette-0.37.2-py3-none-any.whl", hash = "sha256:6fe59f29268538e5d0d182f2791a479a0c64638e6935d1c6989e63fb2699c6ee"},
-    {file = "starlette-0.37.2.tar.gz", hash = "sha256:9af890290133b79fc3db55474ade20f6220a364a0402e0b556e7cd5e1e093823"},
+    {file = "starlette-0.38.6-py3-none-any.whl", hash = "sha256:4517a1409e2e73ee4951214ba012052b9e16f60e90d73cfb06192c19203bbb05"},
+    {file = "starlette-0.38.6.tar.gz", hash = "sha256:863a1588f5574e70a821dadefb41e4881ea451a47a3cd1b4df359d4ffefe5ead"},
 ]
 
 [package.dependencies]
@@ -405,13 +406,13 @@ files = [
 
 [[package]]
 name = "uvicorn"
-version = "0.29.0"
+version = "0.31.0"
 description = "The lightning-fast ASGI server."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "uvicorn-0.29.0-py3-none-any.whl", hash = "sha256:2c2aac7ff4f4365c206fd773a39bf4ebd1047c238f8b8268ad996829323473de"},
-    {file = "uvicorn-0.29.0.tar.gz", hash = "sha256:6a69214c0b6a087462412670b3ef21224fa48cae0e452b5883e8e8bdfdd11dd0"},
+    {file = "uvicorn-0.31.0-py3-none-any.whl", hash = "sha256:cac7be4dd4d891c363cd942160a7b02e69150dcbc7a36be04d5f4af4b17c8ced"},
+    {file = "uvicorn-0.31.0.tar.gz", hash = "sha256:13bc21373d103859f68fe739608e2eb054a816dea79189bc3ca08ea89a275906"},
 ]
 
 [package.dependencies]
@@ -665,4 +666,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "1615fd0b09a90bd6c39fc147ab2697438940539b4ceaa960467322aa363add30"
+content-hash = "ebbe4a4b8ee997e05173cd1e0444bd3fff4b6251aa060dc8c5a24060262f0dff"

@@ -2,11 +2,15 @@ from fastapi import FastAPI
 import os
 from baml_client import b
 from baml_client.types import Message, Role
+from fastapi.responses import StreamingResponse
+import asyncio
 
+app = FastAPI()
 
+@app.get("/")
 async def extract_resume():
 
-    classify_response = await b.ClassifyMessage(
+    classify_response = b.ClassifyMessage(
         convo=[Message(role=Role.Customer, content="I would like to cancel my order.")],
     )
     print(f"Got {classify_response} from BAML")
@@ -42,7 +46,9 @@ async def extract_resume():
 
     async def stream_resume(resume):
         stream = b.stream.ExtractResume(resume)
-        async for chunk in stream:
-            yield str(chunk.model_dump_json()) + "\n"
+        for chunk in stream:
+            print(f"Got chunk: {chunk}")
+            yield (str(chunk.model_dump_json()) + "\n")
+            await asyncio.sleep(0)  # from https://github.com/encode/starlette/discussions/1776#discussioncomment-3207518
 
-    return StreamingResponse(stream_resume(resume), media_type="text/plain")
+    return StreamingResponse(stream_resume(resume), media_type="text/event-stream")

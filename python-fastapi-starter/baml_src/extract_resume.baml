@@ -22,7 +22,7 @@ enum MyEnum {
 
 
 function ExtractResume(raw_text: string) -> Resume {
-  client GPT4
+  client GPT4o
   prompt #"
     Parse the following resume and return a structured representation of the data in the schema below.
 
