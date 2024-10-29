@@ -104,6 +104,11 @@ export interface Ingredient {
   
 }
 
+export interface Link {
+  url: Checked<string,"valid_link">
+  
+}
+
 export interface Message {
   role: Role
   content: string
@@ -156,7 +161,7 @@ export interface Reply {
 
 export interface Resume {
   name: string
-  links: string[]
+  links: Link[]
   education: Education[]
   experience: Experience[]
   skills: string[]

@@ -1,7 +1,9 @@
 class Resume {
   name string
-  links string[] @description(#"
+  links Link[] @description(#"
     Any links to the candidate's online profiles (e.g. LinkedIn, GitHub, Email).
+    For twitter, just use the format twitter@PROFILE_NAME.
+    For other links, convert them into valid URLs.
   "#)
   education Education[]
   experience Experience[]
@@ -9,6 +11,10 @@ class Resume {
   why_hire string[] @description(#"
     3 points of why the candidate is a great hire (use fun and exciting language!).
   "#)
+}
+
+class Link {
+  url string @check(valid_link, {{ this|regex_match("[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)") }})
 }
 
 class Education {
