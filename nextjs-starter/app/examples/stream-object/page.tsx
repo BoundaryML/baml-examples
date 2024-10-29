@@ -22,7 +22,7 @@ const Home: React.FC = () => {
       resumeText={resumeText}
       setResumeText={setResumeText}
       isLoading={structuredResume.isLoading || unstructuredResume.isLoading}
-      structred={structuredResume}
+      structured={structuredResume}
       unstructured={unstructuredResume}
     />
   );
