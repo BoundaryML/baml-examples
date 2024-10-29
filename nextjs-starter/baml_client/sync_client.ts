@@ -46,6 +46,7 @@ export class BamlSyncClient {
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): BookAnalysis {
+    try {
     const raw = this.runtime.callFunctionSync(
       "AnalyzeBooks",
       {
@@ -56,12 +57,21 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as BookAnalysis
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
   AnswerQuestion(
       question: string,context: Context,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Answer {
+    try {
     const raw = this.runtime.callFunctionSync(
       "AnswerQuestion",
       {
@@ -72,12 +82,21 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as Answer
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
   ClassifyMessage(
       convo: Message[],
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Category[] {
+    try {
     const raw = this.runtime.callFunctionSync(
       "ClassifyMessage",
       {
@@ -88,12 +107,21 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as Category[]
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
   DescribeCharacter(
       first_image: Image,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): CharacterDescription {
+    try {
     const raw = this.runtime.callFunctionSync(
       "DescribeCharacter",
       {
@@ -104,12 +132,21 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as CharacterDescription
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
   ExtractPerson(
       input: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Person {
+    try {
     const raw = this.runtime.callFunctionSync(
       "ExtractPerson",
       {
@@ -120,12 +157,21 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as Person
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
   ExtractResume(
       raw_text: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Resume {
+    try {
     const raw = this.runtime.callFunctionSync(
       "ExtractResume",
       {
@@ -136,12 +182,21 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as Resume
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
   ExtractResumeNoStructure(
       raw_text: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): string {
+    try {
     const raw = this.runtime.callFunctionSync(
       "ExtractResumeNoStructure",
       {
@@ -152,12 +207,21 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as string
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
   GenerateReplies(
       tweets: Tweet[],
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Reply[] {
+    try {
     const raw = this.runtime.callFunctionSync(
       "GenerateReplies",
       {
@@ -168,12 +232,21 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as Reply[]
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
   GetRecipe(
       arg: string,
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): Recipe {
+    try {
     const raw = this.runtime.callFunctionSync(
       "GetRecipe",
       {
@@ -184,6 +257,39 @@ export class BamlSyncClient {
       __baml_options__?.clientRegistry,
     )
     return raw.parsed() as Recipe
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
+  }
+  
+  IsResume(
+      raw_text: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): boolean {
+    try {
+    const raw = this.runtime.callFunctionSync(
+      "IsResume",
+      {
+        "raw_text": raw_text
+      },
+      this.ctx_manager.cloneContext(),
+      __baml_options__?.tb?.__tb(),
+      __baml_options__?.clientRegistry,
+    )
+    return raw.parsed() as boolean
+    } catch (error: any) {
+      const bamlError = createBamlValidationError(error);
+      if (bamlError instanceof BamlValidationError) {
+        throw bamlError;
+      } else {
+        throw error;
+      }
+    }
   }
   
 }

@@ -140,6 +140,7 @@ export interface Ranking {
 }
 
 export interface Recipe {
+  topic: "food" | "other"
   number_of_servings: number
   ingredients: PartIngredient[] | Ingredient[]
   instructions: PartSteps[] | string[]

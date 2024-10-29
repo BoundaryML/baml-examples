@@ -28,18 +28,25 @@ class Experience {
   "#)
 }
 
+function IsResume(raw_text: string) -> bool {
+  client "openai/gpt-4o-mini"
+  prompt #"
+    Determine if the following text is a resume or not.
+    {{ ctx.output_format }}
+
+    {{ _.role('user') }}
+    {{raw_text}}
+  "#
+}
+
 function ExtractResume(raw_text: string) -> Resume {
   client GPT4o
   prompt #"
     Parse the following resume and return a structured representation of the data in the schema below.
+    {{ ctx.output_format(prefix="Output format:\n") }}
 
-    Resume:
-    ---
+    {{ _.role('user') }}
     {{raw_text}}
-    ---
-
-    Output JSON format (only include these fields, and no others):
-    {{ ctx.output_format(prefix=null) }}
   "#
 }
  
@@ -49,10 +56,8 @@ function ExtractResumeNoStructure(raw_text: string) -> string {
   prompt #"
     Parse the following resume and return their education, experience, and skills.
 
-    Resume:
-    ---
+    {{ _.role('user') }}
     {{raw_text}}
-    ---
   "#
 }
  

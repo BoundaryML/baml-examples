@@ -26,8 +26,8 @@ class Ranking {
 }
  
 class BookAnalysis {
-  bookNames string[] @description(#"
-    The list of book names  provided
+  bookNames string[] @assert({{ this|length > 0 }}) @description(#"
+    The list of book names provided
   "#)
   popularityOverTime PopularityOverTime[] @description(#"
     Print the popularity of EACH BOOK over time.
@@ -44,11 +44,12 @@ class BookAnalysis {
 function AnalyzeBooks(input: string) -> BookAnalysis {
   client GPT4o
   prompt #"
-    Analyze the following book list and provide the information in the schema. If you don't know the exact answer, take a guess.
-    BOOK_LIST: 
-    {{ input }}
-
+    Analyze the following book list and provide the information in the schema. 
+    For any unknown fields, make a best guess.
     {{ ctx.output_format }}
+
+    {{ _.role('user') }}
+    {{ input }}
   "#
 } 
 

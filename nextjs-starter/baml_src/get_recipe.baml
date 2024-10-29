@@ -1,4 +1,5 @@
 class Recipe {
+    topic "food" | "other"
     number_of_servings int @description(#"
         Best estimate
     "#)
