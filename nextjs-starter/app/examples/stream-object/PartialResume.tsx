@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { RecursivePartialNull } from "@/baml_client/async_client";
 import { Resume } from "@/baml_client/types";
+import { ErrorWrapper } from "../_components/ErrorWrapper";
 
 const PartialResume = ({
   resume,
@@ -152,10 +153,10 @@ const PartialResume = ({
               <AnimatePresence>
                 {resume.links.map(
                   (link, index) =>
-                    link && (
+                    link.url?.value && (
                       <motion.a
-                        key={link}
-                        href={link}
+                        key={link.url.value}
+                        href={link.url.value}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center px-3 py-1 rounded-full bg-secondary text-secondary-foreground text-sm hover:bg-secondary/80 transition-colors"
@@ -164,8 +165,11 @@ const PartialResume = ({
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.2 }}
                       >
+                      <ErrorWrapper error={ link.url?.checks.valid_link.status == "failed" ? "Invalid URL" : null }>
                         <Link className="h-4 w-4 mr-1" />
-                        {link}
+                        {link.url.value}
+                      </ErrorWrapper>
+
                       </motion.a>
                     )
                 )}
