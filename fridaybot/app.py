@@ -1,5 +1,7 @@
+import argparse
 import os
-from datetime import datetime, timedelta
+from datetime import datetime
+from typing import Optional
 
 import discord
 from dotenv import load_dotenv
@@ -22,12 +24,22 @@ NOTION_PAGE_ID = "135bb2d2621680a99929f9a31e96c4bc"
 NOTION_DATABASE_ID = "135bb2d2621680078c17e5a4334cb855"
 
 
+class Args(argparse.Namespace):
+    after: datetime
+    before: Optional[datetime]
+
+
+args = Args()
+
+
 def notion_message_category(message: MessageType) -> str:
     match message:
         case MessageType.FeatureRequest:
             return "Feature Request"
         case MessageType.BugReport:
             return "Bug Report"
+        case MessageType.Question:
+            return "Question"
         case MessageType.Uncategorized:
             return "Uncategorized"
 
@@ -36,16 +48,25 @@ def notion_message_category(message: MessageType) -> str:
 async def on_ready():
     print(f'We have logged in as {discord_client.user}')
 
-    # Fetch messages from the last week
-    start_date = datetime.now() - timedelta(weeks=1)
+    channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
 
-    async for message in discord_client.get_channel(GENERAL_CHANNEL_ID).history(after=start_date):
+    async for message in channel.history(after=args.after, before=args.before):
+        # Skip messages like "user created thread"
+        if message.type != discord.MessageType.default:
+            continue
+
+        # Skip empty messages
+        if message.content.strip() == "":
+            continue
+
+        # Classify message
         message_type = await b.ClassifyMessage(message.content)
 
         # Skip uncategorized messages
         if message_type == MessageType.Uncategorized:
             continue
 
+        # Insert row into Notion DB
         await notion_client.pages.create(
             parent={"database_id": NOTION_DATABASE_ID},
             properties={
@@ -67,5 +88,33 @@ async def on_ready():
             }
         )
 
+    print(f"\n\nBatch {args.after} to {args.before or datetime.now()} completed")
+    await discord_client.close()
 
-discord_client.run(os.environ['DISCORD_BOT_TOKEN'])
+def main():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "--after",
+        type=datetime.fromisoformat,
+        help="Start date for fetching messages",
+        required=True,
+    )
+
+    parser.add_argument(
+        "--before",
+        type=datetime.fromisoformat, 
+        help="End date for fetching messages",
+    )
+
+    global args
+    args = Args(**vars(parser.parse_args()))
+
+    if args.before is not None and args.before < args.after:
+        parser.error("End date must be after start date")
+
+    discord_client.run(os.environ['DISCORD_BOT_TOKEN'])
+
+
+if __name__ == "__main__":
+    main()

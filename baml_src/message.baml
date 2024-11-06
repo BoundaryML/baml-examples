@@ -1,6 +1,7 @@
 enum MessageType {
   FeatureRequest
   BugReport
+  Question
   Uncategorized
 }
 

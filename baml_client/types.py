@@ -43,4 +43,5 @@ class MessageType(str, Enum):
     
     FeatureRequest = "FeatureRequest"
     BugReport = "BugReport"
+    Question = "Question"
     Uncategorized = "Uncategorized"
