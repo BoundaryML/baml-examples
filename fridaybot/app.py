@@ -21,7 +21,7 @@ notion_client = AsyncClient(auth=os.environ["NOTION_API_KEY"])
 # TODO: Env var.
 GENERAL_CHANNEL_ID = 1119375594984050779
 NOTION_PAGE_ID = "135bb2d2621680a99929f9a31e96c4bc"
-NOTION_DATABASE_ID = "135bb2d2621680078c17e5a4334cb855"
+# NOTION_DATABASE_ID = "135bb2d2621680078c17e5a4334cb855"
 
 
 class Args(argparse.Namespace):
@@ -44,11 +44,45 @@ def notion_message_category(message: MessageType) -> str:
             return "Uncategorized"
 
 
+def format_time_period() -> str:
+    after = args.after.strftime("%Y-%m-%d")
+    before = (args.before or datetime.now()).strftime("%Y-%m-%d")
+
+    return f"{after} to {before}"
+
+
 @discord_client.event
 async def on_ready():
     print(f'We have logged in as {discord_client.user}')
 
     channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
+
+    database = await notion_client.databases.create(
+        parent={"type": "page_id", "page_id": NOTION_PAGE_ID},
+        title= [{
+            "type": "text",
+            "text": {"content": format_time_period()}
+        }],
+        properties={
+            "ID": {"title": {}},
+            "Category": {
+                "select": {
+                    "options": [
+                        {"name": "Feature Request", "color": "blue"},
+                        {"name": "Bug Report", "color": "brown"},
+                        {"name": "Uncategorized", "color": "pink"},
+                        {"name": "Question", "color": "yellow"},
+                        {"name": "General Feedback", "color": "default"},
+                    ]
+                },
+            },
+            "Message": {"rich_text": {}},
+            "Link": {"url": {}},
+            "Created Date": {"date": {}},
+        }
+    )
+
+    print(f"Created database: {database['url']}")
 
     async for message in channel.history(after=args.after, before=args.before):
         # Skip messages like "user created thread"
@@ -68,7 +102,7 @@ async def on_ready():
 
         # Insert row into Notion DB
         await notion_client.pages.create(
-            parent={"database_id": NOTION_DATABASE_ID},
+            parent={"database_id": database["id"]},
             properties={
                 "Message": {
                     "rich_text": [{"text": {"content": message.content}}]
@@ -88,7 +122,7 @@ async def on_ready():
             }
         )
 
-    print(f"\n\nBatch {args.after} to {args.before or datetime.now()} completed")
+    print(f"\n\nBatch {format_time_period()} completed")
     await discord_client.close()
 
 def main():
