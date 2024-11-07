@@ -28,3 +28,15 @@ from .types import Checked, Check
 #
 ###############################################################################
 
+
+class Classification(BaseModel):
+    
+    
+    message_id: Optional[int] = None
+    message_type: Optional[types.MessageType] = None
+
+class Message(BaseModel):
+    
+    
+    id: Optional[int] = None
+    content: Optional[str] = None

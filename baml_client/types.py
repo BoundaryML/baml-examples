@@ -45,3 +45,15 @@ class MessageType(str, Enum):
     BugReport = "BugReport"
     Question = "Question"
     Uncategorized = "Uncategorized"
+
+class Classification(BaseModel):
+    
+    
+    message_id: int
+    message_type: "MessageType"
+
+class Message(BaseModel):
+    
+    
+    id: int
+    content: str

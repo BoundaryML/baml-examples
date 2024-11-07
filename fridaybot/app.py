@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import os
 from datetime import datetime
 from typing import Optional
@@ -8,7 +9,7 @@ from dotenv import load_dotenv
 from notion_client import AsyncClient
 
 from baml_client import b
-from baml_client.types import MessageType
+from baml_client.types import Message, MessageType
 
 load_dotenv()
 
@@ -23,6 +24,9 @@ GENERAL_CHANNEL_ID = 1119375594984050779
 NOTION_PAGE_ID = "135bb2d2621680a99929f9a31e96c4bc"
 # NOTION_DATABASE_ID = "135bb2d2621680078c17e5a4334cb855"
 
+
+# Number of messages to fetch and send to LLM in a single batch.
+MESSAGES_BATCH_SIZE = 5
 
 class Args(argparse.Namespace):
     after: datetime
@@ -51,11 +55,48 @@ def format_time_period() -> str:
     return f"{after} to {before}"
 
 
+async def process_messages(database_id, messages: list[discord.Message]):
+    message_map = {message.id: message for message in messages}
+    message_batch = list(map(lambda m: Message(id=m.id, content=m.content), messages))
+
+    for classification in await b.ClassifyMessages(message_batch):
+        # This should not happen but the LLM might return the wrong ID.
+        if classification.message_id not in message_map:
+            continue
+
+       # Skip uncategorized messages
+        if classification.message_type == MessageType.Uncategorized:
+            continue
+
+        # Get the message object back.
+        message = message_map[classification.message_id]
+
+        # Insert the new row into the Notion database.
+        await notion_client.pages.create(
+            parent={"database_id": database_id},
+            properties={
+                "Message": {
+                    "rich_text": [{"text": {"content": message.content}}]
+                },
+                "Category": {
+                    "select": {"name": notion_message_category(classification.message_type)}
+                },
+                "ID": {
+                    "title": [{"text": {"content": str(message.id)}}]
+                },
+                "Link": {
+                    "url": message.jump_url
+                },
+                "Created Date": {
+                    "date": {"start": message.created_at.isoformat()}
+                }
+            }
+        )
+
+
 @discord_client.event
 async def on_ready():
     print(f'We have logged in as {discord_client.user}')
-
-    channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
 
     database = await notion_client.databases.create(
         parent={"type": "page_id", "page_id": NOTION_PAGE_ID},
@@ -84,46 +125,33 @@ async def on_ready():
 
     print(f"Created database: {database['url']}")
 
-    async for message in channel.history(after=args.after, before=args.before):
-        # Skip messages like "user created thread"
-        if message.type != discord.MessageType.default:
-            continue
+    batch = []
+    channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
 
-        # Skip empty messages
-        if message.content.strip() == "":
-            continue
+    async with asyncio.TaskGroup() as tg:
+        async for message in channel.history(after=args.after, before=args.before):
+            # Skip messages like "user created thread"
+            if message.type != discord.MessageType.default:
+                continue
 
-        # Classify message
-        message_type = await b.ClassifyMessage(message.content)
+            # Skip empty messages
+            if message.content.strip() == "":
+                continue
 
-        # Skip uncategorized messages
-        if message_type == MessageType.Uncategorized:
-            continue
+            batch.append(message)
 
-        # Insert row into Notion DB
-        await notion_client.pages.create(
-            parent={"database_id": database["id"]},
-            properties={
-                "Message": {
-                    "rich_text": [{"text": {"content": message.content}}]
-                },
-                "Category": {
-                    "select": {"name": notion_message_category(message_type)}
-                },
-                "ID": {
-                    "title": [{"text": {"content": str(message.id)}}]
-                },
-                "Link": {
-                    "url": message.jump_url
-                },
-                "Created Date": {
-                    "date": {"start": message.created_at.isoformat()}
-                }
-            }
-        )
+            # Spawn task in the background and continue reading messages.
+            if len(batch) >= MESSAGES_BATCH_SIZE:
+                tg.create_task(process_messages(database["id"], batch))
+                batch = []
+
+    # Process remaining messages.
+    if len(batch) > 0:
+        await process_messages(database["id"], batch)
 
     print(f"\n\nBatch {format_time_period()} completed")
     await discord_client.close()
+
 
 def main():
     parser = argparse.ArgumentParser()

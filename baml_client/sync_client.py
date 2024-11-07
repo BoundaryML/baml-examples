@@ -47,11 +47,11 @@ class BamlSyncClient:
       return self.__stream_client
 
     
-    def ClassifyMessage(
+    def ClassifyMessages(
         self,
-        message: str,
+        messages: List[types.Message],
         baml_options: BamlCallOptions = {},
-    ) -> types.MessageType:
+    ) -> List[types.Classification]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb
@@ -60,15 +60,15 @@ class BamlSyncClient:
       __cr__ = baml_options.get("client_registry", None)
 
       raw = self.__runtime.call_function_sync(
-        "ClassifyMessage",
+        "ClassifyMessages",
         {
-          "message": message,
+          "messages": messages,
         },
         self.__ctx_manager.get(),
         tb,
         __cr__,
       )
-      return cast(types.MessageType, raw.cast_to(types, types))
+      return cast(List[types.Classification], raw.cast_to(types, types))
     
 
 
@@ -82,11 +82,11 @@ class BamlStreamClient:
       self.__ctx_manager = ctx_manager
 
     
-    def ClassifyMessage(
+    def ClassifyMessages(
         self,
-        message: str,
+        messages: List[types.Message],
         baml_options: BamlCallOptions = {},
-    ) -> baml_py.BamlSyncStream[Optional[types.MessageType], types.MessageType]:
+    ) -> baml_py.BamlSyncStream[List[partial_types.Classification], List[types.Classification]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
         tb = __tb__._tb
@@ -95,9 +95,9 @@ class BamlStreamClient:
       __cr__ = baml_options.get("client_registry", None)
 
       raw = self.__runtime.stream_function_sync(
-        "ClassifyMessage",
+        "ClassifyMessages",
         {
-          "message": message,
+          "messages": messages,
         },
         None,
         self.__ctx_manager.get(),
@@ -105,10 +105,10 @@ class BamlStreamClient:
         __cr__,
       )
 
-      return baml_py.BamlSyncStream[Optional[types.MessageType], types.MessageType](
+      return baml_py.BamlSyncStream[List[partial_types.Classification], List[types.Classification]](
         raw,
-        lambda x: cast(Optional[types.MessageType], x.cast_to(types, partial_types)),
-        lambda x: cast(types.MessageType, x.cast_to(types, types)),
+        lambda x: cast(List[partial_types.Classification], x.cast_to(types, partial_types)),
+        lambda x: cast(List[types.Classification], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
