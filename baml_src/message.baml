@@ -36,19 +36,19 @@ test ClassifyMessageTest {
   args {
     messages [
       { 
-        id "1"
+        id 1
         content  "BAML should support recursive types."
       }
       { 
-        id "2"
+        id 2
         content  "I found a bug in the BAML compiler."
       }
       { 
-        id "3"
+        id 3
         content  "How do I install the BAML compiler?"
       }
       { 
-        id "4"
+        id 4
         content  "I like BAML."
       }
     ] 

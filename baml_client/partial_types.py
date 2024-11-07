@@ -40,3 +40,9 @@ class Message(BaseModel):
     
     id: Optional[int] = None
     content: Optional[str] = None
+
+class ThreadMessage(BaseModel):
+    
+    
+    user_id: Optional[int] = None
+    content: Optional[str] = None

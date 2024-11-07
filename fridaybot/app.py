@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from notion_client import AsyncClient
 
 from baml_client import b
-from baml_client.types import Message, MessageType
+from baml_client.types import Message, MessageType, ThreadMessage
 
 load_dotenv()
 
@@ -39,6 +39,18 @@ class Args(argparse.Namespace):
     before: Optional[datetime]
 
 
+class ClassifiedMessage:
+    def __init__(self, message: discord.Message, type: MessageType):
+        self.message = message
+        self.message_type = type
+
+
+class SummerizedThread:
+    def __init__(self, messages: list[discord.Message], summary: str):
+        self.messages = messages
+        self.thread_summary = summary
+
+
 args = Args()
 
 
@@ -61,52 +73,112 @@ def format_time_period() -> str:
     return f"{after} to {before}"
 
 
-async def insert_notion_rows(queue: asyncio.Queue):
+async def send_notion_requests(
+    database_id: str,
+    queue: asyncio.Queue[ClassifiedMessage | SummerizedThread]
+):
+    # Maps a message ID to the corresponding Notion page ID. That way we can
+    # grab the page ID when we get the thread summary and append a block to the
+    # notion page without querying the Notion database.
+    threads: dict[int, str] = {}
+
     while True:
-        request = await queue.get()
-        await notion_client.pages.create(**request)
-        # await asyncio.sleep(NOTION_RATE_LIMIT)
+        task = await queue.get()
+
+        if isinstance(task, ClassifiedMessage):
+            message = task.message
+            category = notion_message_category(task.message_type)
+
+            response = await notion_client.pages.create(
+                parent={"database_id": database_id},
+                properties={
+                    "Message": {
+                        "rich_text": [{"text": {"content": message.content}}]
+                    },
+                    "Category": {
+                        "select": {"name": category}
+                    },
+                    "ID": {
+                        "title": [{"text": {"content": str(message.id)}}]
+                    },
+                    "Link": {
+                        "url": message.jump_url
+                    },
+                    "Created Date": {
+                        "date": {"start": message.created_at.isoformat()}
+                    }
+                }
+            )
+
+            if message.thread is not None:
+                threads[message.id] = response["id"]
+        elif isinstance(task, SummerizedThread):
+            try:
+                page_id = threads.pop(task.messages[0].id)
+                await notion_client.blocks.children.append(page_id, children=[
+                    {
+                        "object": "block",
+                        "type": "heading_2",
+                        "heading_2": {
+                            "rich_text": [{ "type": "text", "text": { "content": "Summary" } }]
+                        }
+                    },
+                    {
+                        "object": "block",
+                        "type": "paragraph",
+                        "paragraph": {
+                            "rich_text": [
+                                {"type": "text", "text": {"content": task.thread_summary}}
+                            ]
+                        },
+                    },
+                ])
+            except KeyError:
+                print(f"Thread message ID not found for summary: {task.messages[0].id}", file=sys.stderr)
+        else:
+            print(f"Ignoring unknown task type: {type(task)}", file=sys.stderr)
+
+        # TODO: Add retry and backoff.
+        # asyncio.sleep(NOTION_RATE_LIMIT)
+
         queue.task_done()
 
 
-async def classify_messages(database_id, messages: list[discord.Message], queue: asyncio.Queue):
-    message_map = {message.id: message for message in messages}
-    message_batch = list(map(lambda m: Message(id=m.id, content=m.content), messages))
+async def classify_discord_messages(
+    message_queue: asyncio.Queue[tuple[list[discord.Message], list[list[discord.Message]]]],
+    notion_request_queue: asyncio.Queue,
+):
+    while True:
+        messages, threads = await message_queue.get()
 
-    for classification in await b.ClassifyMessages(message_batch):
-        # This should not happen but the LLM might return the wrong ID.
-        if classification.message_id not in message_map:
-            print(f"Ignoring message with unknown ID: {classification.message_id}", file=sys.stderr)
-            continue
+        mapping = {message.id: message for message in messages}
+        batch = [Message(id=m.id, content=m.content) for m in messages]
 
-       # Skip uncategorized messages
-        if classification.message_type == MessageType.Uncategorized:
-            continue
+        for classification in await b.ClassifyMessages(batch):
+            # This should not happen but the LLM might return the wrong ID.
+            if classification.message_id not in mapping:
+                print(f"Ignoring message with unknown ID: {classification.message_id}", file=sys.stderr)
+                continue
 
-        # Get the message object back.
-        message = message_map[classification.message_id]
+            # Skip uncategorized messages
+            if classification.message_type == MessageType.Uncategorized:
+                continue
 
-        # Put request in the queue.
-        queue.put_nowait({
-            "parent": {"database_id": database_id},
-            "properties": {
-                "Message": {
-                    "rich_text": [{"text": {"content": message.content}}]
-                },
-                "Category": {
-                    "select": {"name": notion_message_category(classification.message_type)}
-                },
-                "ID": {
-                    "title": [{"text": {"content": str(message.id)}}]
-                },
-                "Link": {
-                    "url": message.jump_url
-                },
-                "Created Date": {
-                    "date": {"start": message.created_at.isoformat()}
-                }
-            }
-        })
+            # Get the message object back.
+            message = mapping[classification.message_id]
+
+            # Put message in the queue for Notion.
+            notion_request_queue.put_nowait(ClassifiedMessage(message, classification.message_type))
+
+        # Now summarize all the threads after we've put all the messages in
+        # the notion queue, that way by the time we have to insert the summary
+        # the page ID for the thread message will be available.
+        for thread in threads:
+            conversation = [ThreadMessage(user_id=m.author.id, content=m.content) for m in thread]
+            summary = await b.SummerizeThread(conversation)
+            notion_request_queue.put_nowait(SummerizedThread(thread, summary))
+
+        message_queue.task_done()
 
 
 @discord_client.event
@@ -141,40 +213,60 @@ async def on_ready():
     print(f"Created database: {database['url']}")
 
     batch = []
+    threads = []
+
+    discord_message_queue = asyncio.Queue()
+    notion_request_queue = asyncio.Queue()
+
+    notion_worker = asyncio.create_task(
+        send_notion_requests(database["id"], notion_request_queue)
+    )
+
+    llm_worker = asyncio.create_task(
+        classify_discord_messages(discord_message_queue, notion_request_queue)
+    )
+
     channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
 
-    notion_request_queue = asyncio.Queue()
-    notion_worker = asyncio.create_task(insert_notion_rows(notion_request_queue))
+    async for message in channel.history(after=args.after, before=args.before):
+        # Skip messages like "user created thread"
+        if message.type != discord.MessageType.default:
+            continue
 
-    async with asyncio.TaskGroup() as tg:
-        async for message in channel.history(after=args.after, before=args.before):
-            # Skip messages like "user created thread"
-            if message.type != discord.MessageType.default:
-                continue
+        # Skip empty messages
+        if message.content.strip() == "":
+            continue
 
-            # Skip empty messages
-            if message.content.strip() == "":
-                continue
+        # Add message to batch.
+        batch.append(message)
 
-            batch.append(message)
+        # Add all threads to a separate list for later processing.
+        if thread := message.thread:
+            messages = [message]
+            async for message in thread.history():
+                messages.append(message)
+            threads.append(messages)
 
-            # Spawn task in the background and continue reading messages.
-            if len(batch) >= MESSAGES_BATCH_SIZE:
-                tg.create_task(classify_messages(database["id"], batch, notion_request_queue))
-                batch = []
+        # Spawn task in the background and continue reading messages.
+        if len(batch) >= MESSAGES_BATCH_SIZE:
+            discord_message_queue.put_nowait((batch, threads))
+            batch = []
+            threads = []
 
-        # Process remaining messages.
-        if len(batch) > 0:
-            tg.create_task(classify_messages(database["id"], batch, notion_request_queue))
+    # Process remaining messages.
+    if len(batch) > 0:
+        discord_message_queue.put_nowait((batch, threads))
 
     # Wait for all requests to finish.
+    await discord_message_queue.join()
     await notion_request_queue.join()
 
     # Cancel worker.
+    llm_worker.cancel()
     notion_worker.cancel()
-    # Wait for worker to finish. Maybe asyncio.gather() is not necessary but
-    # couldn't get it to work otherwise.
-    await asyncio.gather(notion_worker, return_exceptions=True)
+
+    # Wait for workers to finish.
+    await asyncio.gather(llm_worker, notion_worker, return_exceptions=True)
 
     # Close connection to Discord.
     await discord_client.close()

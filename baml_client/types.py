@@ -57,3 +57,9 @@ class Message(BaseModel):
     
     id: int
     content: str
+
+class ThreadMessage(BaseModel):
+    
+    
+    user_id: int
+    content: str

@@ -73,6 +73,29 @@ class BamlAsyncClient:
       )
       return cast(List[types.Classification], raw.cast_to(types, types))
     
+    async def SummerizeThread(
+        self,
+        messages: List[types.ThreadMessage],
+        baml_options: BamlCallOptions = {},
+    ) -> str:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "SummerizeThread",
+        {
+          "messages": messages,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(str, raw.cast_to(types, types))
+    
 
 
 class BamlStreamClient:
@@ -111,6 +134,36 @@ class BamlStreamClient:
         raw,
         lambda x: cast(List[partial_types.Classification], x.cast_to(types, partial_types)),
         lambda x: cast(List[types.Classification], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def SummerizeThread(
+        self,
+        messages: List[types.ThreadMessage],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[str], str]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "SummerizeThread",
+        {
+          "messages": messages,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[str], str](
+        raw,
+        lambda x: cast(Optional[str], x.cast_to(types, partial_types)),
+        lambda x: cast(str, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
