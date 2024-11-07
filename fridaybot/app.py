@@ -1,6 +1,7 @@
 import argparse
 import asyncio
 import os
+import sys
 from datetime import datetime
 from typing import Optional
 
@@ -24,10 +25,15 @@ GENERAL_CHANNEL_ID = 1119375594984050779
 NOTION_PAGE_ID = "135bb2d2621680a99929f9a31e96c4bc"
 # NOTION_DATABASE_ID = "135bb2d2621680078c17e5a4334cb855"
 
+# 3 requests per second.
+NOTION_RATE_LIMIT = 1/3
+
 
 # Number of messages to fetch and send to LLM in a single batch.
-MESSAGES_BATCH_SIZE = 5
+MESSAGES_BATCH_SIZE = 10
 
+
+# Just for type hinting.
 class Args(argparse.Namespace):
     after: datetime
     before: Optional[datetime]
@@ -55,13 +61,22 @@ def format_time_period() -> str:
     return f"{after} to {before}"
 
 
-async def process_messages(database_id, messages: list[discord.Message]):
+async def insert_notion_rows(queue: asyncio.Queue):
+    while True:
+        request = await queue.get()
+        await notion_client.pages.create(**request)
+        # await asyncio.sleep(NOTION_RATE_LIMIT)
+        queue.task_done()
+
+
+async def classify_messages(database_id, messages: list[discord.Message], queue: asyncio.Queue):
     message_map = {message.id: message for message in messages}
     message_batch = list(map(lambda m: Message(id=m.id, content=m.content), messages))
 
     for classification in await b.ClassifyMessages(message_batch):
         # This should not happen but the LLM might return the wrong ID.
         if classification.message_id not in message_map:
+            print(f"Ignoring message with unknown ID: {classification.message_id}", file=sys.stderr)
             continue
 
        # Skip uncategorized messages
@@ -71,10 +86,10 @@ async def process_messages(database_id, messages: list[discord.Message]):
         # Get the message object back.
         message = message_map[classification.message_id]
 
-        # Insert the new row into the Notion database.
-        await notion_client.pages.create(
-            parent={"database_id": database_id},
-            properties={
+        # Put request in the queue.
+        queue.put_nowait({
+            "parent": {"database_id": database_id},
+            "properties": {
                 "Message": {
                     "rich_text": [{"text": {"content": message.content}}]
                 },
@@ -91,7 +106,7 @@ async def process_messages(database_id, messages: list[discord.Message]):
                     "date": {"start": message.created_at.isoformat()}
                 }
             }
-        )
+        })
 
 
 @discord_client.event
@@ -128,6 +143,9 @@ async def on_ready():
     batch = []
     channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
 
+    notion_request_queue = asyncio.Queue()
+    notion_worker = asyncio.create_task(insert_notion_rows(notion_request_queue))
+
     async with asyncio.TaskGroup() as tg:
         async for message in channel.history(after=args.after, before=args.before):
             # Skip messages like "user created thread"
@@ -142,15 +160,26 @@ async def on_ready():
 
             # Spawn task in the background and continue reading messages.
             if len(batch) >= MESSAGES_BATCH_SIZE:
-                tg.create_task(process_messages(database["id"], batch))
+                tg.create_task(classify_messages(database["id"], batch, notion_request_queue))
                 batch = []
 
-    # Process remaining messages.
-    if len(batch) > 0:
-        await process_messages(database["id"], batch)
+        # Process remaining messages.
+        if len(batch) > 0:
+            tg.create_task(classify_messages(database["id"], batch, notion_request_queue))
+
+    # Wait for all requests to finish.
+    await notion_request_queue.join()
+
+    # Cancel worker.
+    notion_worker.cancel()
+    # Wait for worker to finish. Maybe asyncio.gather() is not necessary but
+    # couldn't get it to work otherwise.
+    await asyncio.gather(notion_worker, return_exceptions=True)
+
+    # Close connection to Discord.
+    await discord_client.close()
 
     print(f"\n\nBatch {format_time_period()} completed")
-    await discord_client.close()
 
 
 def main():
