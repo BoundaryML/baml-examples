@@ -98,6 +98,9 @@ async def send_notion_requests(
                     "Category": {
                         "select": {"name": category}
                     },
+                    "Message Type": {
+                        "select": {"name": "Thread" if message.thread else "Default"}
+                    },
                     "ID": {
                         "title": [{"text": {"content": str(message.id)}}]
                     },
@@ -134,7 +137,7 @@ async def send_notion_requests(
                     },
                 ])
             except KeyError:
-                print(f"Thread message ID not found for summary: {task.messages[0].id}", file=sys.stderr)
+                pass
         else:
             print(f"Ignoring unknown task type: {type(task)}", file=sys.stderr)
 
@@ -144,9 +147,15 @@ async def send_notion_requests(
         queue.task_done()
 
 
+async def summerize_thread(thread: list[discord.Message], notion_request_queue: asyncio.Queue):
+    conversation = [ThreadMessage(user_id=m.author.id, content=m.content) for m in thread]
+    summary = await b.SummerizeThread(conversation)
+    notion_request_queue.put_nowait(SummerizedThread(thread, summary))
+
+
 async def classify_discord_messages(
     message_queue: asyncio.Queue[tuple[list[discord.Message], list[list[discord.Message]]]],
-    notion_request_queue: asyncio.Queue,
+    notion_request_queue: asyncio.Queue[ClassifiedMessage | SummerizedThread],
 ):
     while True:
         messages, threads = await message_queue.get()
@@ -172,11 +181,10 @@ async def classify_discord_messages(
 
         # Now summarize all the threads after we've put all the messages in
         # the notion queue, that way by the time we have to insert the summary
-        # the page ID for the thread message will be available.
+        # the page ID for the thread message will be available. Summerizing
+        # threads 
         for thread in threads:
-            conversation = [ThreadMessage(user_id=m.author.id, content=m.content) for m in thread]
-            summary = await b.SummerizeThread(conversation)
-            notion_request_queue.put_nowait(SummerizedThread(thread, summary))
+            await summerize_thread(thread, notion_request_queue)
 
         message_queue.task_done()
 
@@ -200,11 +208,18 @@ async def on_ready():
                         {"name": "Bug Report", "color": "brown"},
                         {"name": "Uncategorized", "color": "pink"},
                         {"name": "Question", "color": "yellow"},
-                        {"name": "General Feedback", "color": "default"},
                     ]
                 },
             },
             "Message": {"rich_text": {}},
+            "Message Type": {
+                "select": {
+                    "options": [
+                        {"name": "Thread", "color": "green"},
+                        {"name": "Default", "color": "blue"},
+                    ]
+                },
+            },
             "Link": {"url": {}},
             "Created Date": {"date": {}},
         }
@@ -241,11 +256,12 @@ async def on_ready():
         batch.append(message)
 
         # Add all threads to a separate list for later processing.
-        if thread := message.thread:
-            messages = [message]
-            async for message in thread.history():
-                messages.append(message)
-            threads.append(messages)
+        if discord_thread := message.thread:
+            thread = [message]
+            async for thread_message in discord_thread.history():
+                if len(message.content.strip()) > 0:
+                    thread.append(thread_message)
+            threads.append(thread)
 
         # Spawn task in the background and continue reading messages.
         if len(batch) >= MESSAGES_BATCH_SIZE:
@@ -266,7 +282,7 @@ async def on_ready():
     notion_worker.cancel()
 
     # Wait for workers to finish.
-    await asyncio.gather(llm_worker, notion_worker, return_exceptions=True)
+    await asyncio.gather(llm_worker, notion_worker)
 
     # Close connection to Discord.
     await discord_client.close()
