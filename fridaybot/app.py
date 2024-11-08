@@ -75,7 +75,7 @@ def format_time_period() -> str:
 
 async def send_notion_requests(
     database_id: str,
-    queue: asyncio.Queue[ClassifiedMessage | SummerizedThread]
+    request_queue: asyncio.Queue[ClassifiedMessage | SummerizedThread]
 ):
     # Maps a message ID to the corresponding Notion page ID. That way we can
     # grab the page ID when we get the thread summary and append a block to the
@@ -83,11 +83,11 @@ async def send_notion_requests(
     threads: dict[int, str] = {}
 
     while True:
-        task = await queue.get()
+        request = await request_queue.get()
 
-        if isinstance(task, ClassifiedMessage):
-            message = task.message
-            category = notion_message_category(task.message_type)
+        if isinstance(request, ClassifiedMessage):
+            message = request.message
+            category = notion_message_category(request.message_type)
 
             response = await notion_client.pages.create(
                 parent={"database_id": database_id},
@@ -115,9 +115,9 @@ async def send_notion_requests(
 
             if message.thread is not None:
                 threads[message.id] = response["id"]
-        elif isinstance(task, SummerizedThread):
+        elif isinstance(request, SummerizedThread):
             try:
-                page_id = threads.pop(task.messages[0].id)
+                page_id = threads.pop(request.messages[0].id)
                 await notion_client.blocks.children.append(page_id, children=[
                     {
                         "object": "block",
@@ -131,34 +131,63 @@ async def send_notion_requests(
                         "type": "paragraph",
                         "paragraph": {
                             "rich_text": [
-                                {"type": "text", "text": {"content": task.thread_summary}}
+                                {"type": "text", "text": {"content": request.thread_summary}}
                             ]
                         },
                     },
                 ])
             except KeyError:
-                pass
+                print(f"Failed to find page ID for message {request.messages[0].id}", file=sys.stderr)
         else:
-            print(f"Ignoring unknown task type: {type(task)}", file=sys.stderr)
+            print(f"Ignoring unknown task type: {type(request)}", file=sys.stderr)
 
         # TODO: Add retry and backoff.
         # asyncio.sleep(NOTION_RATE_LIMIT)
 
-        queue.task_done()
+        request_queue.task_done()
 
 
-async def summerize_thread(thread: list[discord.Message], notion_request_queue: asyncio.Queue):
-    conversation = [ThreadMessage(user_id=m.author.id, content=m.content) for m in thread]
-    summary = await b.SummerizeThread(conversation)
-    notion_request_queue.put_nowait(SummerizedThread(thread, summary))
+async def pull_discord_threads(
+    thread_reading_queue: asyncio.Queue[discord.Message],
+    thread_summary_queue: asyncio.Queue[list[discord.Message]]
+):
+    while True:
+        message = await thread_reading_queue.get()
+
+        if message.thread is None:
+            continue
+
+        thread = [message]
+        async for thread_message in message.thread.history():
+            thread.append(thread_message)
+        
+        thread_summary_queue.put_nowait(thread)
+
+        thread_reading_queue.task_done()
+
+
+async def summerize_threads(
+    thread_summary_queue: asyncio.Queue[list[discord.Message]],
+    notion_request_queue: asyncio.Queue[SummerizedThread | ClassifiedMessage]
+):
+    while True:
+        thread = await thread_summary_queue.get()
+        summary = await b.SummerizeThread(
+            [ThreadMessage(user_id=m.author.id, content=m.content) for m in thread]
+        )
+
+        notion_request_queue.put_nowait(SummerizedThread(thread, summary))
+
+        thread_summary_queue.task_done()
 
 
 async def classify_discord_messages(
-    message_queue: asyncio.Queue[tuple[list[discord.Message], list[list[discord.Message]]]],
+    message_queue: asyncio.Queue[list[discord.Message]],
     notion_request_queue: asyncio.Queue[ClassifiedMessage | SummerizedThread],
+    thread_reading_queue: asyncio.Queue[discord.Message],
 ):
     while True:
-        messages, threads = await message_queue.get()
+        messages = await message_queue.get()
 
         mapping = {message.id: message for message in messages}
         batch = [Message(id=m.id, content=m.content) for m in messages]
@@ -179,12 +208,12 @@ async def classify_discord_messages(
             # Put message in the queue for Notion.
             notion_request_queue.put_nowait(ClassifiedMessage(message, classification.message_type))
 
-        # Now summarize all the threads after we've put all the messages in
-        # the notion queue, that way by the time we have to insert the summary
-        # the page ID for the thread message will be available. Summerizing
-        # threads 
-        for thread in threads:
-            await summerize_thread(thread, notion_request_queue)
+            # Now that we've put the message request in the notion queue we can
+            # safely pull the thread and summerize it, since notion requests are
+            # processed in order which means by the time we get the thread
+            # summary the Notion page for that thread will already exist.
+            if message.thread is not None:
+                thread_reading_queue.put_nowait(message)
 
         message_queue.task_done()
 
@@ -228,17 +257,26 @@ async def on_ready():
     print(f"Created database: {database['url']}")
 
     batch = []
-    threads = []
 
-    discord_message_queue = asyncio.Queue()
     notion_request_queue = asyncio.Queue()
+    message_queue = asyncio.Queue()
+    thread_reading_queue = asyncio.Queue()
+    thread_summary_queue = asyncio.Queue()
 
     notion_worker = asyncio.create_task(
         send_notion_requests(database["id"], notion_request_queue)
     )
 
-    llm_worker = asyncio.create_task(
-        classify_discord_messages(discord_message_queue, notion_request_queue)
+    message_classifier = asyncio.create_task(
+        classify_discord_messages(message_queue, notion_request_queue, thread_reading_queue)
+    )
+
+    thread_reader = asyncio.create_task(
+        pull_discord_threads(thread_reading_queue, thread_summary_queue)
+    )
+
+    thread_summerizer = asyncio.create_task(
+        summerize_threads(thread_summary_queue, notion_request_queue)
     )
 
     channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
@@ -252,37 +290,31 @@ async def on_ready():
         if message.content.strip() == "":
             continue
 
-        # Add message to batch.
         batch.append(message)
 
-        # Add all threads to a separate list for later processing.
-        if discord_thread := message.thread:
-            thread = [message]
-            async for thread_message in discord_thread.history():
-                if len(message.content.strip()) > 0:
-                    thread.append(thread_message)
-            threads.append(thread)
-
-        # Spawn task in the background and continue reading messages.
+        # Put batch in the queue and continue reading messages.
         if len(batch) >= MESSAGES_BATCH_SIZE:
-            discord_message_queue.put_nowait((batch, threads))
+            message_queue.put_nowait(batch)
             batch = []
-            threads = []
 
     # Process remaining messages.
     if len(batch) > 0:
-        discord_message_queue.put_nowait((batch, threads))
+        message_queue.put_nowait(batch)
 
     # Wait for all requests to finish.
-    await discord_message_queue.join()
+    await message_queue.join()
     await notion_request_queue.join()
+    await thread_reading_queue.join()
+    await thread_summary_queue.join()
 
-    # Cancel worker.
-    llm_worker.cancel()
+    # Cancel workers.
+    message_classifier.cancel()
     notion_worker.cancel()
+    thread_reader.cancel()
+    thread_summerizer.cancel()
 
     # Wait for workers to finish.
-    await asyncio.gather(llm_worker, notion_worker)
+    await asyncio.gather(message_classifier, notion_worker, thread_reader, thread_summerizer)
 
     # Close connection to Discord.
     await discord_client.close()
