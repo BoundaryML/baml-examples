@@ -5,7 +5,7 @@ description = ""
 authors = ["Antonio Sarosi <sarosiantonio@gmail.com>"]
 readme = "README.md"
 packages = [
-    { include = "fast_api_starter", from = "." }
+    { include = "fridaybot", from = "." }
 ]
 
 [tool.poetry.dependencies]
