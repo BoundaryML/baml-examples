@@ -256,65 +256,52 @@ async def on_ready():
 
     print(f"Created database: {database['url']}")
 
-    batch = []
-
-    notion_request_queue = asyncio.Queue()
     message_queue = asyncio.Queue()
     thread_reading_queue = asyncio.Queue()
     thread_summary_queue = asyncio.Queue()
+    notion_request_queue = asyncio.Queue()
 
-    notion_worker = asyncio.create_task(
-        send_notion_requests(database["id"], notion_request_queue)
-    )
+    async with asyncio.TaskGroup() as tg:
+        # Spawn workers.
+        workers = [tg.create_task(t) for t in (
+            send_notion_requests(database["id"], notion_request_queue),
+            classify_discord_messages(message_queue, notion_request_queue, thread_reading_queue),
+            pull_discord_threads(thread_reading_queue, thread_summary_queue),
+            summerize_threads(thread_summary_queue, notion_request_queue),
+        )]
 
-    message_classifier = asyncio.create_task(
-        classify_discord_messages(message_queue, notion_request_queue, thread_reading_queue)
-    )
+        batch = []
 
-    thread_reader = asyncio.create_task(
-        pull_discord_threads(thread_reading_queue, thread_summary_queue)
-    )
+        channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
 
-    thread_summerizer = asyncio.create_task(
-        summerize_threads(thread_summary_queue, notion_request_queue)
-    )
+        # Read messages in batches.
+        async for message in channel.history(after=args.after, before=args.before):
+            # Skip messages like "user created thread"
+            if message.type != discord.MessageType.default:
+                continue
 
-    channel = discord_client.get_channel(GENERAL_CHANNEL_ID)
+            # Skip empty messages
+            if message.content.strip() == "":
+                continue
 
-    async for message in channel.history(after=args.after, before=args.before):
-        # Skip messages like "user created thread"
-        if message.type != discord.MessageType.default:
-            continue
+            batch.append(message)
 
-        # Skip empty messages
-        if message.content.strip() == "":
-            continue
+            # Put batch in the queue and continue reading messages.
+            if len(batch) >= MESSAGES_BATCH_SIZE:
+                message_queue.put_nowait(batch)
+                batch = []
 
-        batch.append(message)
-
-        # Put batch in the queue and continue reading messages.
-        if len(batch) >= MESSAGES_BATCH_SIZE:
+        # Process remaining messages.
+        if len(batch) > 0:
             message_queue.put_nowait(batch)
-            batch = []
 
-    # Process remaining messages.
-    if len(batch) > 0:
-        message_queue.put_nowait(batch)
+        # Wait for all requests to finish.
+        for queue in [message_queue, thread_reading_queue, thread_summary_queue, notion_request_queue]:
+            await queue.join()
 
-    # Wait for all requests to finish.
-    await message_queue.join()
-    await notion_request_queue.join()
-    await thread_reading_queue.join()
-    await thread_summary_queue.join()
-
-    # Cancel workers.
-    message_classifier.cancel()
-    notion_worker.cancel()
-    thread_reader.cancel()
-    thread_summerizer.cancel()
-
-    # Wait for workers to finish.
-    await asyncio.gather(message_classifier, notion_worker, thread_reader, thread_summerizer)
+        # Cancel workers.
+        for worker in workers:
+            worker.cancel()
 
     # Close connection to Discord.
     await discord_client.close()
