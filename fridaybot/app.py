@@ -21,15 +21,25 @@ intents.message_content = True
 discord_client = discord.Client(intents=intents)
 notion_client = AsyncClient(auth=os.environ["NOTION_API_KEY"])
 
-# TODO: Env var.
+# TODO: Environment variables.
+
+# Discord channel ID where we read messages/threads from.
 GENERAL_CHANNEL_ID = 1119375594984050779
+
+# Notion page ID where we create databases. The Notion integration needs to
+# have access to this page.
 NOTION_PAGE_ID = "135bb2d2621680a99929f9a31e96c4bc"
+
+# Repository URL. If the repo is not public you need to add Bearer token to the
+# request headers in the fetch_github_issues() function.
+GITHUB_REPO_URL = "https://api.github.com/repos/boundaryml/baml"
 
 # 3 requests per second.
 NOTION_RATE_LIMIT = 1/3
 
-
-# Number of messages to fetch and send to LLM in a single batch.
+# Number of messages to fetch and send to LLM in a single batch. Ideally this
+# should be based on how "big" the overall prompt ends up being because it
+# depends on the length of each messsages.
 MESSAGES_BATCH_SIZE = 10
 
 
@@ -39,6 +49,7 @@ class Args(argparse.Namespace):
     before: Optional[datetime]
 
 
+# Global CLI args.
 args = Args()
 
 
@@ -81,8 +92,10 @@ def format_time_period() -> str:
     return f"{after} to {before}"
 
 
+# TODO. RAG + Embeddings. Store all issues in a database and keep in sync with
+# Github webhooks.
 def fetch_github_issues() -> list[Issue]:
-    url = "https://api.github.com/repos/boundaryml/baml/issues"
+    url = f"{GITHUB_REPO_URL}/issues"
 
     # Results per page. Max is 100. For the purposes of this example we'll
     # just fetch one page of issues. Ideally we would store all of them in a
@@ -92,6 +105,7 @@ def fetch_github_issues() -> list[Issue]:
     # State of the issue. Can be either open, closed, or all.
     state = "all"
 
+    # TODO: Bearer token for private repos.
     response = requests.get(f"{url}?state={state}&per_page={per_page}")
     response.raise_for_status()
 
@@ -113,7 +127,10 @@ async def send_notion_requests(
 ):
     # Maps a message ID to the corresponding Notion page ID. That way we can
     # grab the page ID when we get the thread summary and append a block to the
-    # notion page without querying the Notion database.
+    # notion page without querying the Notion database. Same for linking github
+    # issues or PR, we get the page ID from here.
+    # TODO: Pop items out of the dict when both the PR and summary are added.
+    # It's tricky because there might be no PR to link.
     page_ids: dict[int, str] = {}
 
     while True:
@@ -185,7 +202,8 @@ async def send_notion_requests(
         else:
             print(f"Ignoring unknown task type: {type(request)}", file=sys.stderr)
 
-        # TODO: Add retry and backoff.
+        # TODO: Add retry and exponential backoff. Right now everything seems
+        # to run slow enough so we don't hit the rate limit.
         # asyncio.sleep(NOTION_RATE_LIMIT)
 
         request_queue.task_done()
@@ -285,6 +303,9 @@ async def classify_discord_messages(
         message_queue.task_done()
 
 
+# TODO: According to the documentation this function could run multiple times
+# so handle that.
+# https://discordpy.readthedocs.io/en/stable/api.html#discord.on_ready
 @discord_client.event
 async def on_ready():
     print(f'We have logged in as {discord_client.user}')
