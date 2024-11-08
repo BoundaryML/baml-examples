@@ -6,11 +6,12 @@ from datetime import datetime
 from typing import Optional
 
 import discord
+import requests
 from dotenv import load_dotenv
 from notion_client import AsyncClient
 
 from baml_client import b
-from baml_client.types import Message, MessageType, ThreadMessage
+from baml_client.types import Issue, Message, MessageType, ThreadMessage
 
 load_dotenv()
 
@@ -23,7 +24,6 @@ notion_client = AsyncClient(auth=os.environ["NOTION_API_KEY"])
 # TODO: Env var.
 GENERAL_CHANNEL_ID = 1119375594984050779
 NOTION_PAGE_ID = "135bb2d2621680a99929f9a31e96c4bc"
-# NOTION_DATABASE_ID = "135bb2d2621680078c17e5a4334cb855"
 
 # 3 requests per second.
 NOTION_RATE_LIMIT = 1/3
@@ -39,6 +39,9 @@ class Args(argparse.Namespace):
     before: Optional[datetime]
 
 
+args = Args()
+
+
 class ClassifiedMessage:
     def __init__(self, message: discord.Message, type: MessageType):
         self.message = message
@@ -50,8 +53,13 @@ class SummerizedThread:
         self.messages = messages
         self.thread_summary = summary
 
+class RelatedIssue:
+    def __init__(self, message: discord.Message, issue: Issue):
+        self.message = message
+        self.issue = issue
 
-args = Args()
+
+NotionRequest = ClassifiedMessage | SummerizedThread | RelatedIssue
 
 
 def notion_message_category(message: MessageType) -> str:
@@ -73,14 +81,40 @@ def format_time_period() -> str:
     return f"{after} to {before}"
 
 
+def fetch_github_issues() -> list[Issue]:
+    url = "https://api.github.com/repos/boundaryml/baml/issues"
+
+    # Results per page. Max is 100. For the purposes of this example we'll
+    # just fetch one page of issues. Ideally we would store all of them in a
+    # vector database and use RAG.
+    per_page = 100 
+
+    # State of the issue. Can be either open, closed, or all.
+    state = "all"
+
+    response = requests.get(f"{url}?state={state}&per_page={per_page}")
+    response.raise_for_status()
+
+    issues = []
+    for issue in response.json():
+        issues.append(Issue(
+            number=issue["number"],
+            title=issue["title"],
+            body=issue["body"],
+            type="pull_request" if "pull_request" in issue else "issue",
+        ))
+
+    return issues
+
+
 async def send_notion_requests(
     database_id: str,
-    request_queue: asyncio.Queue[ClassifiedMessage | SummerizedThread]
+    request_queue: asyncio.Queue[NotionRequest]
 ):
     # Maps a message ID to the corresponding Notion page ID. That way we can
     # grab the page ID when we get the thread summary and append a block to the
     # notion page without querying the Notion database.
-    threads: dict[int, str] = {}
+    page_ids: dict[int, str] = {}
 
     while True:
         request = await request_queue.get()
@@ -114,10 +148,10 @@ async def send_notion_requests(
             )
 
             if message.thread is not None:
-                threads[message.id] = response["id"]
+                page_ids[message.id] = response["id"]
         elif isinstance(request, SummerizedThread):
             try:
-                page_id = threads.pop(request.messages[0].id)
+                page_id = page_ids[request.messages[0].id]
                 await notion_client.blocks.children.append(page_id, children=[
                     {
                         "object": "block",
@@ -138,6 +172,16 @@ async def send_notion_requests(
                 ])
             except KeyError:
                 print(f"Failed to find page ID for message {request.messages[0].id}", file=sys.stderr)
+        elif isinstance(request, RelatedIssue):
+            try:
+                page_id = page_ids[request.message.id]
+
+                route = "pull" if request.issue.type == "pull_request" else "issues"
+                url = f"https://github.com/BoundaryML/baml/{route}/{request.issue.number}"
+
+                await notion_client.pages.update(page_id, properties={"Issue/PR": {"url": url}})
+            except KeyError:
+                print(f"Failed to find page ID for message {request.message.id}", file=sys.stderr)
         else:
             print(f"Ignoring unknown task type: {type(request)}", file=sys.stderr)
 
@@ -168,7 +212,7 @@ async def pull_discord_threads(
 
 async def summerize_threads(
     thread_summary_queue: asyncio.Queue[list[discord.Message]],
-    notion_request_queue: asyncio.Queue[SummerizedThread | ClassifiedMessage]
+    notion_request_queue: asyncio.Queue[NotionRequest]
 ):
     while True:
         thread = await thread_summary_queue.get()
@@ -181,10 +225,29 @@ async def summerize_threads(
         thread_summary_queue.task_done()
 
 
+async def find_related_issues(
+    issues: list[Issue],
+    related_issues_queue: asyncio.Queue[discord.Message],
+    notion_request_queue: asyncio.Queue[NotionRequest]
+):
+    mapping = {issue.number: issue for issue in issues}
+
+    while True:
+        message = await related_issues_queue.get()
+        if issue_number := await b.FindRelatedIssue(message.content, issues):
+            if issue_number in mapping:
+                notion_request_queue.put_nowait(RelatedIssue(message, mapping[issue_number]))
+            else:
+                print(f"Issue {issue_number} not found", file=sys.stderr)
+
+        related_issues_queue.task_done()
+
+
 async def classify_discord_messages(
     message_queue: asyncio.Queue[list[discord.Message]],
-    notion_request_queue: asyncio.Queue[ClassifiedMessage | SummerizedThread],
+    notion_request_queue: asyncio.Queue[NotionRequest],
     thread_reading_queue: asyncio.Queue[discord.Message],
+    related_issues_queue: asyncio.Queue[discord.Message],
 ):
     while True:
         messages = await message_queue.get()
@@ -215,12 +278,22 @@ async def classify_discord_messages(
             if message.thread is not None:
                 thread_reading_queue.put_nowait(message)
 
+            # Same with finding issues.
+            if classification.message_type in [MessageType.FeatureRequest, MessageType.BugReport]:
+                related_issues_queue.put_nowait(message)
+
         message_queue.task_done()
 
 
 @discord_client.event
 async def on_ready():
     print(f'We have logged in as {discord_client.user}')
+
+    print("Fetching issues from GitHub...")
+
+    issues = await asyncio.to_thread(fetch_github_issues)
+
+    print("Creating Notion database...")
 
     database = await notion_client.databases.create(
         parent={"type": "page_id", "page_id": NOTION_PAGE_ID},
@@ -250,24 +323,27 @@ async def on_ready():
                 },
             },
             "Link": {"url": {}},
+            "Issue/PR": {"url": {}},
             "Created Date": {"date": {}},
         }
     )
 
-    print(f"Created database: {database['url']}")
+    print(f"Notion database created: {database['url']}")
 
     message_queue = asyncio.Queue()
     thread_reading_queue = asyncio.Queue()
     thread_summary_queue = asyncio.Queue()
+    related_issues_queue = asyncio.Queue()
     notion_request_queue = asyncio.Queue()
 
     async with asyncio.TaskGroup() as tg:
         # Spawn workers.
         workers = [tg.create_task(t) for t in (
             send_notion_requests(database["id"], notion_request_queue),
-            classify_discord_messages(message_queue, notion_request_queue, thread_reading_queue),
+            classify_discord_messages(message_queue, notion_request_queue, thread_reading_queue, related_issues_queue),
             pull_discord_threads(thread_reading_queue, thread_summary_queue),
             summerize_threads(thread_summary_queue, notion_request_queue),
+            find_related_issues(issues, related_issues_queue, notion_request_queue),
         )]
 
         batch = []
@@ -296,7 +372,13 @@ async def on_ready():
             message_queue.put_nowait(batch)
 
         # Wait for all requests to finish.
-        for queue in [message_queue, thread_reading_queue, thread_summary_queue, notion_request_queue]:
+        for queue in [
+            message_queue,
+            thread_reading_queue,
+            thread_summary_queue,
+            related_issues_queue,
+            notion_request_queue,
+        ]:
             await queue.join()
 
         # Cancel workers.

@@ -73,6 +73,29 @@ class BamlAsyncClient:
       )
       return cast(List[types.Classification], raw.cast_to(types, types))
     
+    async def FindRelatedIssue(
+        self,
+        message: str,issues: List[types.Issue],
+        baml_options: BamlCallOptions = {},
+    ) -> Optional[int]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = await self.__runtime.call_function(
+        "FindRelatedIssue",
+        {
+          "message": message,"issues": issues,
+        },
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+      return cast(Optional[int], raw.cast_to(types, types))
+    
     async def SummerizeThread(
         self,
         messages: List[types.ThreadMessage],
@@ -134,6 +157,37 @@ class BamlStreamClient:
         raw,
         lambda x: cast(List[partial_types.Classification], x.cast_to(types, partial_types)),
         lambda x: cast(List[types.Classification], x.cast_to(types, types)),
+        self.__ctx_manager.get(),
+      )
+    
+    def FindRelatedIssue(
+        self,
+        message: str,issues: List[types.Issue],
+        baml_options: BamlCallOptions = {},
+    ) -> baml_py.BamlStream[Optional[int], Optional[int]]:
+      __tb__ = baml_options.get("tb", None)
+      if __tb__ is not None:
+        tb = __tb__._tb
+      else:
+        tb = None
+      __cr__ = baml_options.get("client_registry", None)
+
+      raw = self.__runtime.stream_function(
+        "FindRelatedIssue",
+        {
+          "message": message,
+          "issues": issues,
+        },
+        None,
+        self.__ctx_manager.get(),
+        tb,
+        __cr__,
+      )
+
+      return baml_py.BamlStream[Optional[int], Optional[int]](
+        raw,
+        lambda x: cast(Optional[int], x.cast_to(types, partial_types)),
+        lambda x: cast(Optional[int], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

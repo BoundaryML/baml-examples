@@ -52,6 +52,14 @@ class Classification(BaseModel):
     message_id: int
     message_type: "MessageType"
 
+class Issue(BaseModel):
+    
+    
+    number: int
+    title: str
+    body: Optional[str] = None
+    type: Union[Literal["pull_request"], Literal["issue"]]
+
 class Message(BaseModel):
     
     
