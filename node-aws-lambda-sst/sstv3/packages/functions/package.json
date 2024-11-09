@@ -1,0 +1,14 @@
+{
+  "name": "@monorepo-template/functions",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@boundaryml/baml": "^0.67.0",
+    "@monorepo-template/core": "*",
+    "sst": "3.2.73",
+    "@boundaryml/baml-linux-x64-gnu": "^0.67.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.137"
+  }
+}

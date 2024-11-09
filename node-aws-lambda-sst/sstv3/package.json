@@ -1,0 +1,16 @@
+{
+  "name": "monorepo-template",
+  "version": "0.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "private": true,
+  "scripts": {},
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.4",
+    "typescript": "5.6.2"
+  },
+  "dependencies": {
+    "sst": "3.2.73"
+  }
+}
