@@ -2,11 +2,11 @@
 
 ## BAML Specific
 
-This doesn't yet support lambda layers like sstv2 out of the box. If you're interested in setting it up, let us know.
+This doesn't yet support lambda layers like sstv2 out of the box. If you're interested in setting it up, let us know. There is a manual way to doing it that involves creating the lambda layer manually in the console, and referring to the ARN in the infra setup.
 
 ## Install commands (baml)
 
-Note you'll need to install gnu-x64 binary (the runtime AWS uses) for the lambda to work -- even if you're not in that cpu architecture. Which means you need to force install it for it to be included in the final bundle.
+Note you'll need to install gnu-x64 binary (the runtime AWS uses) for the lambda to work -- even if you're not working locally with on that cpu architecture. Which means you need to force install it for it to be included in the final bundle.
 
 ### yarn instructions:
 
