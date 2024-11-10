@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "gimp-use"
+version = "0.1.0"
+description = ""
+authors = ["Greg Hale"]
+readme = "README.md"
+packages = [
+  { include = "gimp-use", from="." }
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyautogui = "^0.9.54"
+pillow = "^11.0.0"
+pydantic = "^2.9.2"
+baml-py = "^0.65.0"
+dash = "^2.18.2"
+
