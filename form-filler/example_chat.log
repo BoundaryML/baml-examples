@@ -1,0 +1,60 @@
+Hello from form-filler!
++----------------+---------+
+|     Field      |  Value  |
++----------------+---------+
+|   Leave Type   | missing |
+|   From Date    | missing |
+|    To Date     | missing |
+|     Reason     | missing |
+| Salary Advance | missing |
+|   Confidence   | missing |
++----------------+---------+
+Bot: What type of leave are you requesting?
+User: vacation for a wedding, this weekend!
++----------------+--------------------------------------+
+|     Field      |                Value                 |
++----------------+--------------------------------------+
+|   Leave Type   |                annual                |
+|   From Date    |               missing                |
+|    To Date     |               missing                |
+|     Reason     | vacation for a wedding, this weekend |
+| Salary Advance |               missing                |
+|   Confidence   |                 high                 |
++----------------+--------------------------------------+
+Bot: Could you please provide the start and end dates for your leave?
+User: nov 17
++----------------+--------------------------------------+
+|     Field      |                Value                 |
++----------------+--------------------------------------+
+|   Leave Type   |                annual                |
+|   From Date    |              17-11-2023              |
+|    To Date     |               missing                |
+|     Reason     | vacation for a wedding, this weekend |
+| Salary Advance |               missing                |
+|   Confidence   |                 high                 |
++----------------+--------------------------------------+
+Bot: Could you please provide the end date for your leave?
+User: just 5 days
++----------------+--------------------------------------+
+|     Field      |                Value                 |
++----------------+--------------------------------------+
+|   Leave Type   |                annual                |
+|   From Date    |              17-11-2023              |
+|    To Date     |              21-11-2023              |
+|     Reason     | vacation for a wedding, this weekend |
+| Salary Advance |               missing                |
+|   Confidence   |                 high                 |
++----------------+--------------------------------------+
+Bot: Would you like to request a salary advance?
+User: thats too personal of a question... why?
++----------------+--------------------------------------+
+|     Field      |                Value                 |
++----------------+--------------------------------------+
+|   Leave Type   |                annual                |
+|   From Date    |              17-11-2023              |
+|    To Date     |              21-11-2023              |
+|     Reason     | vacation for a wedding, this weekend |
+| Salary Advance |               missing                |
+|   Confidence   |                 high                 |
++----------------+--------------------------------------+
+Thanks for submitting!
