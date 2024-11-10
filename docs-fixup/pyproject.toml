@@ -1,0 +1,43 @@
+[project]
+name = "baa-ctl"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.39.0",
+    "baml-py>=0.66.0",
+    "beautifulsoup4>=4.12.3",
+    "faicons>=0.2.2",
+    "pandas>=2.2.3",
+    "plotly>=5.24.1",
+    "pydantic>=2.9.2",
+    "pytest>=8.3.3",
+    "python-frontmatter>=1.1.0",
+    "pyyaml>=6.0.2",
+    "requests>=2.31.0",
+    "rich>=13.9.4",
+    "ridgeplot>=0.1.30",
+    "shiny>=1.2.0",
+    "shinywidgets>=0.3.4",
+    "tqdm>=4.66.6",
+]
+
+[project.optional-dependencies]
+test = ["pygments>=2.17.2"]
+
+[tool.ruff.lint]
+# https://docs.astral.sh/ruff/rules/
+# I - tell ruff to sort imports, even if it might break things
+#     https://github.com/astral-sh/ruff/issues/8926#issuecomment-1834048218
+# PL - pylint (e.g. circular import)
+# TID - check for banned imports
+extend-select = ["I", "PL", "TID"]
+
+[tool.uv]
+package = true
+
+# uv by default does not support a flat-layout structure, so we need this to tell it
+# to use a flat-layout structure
+# see https://setuptools.pypa.io/en/latest/userguide/package_discovery.html#custom-discovery
+[tool.setuptools.packages]
+find = {}
