@@ -1,6 +1,4 @@
-from dotenv import load_dotenv
-import os
-from baml_client import b, reset_baml_env_vars
+from baml_client import b
 from parse_json_schema import parse_json_schema
 from baml_client.type_builder import TypeBuilder
 from enum import Enum
@@ -10,13 +8,6 @@ from typing_extensions import Annotated
 
 from pydantic import BaseModel, Field
 from pydantic.config import ConfigDict
-
-
-# Load environment variables
-load_dotenv()
-# Reset BAML environment variables to the most recent values
-print(os.environ['OPENAI_API_KEY'])
-reset_baml_env_vars(os.environ.copy())
 
 class FooBar(BaseModel):
     count: int
