@@ -98,7 +98,7 @@ class DynamicContainer {
 ```python
 from baml_client import b
 # Add the type to your BAML Type annotated with `@@dyanamic`
-tb.DyanamicContainer.add_property("data", baml_type)
+tb.DynamicContainer.add_property("data", baml_type)
 # Use in BAML function calls
 response = b.ExtractDynamicTypes(text, {"tb": tb})
 # Parse the response
