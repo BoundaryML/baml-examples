@@ -40,6 +40,10 @@ If you installed via pip:
 baml-cli generate
 ```
 
+### Setup VSCode
+
+- In command palette (command + shift + p), select "Python: Select interpreter", and select the .venv directory that was generated (if using uv)
+
 ## Run
 
 Next make sure you add a .env file, and you can run this script:
