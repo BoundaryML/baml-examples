@@ -26,7 +26,23 @@ pip install -r requirements.txt
 uv sync
 ```
 
+### Generate the baml_client
+
+Using uv:
+
+```bash
+uv run baml-cli generate
+```
+
+If you installed via pip:
+
+```bash
+baml-cli generate
+```
+
 ## Run
+
+Next make sure you add a .env file, and you can run this script:
 
 ```bash
 uv run dotenv run python test_one.py
@@ -35,7 +51,6 @@ uv run dotenv run python test_one.py
 ```bash
 dotenv run python test_one.py
 ```
-
 
 ## Understanding the Code
 
