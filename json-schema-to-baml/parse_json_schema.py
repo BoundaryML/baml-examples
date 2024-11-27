@@ -3,20 +3,19 @@ from baml_client.type_builder import TypeBuilder, FieldType
 
 from pydantic import BaseModel
 
+
 class SchemaAdder:
     def __init__(self, tb: TypeBuilder, schema: Dict[str, Any]):
         self.tb = tb
         self.schema = schema
         self._ref_cache = {}
-    
-
 
     def _parse_object(self, json_schema: Dict[str, Any]) -> FieldType:
         assert json_schema["type"] == "object"
         name = json_schema.get("title")
         if name is None:
             raise ValueError("Title is required in JSON schema for object type")
-        
+
         required_fields = json_schema.get("required", [])
         assert isinstance(required_fields, list)
 
@@ -34,7 +33,9 @@ class SchemaAdder:
                 if description := field_schema.get("description"):
                     assert isinstance(description, str)
                     if default_value is not None:
-                        description = description.strip() + "\n" + f"Default: {default_value}"
+                        description = (
+                            description.strip() + "\n" + f"Default: {default_value}"
+                        )
                         description = description.strip()
                     if len(description) > 0:
                         property.description(description)
@@ -43,7 +44,7 @@ class SchemaAdder:
     def _parse_string(self, json_schema: Dict[str, Any]) -> FieldType:
         assert json_schema["type"] == "string"
         title = json_schema.get("title")
-        
+
         if enum := json_schema.get("enum"):
             assert isinstance(enum, list)
             if title is None:
@@ -58,7 +59,7 @@ class SchemaAdder:
     def _load_ref(self, ref: str) -> FieldType:
         assert ref.startswith("#/"), f"Only local references are supported: {ref}"
         _, left, right = ref.split("/", 2)
-        
+
         if ref not in self._ref_cache:
             if refs := self.schema.get(left):
                 assert isinstance(refs, dict)
@@ -71,7 +72,7 @@ class SchemaAdder:
         if any_of := json_schema.get("anyOf"):
             assert isinstance(any_of, list)
             return self.tb.union([self.parse(sub_schema) for sub_schema in any_of])
-        
+
         if ref := json_schema.get("$ref"):
             assert isinstance(ref, str)
             return self._load_ref(ref)
@@ -84,7 +85,7 @@ class SchemaAdder:
             "number": lambda: self.tb.float(),
             "integer": lambda: self.tb.int(),
             "object": lambda: self._parse_object(json_schema),
-            "array": lambda: self.parse(json_schema).list(),
+            "array": lambda: self.parse(json_schema["items"]).list(),
             "boolean": lambda: self.tb.bool(),
             "null": lambda: self.tb.null(),
         }
