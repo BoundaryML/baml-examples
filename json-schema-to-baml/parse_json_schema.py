@@ -1,9 +1,6 @@
 from typing import Any, Dict
 from baml_client.type_builder import TypeBuilder, FieldType
 
-from pydantic import BaseModel
-
-
 class SchemaAdder:
     def __init__(self, tb: TypeBuilder, schema: Dict[str, Any]):
         self.tb = tb

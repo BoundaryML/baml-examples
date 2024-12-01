@@ -1,11 +1,17 @@
-from baml_client import b
+from baml_client import b, reset_baml_env_vars
 from parse_json_schema import parse_json_schema
 from baml_client.type_builder import TypeBuilder
-from enum import Enum
 from typing import Union, List
+from dotenv import load_dotenv
+import os
 
-from pydantic import BaseModel, Field
-from pydantic.config import ConfigDict
+from pydantic import BaseModel
+
+
+# Load the .env file
+load_dotenv()
+# Reset the BAML environment variables
+reset_baml_env_vars(os.environ.copy())
 
 
 class Education(BaseModel):
@@ -37,6 +43,7 @@ def parse(raw_text: str):
 
     # This is guaranteed to be succeed thanks to BAML!
     content = Resume.model_validate(data)
+    print("Resume is:")
     print(content)
 
 
