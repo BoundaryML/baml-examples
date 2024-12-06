@@ -1,0 +1,4 @@
+{
+    "window.title": "${dirty}${activeFolderShort}${separator}${appName}",
+    "java.compile.nullAnalysis.mode": "automatic"
+}
