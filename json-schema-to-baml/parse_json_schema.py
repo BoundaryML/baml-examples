@@ -81,13 +81,20 @@ class SchemaAdder:
             assert isinstance(any_of, list)
             return self.tb.union([self.parse(sub_schema) for sub_schema in any_of])
 
+        if additional_properties := json_schema.get("additionalProperties"):
+            assert isinstance(additional_properties, dict)
+            if any_of_additional_props := additional_properties.get("anyOf"):
+                assert isinstance(any_of_additional_props, list)
+                return self.tb.map(self.tb.string(), self.tb.union([self.parse(sub_schema) for sub_schema in any_of_additional_props]))
+
         if ref := json_schema.get("$ref"):
             assert isinstance(ref, str)
             return self._load_ref(ref)
 
         type_ = json_schema.get("type")
         if type_ is None:
-            raise ValueError(f"Type is required in JSON schema: {json_schema}")
+            warnings.warn("Empty type field in JSON schema, defaulting to string", UserWarning, stacklevel=2)
+            return self.tb.string()
         parse_type = {
             "string": lambda: self._parse_string(json_schema),
             "number": lambda: self.tb.float(),
