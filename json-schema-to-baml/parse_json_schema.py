@@ -1,3 +1,4 @@
+import warnings
 from typing import Any, Dict
 from baml_client.type_builder import TypeBuilder, FieldType
 
@@ -22,11 +23,21 @@ class SchemaAdder:
             for field_name, field_schema in properties.items():
                 assert isinstance(field_schema, dict)
                 default_value = field_schema.get("default")
-                field_type = self.parse(field_schema)
+                # Handle case when properties are not defined, BAML expects `map<string, string>`
+                if field_schema.get("properties") is None and field_schema.get("type") == "object":
+                    warnings.warn(
+                        f"Field '{field_name}' uses generic dict type which defaults to Dict[str, str]. "
+                        "If a more specific type is needed, please provide a specific Pydantic model instead.",
+                        UserWarning,
+                        stacklevel=2
+                    )
+                    field_type = self.tb.map(self.tb.string(), self.tb.string())
+                else:
+                    field_type = self.parse(field_schema)
                 if field_name not in required_fields:
                     if default_value is None:
                         field_type = field_type.optional()
-                property = new_cls.add_property(field_name, field_type)
+                property_ = new_cls.add_property(field_name, field_type)
                 if description := field_schema.get("description"):
                     assert isinstance(description, str)
                     if default_value is not None:
@@ -35,7 +46,7 @@ class SchemaAdder:
                         )
                         description = description.strip()
                     if len(description) > 0:
-                        property.description(description)
+                        property_.description(description)
         return new_cls.type()
 
     def _parse_string(self, json_schema: Dict[str, Any]) -> FieldType:
