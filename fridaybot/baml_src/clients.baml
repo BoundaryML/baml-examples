@@ -26,43 +26,43 @@ client<llm> ClaudeSonnet {
 }
 
 
-client<llm> Haiku {
-  provider anthropic
-  retry_policy Constant
-  options {
-    model "claude-3-haiku-20240307"
-    api_key env.ANTHROPIC_API_KEY
-  }
-}
-
-// https://docs.boundaryml.com/docs/snippets/clients/round-robin
-client<llm> Fast {
-  provider round-robin
-  options {
-    // This will alternate between the two clients
-    strategy [CustomGPT4oMini, CustomHaiku]
-  }
-}
-
-// https://docs.boundaryml.com/docs/snippets/clients/fallback
-client<llm> OpenaiFallback {
-  provider fallback
-  options {
-    // This will try the clients in order until one succeeds
-    strategy [CustomGPT4oMini, CustomGPT4oMini]
-  }
-}
-
-// https://docs.boundaryml.com/docs/snippets/clients/retry
-retry_policy Constant {
-  max_retries 3
-  // Strategy is optional
-  strategy {
-    type constant_delay
-    delay_ms 200
-  }
-}
-
+// client<llm> Haiku {
+//   provider anthropic
+//   retry_policy Constant
+//   options {
+//     model "claude-3-haiku-20240307"
+//     api_key env.ANTHROPIC_API_KEY
+//   }
+// }
+//
+// // https://docs.boundaryml.com/docs/snippets/clients/round-robin
+// client<llm> Fast {
+//   provider round-robin
+//   options {
+//     // This will alternate between the two clients
+//     strategy [CustomGPT4oMini, CustomHaiku]
+//   }
+// }
+//
+// // https://docs.boundaryml.com/docs/snippets/clients/fallback
+// client<llm> OpenaiFallback {
+//   provider fallback
+//   options {
+//     // This will try the clients in order until one succeeds
+//     strategy [CustomGPT4oMini, CustomGPT4oMini]
+//   }
+// }
+//
+// // https://docs.boundaryml.com/docs/snippets/clients/retry
+// retry_policy Constant {
+//   max_retries 3
+//   // Strategy is optional
+//   strategy {
+//     type constant_delay
+//     delay_ms 200
+//   }
+// }
+//
 retry_policy Exponential {
   max_retries 2
   // Strategy is optional

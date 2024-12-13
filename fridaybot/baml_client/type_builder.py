@@ -14,7 +14,8 @@
 # pylint: disable=unused-import,line-too-long
 # fmt: off
 import typing
-from baml_py.type_builder import FieldType, TypeBuilder as _TypeBuilder, ClassPropertyBuilder, EnumValueBuilder, EnumBuilder, ClassBuilder
+from baml_py.baml_py import FieldType, EnumValueBuilder, EnumBuilder, ClassBuilder
+from baml_py.type_builder import TypeBuilder as _TypeBuilder, ClassPropertyBuilder
 
 class TypeBuilder(_TypeBuilder):
     def __init__(self):

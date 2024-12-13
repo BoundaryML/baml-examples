@@ -1,0 +1,71 @@
+name: Run Friday Bot
+
+on:
+  schedule:
+    - cron: '0 0 * * 4'
+
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: 'Start date (YYYY-MM-DD)'
+        required: false
+        type: string
+      end_date:
+        description: 'End date (YYYY-MM-DD)'
+        required: false
+        type: string
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+
+      - name: Install dependencies
+        run: poetry install
+        working-directory: ${{ github.workspace }}/fridaybot
+
+      - name: Set up environment variables
+        run: |
+          cp .env.example .env
+        working-directory: ${{ github.workspace }}/fridaybot
+
+      - name: Set environment variables
+        run: |
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+
+      - name: Run bot
+        run: |
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            START_DATE="${{ inputs.start_date }}"
+            END_DATE="${{ inputs.end_date }}"
+
+            if [ -z "$START_DATE" ]; then
+              # Default to 14 days ago if no start date provided
+              START_DATE=$(date -d "14 days ago" +%Y-%m-%d)
+            fi
+
+            if [ -n "$END_DATE" ]; then
+              poetry run python -m fridaybot.app --after=$START_DATE --before=$END_DATE
+            else
+              poetry run python -m fridaybot.app --after=$START_DATE
+            fi
+          else
+            # For scheduled runs, use the last 14 days.
+            START_DATE=$(date -d "14 days ago" +%Y-%m-%d)
+            poetry run fridaybot.app --after=$START_DATE
+          fi
+        working-directory: ${{ github.workspace }}/fridaybot
