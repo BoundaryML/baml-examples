@@ -1,6 +1,10 @@
 name: Run Friday Bot
 
 on:
+  push:
+    branches:
+      - "main"
+      - "greg/fridaybot-cicd"
   schedule:
     - cron: '0 0 * * 4'
 
