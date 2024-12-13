@@ -57,7 +57,7 @@ class BamlAsyncClient:
     ) -> List[types.Classification]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -80,7 +80,7 @@ class BamlAsyncClient:
     ) -> Optional[int]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -103,7 +103,7 @@ class BamlAsyncClient:
     ) -> str:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -137,7 +137,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlStream[List[partial_types.Classification], List[types.Classification]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -167,7 +167,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlStream[Optional[int], Optional[int]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -198,7 +198,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlStream[Optional[str], str]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)

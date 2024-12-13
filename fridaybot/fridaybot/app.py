@@ -10,10 +10,11 @@ import requests
 from dotenv import load_dotenv
 from notion_client import AsyncClient
 
+load_dotenv()
+
 from baml_client import b
 from baml_client.types import Issue, Message, MessageType, ThreadMessage
 
-load_dotenv()
 
 intents = discord.Intents.default()
 intents.message_content = True

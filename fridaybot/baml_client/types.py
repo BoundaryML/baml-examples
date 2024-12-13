@@ -47,27 +47,19 @@ class MessageType(str, Enum):
     Uncategorized = "Uncategorized"
 
 class Classification(BaseModel):
-    
-    
     message_id: int
     message_type: "MessageType"
 
 class Issue(BaseModel):
-    
-    
     number: int
     title: str
     body: Optional[str] = None
     type: Union[Literal["pull_request"], Literal["issue"]]
 
 class Message(BaseModel):
-    
-    
     id: int
     content: str
 
 class ThreadMessage(BaseModel):
-    
-    
     user_id: int
     content: str
