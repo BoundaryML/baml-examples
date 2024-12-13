@@ -1,6 +1,10 @@
 name: Run Friday Bot
 
 on:
+  push:
+    branches:
+      - "main"
+      - "greg/fridaybot-cicd"
   schedule:
     - cron: '0 0 * * 4'
 
@@ -40,13 +44,12 @@ jobs:
           cp .env.example .env
         working-directory: ${{ github.workspace }}/fridaybot
 
-      - name: Set environment variables
-        run: |
+      - name: Run Fridaybot
+        env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
 
-      - name: Run bot
         run: |
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -59,13 +62,17 @@ jobs:
             fi
 
             if [ -n "$END_DATE" ]; then
-              poetry run python -m fridaybot.app --after=$START_DATE --before=$END_DATE
+              poetry run python fridaybot --after=$START_DATE --before=$END_DATE
             else
-              poetry run python -m fridaybot.app --after=$START_DATE
+              poetry run python fridaybot --after=$START_DATE
             fi
           else
             # For scheduled runs, use the last 14 days.
             START_DATE=$(date -d "14 days ago" +%Y-%m-%d)
-            poetry run fridaybot.app --after=$START_DATE
+            poetry run fridaybot --after=$START_DATE
           fi
         working-directory: ${{ github.workspace }}/fridaybot
+
+      - name: Congratulations
+        run: |
+          echo "Success. Visit https://www.notion.so/gloochat/Friday-Bot-135bb2d2621680a99929f9a31e96c4bc"
