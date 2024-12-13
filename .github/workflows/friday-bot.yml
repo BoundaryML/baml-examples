@@ -45,11 +45,12 @@ jobs:
         working-directory: ${{ github.workspace }}/fridaybot
 
       - name: Run Fridaybot
-        run: |
-
+        env:
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+
+        run: |
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             START_DATE="${{ inputs.start_date }}"
