@@ -72,3 +72,7 @@ jobs:
             poetry run fridaybot --after=$START_DATE
           fi
         working-directory: ${{ github.workspace }}/fridaybot
+
+      - name: Congratulations
+        run: |
+          echo "Success. Visit https://www.notion.so/gloochat/Friday-Bot-135bb2d2621680a99929f9a31e96c4bc"
