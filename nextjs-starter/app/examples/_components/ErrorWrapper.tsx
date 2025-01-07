@@ -1,4 +1,4 @@
-import React from 'react';
+import type React from 'react';
 import {
   Tooltip,
   TooltipContent,
@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/tooltip"
 import { AlertCircle } from "lucide-react"
 
-export const ErrorWrapper = ({ children, error }) => {
+export const ErrorWrapper = ({ children, error }: { children: React.ReactNode; error: string }) => {
   if (!error) return children;
 
   return (

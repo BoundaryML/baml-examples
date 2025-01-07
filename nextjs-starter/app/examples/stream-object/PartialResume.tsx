@@ -153,7 +153,7 @@ const PartialResume = ({
               <AnimatePresence>
                 {resume.links.map(
                   (link, index) =>
-                    link.url?.value && (
+                    link?.url?.value && (
                       <motion.a
                         key={link.url.value}
                         href={link.url.value}
@@ -165,7 +165,7 @@ const PartialResume = ({
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.2 }}
                       >
-                      <ErrorWrapper error={ link.url?.checks.valid_link.status == "failed" ? "Invalid URL" : null }>
+                      <ErrorWrapper error={ link?.url?.checks?.valid_link?.status === "failed" ? "Invalid URL" : "" }>
                         <Link className="h-4 w-4 mr-1" />
                         {link.url.value}
                       </ErrorWrapper>
