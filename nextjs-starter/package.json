@@ -30,7 +30,7 @@
     "@react-hook/debounce": "^4.0.0",
     "@remixicon/react": "^4.4.0",
     "@tremor/react": "^3.17.2",
-    "ai": "^3.1.31",
+    "ai": "^4.0.28",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cx": "^24.10.10",
