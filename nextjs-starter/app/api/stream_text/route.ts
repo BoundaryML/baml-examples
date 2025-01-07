@@ -1,4 +1,3 @@
-import { StreamingTextResponse } from 'ai'
 import { b } from '@/baml_client'
 
 function iteratorToStream(stream: any) {

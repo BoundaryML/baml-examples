@@ -1,6 +1,6 @@
 "use server";
-import { createStreamableValue, StreamableValue as BaseStreamableValue } from "ai/rsc";
-import { BamlStream } from "@boundaryml/baml";
+import { createStreamableValue, type StreamableValue as BaseStreamableValue } from "ai/rsc";
+import type { BamlStream } from "@boundaryml/baml";
 import { b } from "@/baml_client";
 
 export const analyzeBooks = makeStreamable(b.stream.AnalyzeBooks.bind(b.stream));
