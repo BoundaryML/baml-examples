@@ -8,6 +8,7 @@ export const getRecipe = makeStreamable(b.stream.GetRecipe.bind(b.stream));
 export const answerQuestion = makeStreamable(b.stream.AnswerQuestion.bind(b.stream));
 export const extractResume = makeStreamable(b.stream.ExtractResume.bind(b.stream));
 export const extractResumeNoStructure = makeStreamable(b.stream.ExtractResumeNoStructure.bind(b.stream));
+export const generateGuide = makeStreamable(b.stream.GenerateGuide.bind(b.stream));
 
 // ------------------------------
 // Helper functions

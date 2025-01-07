@@ -6,7 +6,7 @@ class Resume {
     For other links, convert them into valid URLs.
   "#)
   education Education[]
-  experience Experience[]
+  experience Experience[] @alias(experiences)
   skills string[]
   why_hire string[] @description(#"
     3 points of why the candidate is a great hire (use fun and exciting language!).
