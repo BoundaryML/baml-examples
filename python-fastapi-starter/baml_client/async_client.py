@@ -13,7 +13,7 @@
 # flake8: noqa: E501,F401
 # pylint: disable=unused-import,line-too-long
 # fmt: off
-from typing import Any, Dict, List, Optional, TypeVar, Union, TypedDict, Type
+from typing import Any, Dict, List, Optional, TypeVar, Union, TypedDict, Type, Literal, cast
 from typing_extensions import NotRequired
 import pprint
 
@@ -21,22 +21,13 @@ import baml_py
 from pydantic import BaseModel, ValidationError, create_model
 
 from . import partial_types, types
+from .types import Checked, Check
 from .type_builder import TypeBuilder
 from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX, DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME
 
 
 OutputType = TypeVar('OutputType')
 
-def coerce(cls: Type[BaseModel], parsed: Any) -> Any:
-  try:
-    return cls.model_validate({"inner": parsed}).inner # type: ignore
-  except ValidationError as e:
-    raise TypeError(
-      "Internal BAML error while casting output to {}\n{}".format(
-        cls.__name__,
-        pprint.pformat(parsed)
-      )
-    ) from e
 
 # Define the TypedDict with optional parameters having default values
 class BamlCallOptions(TypedDict, total=False):
@@ -66,7 +57,7 @@ class BamlAsyncClient:
     ) -> types.BookAnalysis:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -80,8 +71,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      mdl = create_model("AnalyzeBooksReturnType", inner=(types.BookAnalysis, ...))
-      return coerce(mdl, raw.parsed())
+      return cast(types.BookAnalysis, raw.cast_to(types, types))
     
     async def AnswerQuestion(
         self,
@@ -90,7 +80,7 @@ class BamlAsyncClient:
     ) -> types.Answer:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -104,8 +94,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      mdl = create_model("AnswerQuestionReturnType", inner=(types.Answer, ...))
-      return coerce(mdl, raw.parsed())
+      return cast(types.Answer, raw.cast_to(types, types))
     
     async def ClassifyMessage(
         self,
@@ -114,7 +103,7 @@ class BamlAsyncClient:
     ) -> List[types.Category]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -128,8 +117,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      mdl = create_model("ClassifyMessageReturnType", inner=(List[types.Category], ...))
-      return coerce(mdl, raw.parsed())
+      return cast(List[types.Category], raw.cast_to(types, types))
     
     async def DescribeCharacter(
         self,
@@ -138,7 +126,7 @@ class BamlAsyncClient:
     ) -> types.CharacterDescription:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -152,8 +140,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      mdl = create_model("DescribeCharacterReturnType", inner=(types.CharacterDescription, ...))
-      return coerce(mdl, raw.parsed())
+      return cast(types.CharacterDescription, raw.cast_to(types, types))
     
     async def ExtractResume(
         self,
@@ -162,7 +149,7 @@ class BamlAsyncClient:
     ) -> types.Resume:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -176,8 +163,7 @@ class BamlAsyncClient:
         tb,
         __cr__,
       )
-      mdl = create_model("ExtractResumeReturnType", inner=(types.Resume, ...))
-      return coerce(mdl, raw.parsed())
+      return cast(types.Resume, raw.cast_to(types, types))
     
 
 
@@ -197,7 +183,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlStream[partial_types.BookAnalysis, types.BookAnalysis]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -213,13 +199,10 @@ class BamlStreamClient:
         __cr__,
       )
 
-      mdl = create_model("AnalyzeBooksReturnType", inner=(types.BookAnalysis, ...))
-      partial_mdl = create_model("AnalyzeBooksPartialReturnType", inner=(partial_types.BookAnalysis, ...))
-
       return baml_py.BamlStream[partial_types.BookAnalysis, types.BookAnalysis](
         raw,
-        lambda x: coerce(partial_mdl, x),
-        lambda x: coerce(mdl, x),
+        lambda x: cast(partial_types.BookAnalysis, x.cast_to(types, partial_types)),
+        lambda x: cast(types.BookAnalysis, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -230,7 +213,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlStream[partial_types.Answer, types.Answer]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -247,13 +230,10 @@ class BamlStreamClient:
         __cr__,
       )
 
-      mdl = create_model("AnswerQuestionReturnType", inner=(types.Answer, ...))
-      partial_mdl = create_model("AnswerQuestionPartialReturnType", inner=(partial_types.Answer, ...))
-
       return baml_py.BamlStream[partial_types.Answer, types.Answer](
         raw,
-        lambda x: coerce(partial_mdl, x),
-        lambda x: coerce(mdl, x),
+        lambda x: cast(partial_types.Answer, x.cast_to(types, partial_types)),
+        lambda x: cast(types.Answer, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -264,7 +244,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlStream[List[Optional[types.Category]], List[types.Category]]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -280,13 +260,10 @@ class BamlStreamClient:
         __cr__,
       )
 
-      mdl = create_model("ClassifyMessageReturnType", inner=(List[types.Category], ...))
-      partial_mdl = create_model("ClassifyMessagePartialReturnType", inner=(List[Optional[types.Category]], ...))
-
       return baml_py.BamlStream[List[Optional[types.Category]], List[types.Category]](
         raw,
-        lambda x: coerce(partial_mdl, x),
-        lambda x: coerce(mdl, x),
+        lambda x: cast(List[Optional[types.Category]], x.cast_to(types, partial_types)),
+        lambda x: cast(List[types.Category], x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -297,7 +274,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlStream[partial_types.CharacterDescription, types.CharacterDescription]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -313,13 +290,10 @@ class BamlStreamClient:
         __cr__,
       )
 
-      mdl = create_model("DescribeCharacterReturnType", inner=(types.CharacterDescription, ...))
-      partial_mdl = create_model("DescribeCharacterPartialReturnType", inner=(partial_types.CharacterDescription, ...))
-
       return baml_py.BamlStream[partial_types.CharacterDescription, types.CharacterDescription](
         raw,
-        lambda x: coerce(partial_mdl, x),
-        lambda x: coerce(mdl, x),
+        lambda x: cast(partial_types.CharacterDescription, x.cast_to(types, partial_types)),
+        lambda x: cast(types.CharacterDescription, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     
@@ -330,7 +304,7 @@ class BamlStreamClient:
     ) -> baml_py.BamlStream[partial_types.Resume, types.Resume]:
       __tb__ = baml_options.get("tb", None)
       if __tb__ is not None:
-        tb = __tb__._tb
+        tb = __tb__._tb # type: ignore (we know how to use this private attribute)
       else:
         tb = None
       __cr__ = baml_options.get("client_registry", None)
@@ -346,13 +320,10 @@ class BamlStreamClient:
         __cr__,
       )
 
-      mdl = create_model("ExtractResumeReturnType", inner=(types.Resume, ...))
-      partial_mdl = create_model("ExtractResumePartialReturnType", inner=(partial_types.Resume, ...))
-
       return baml_py.BamlStream[partial_types.Resume, types.Resume](
         raw,
-        lambda x: coerce(partial_mdl, x),
-        lambda x: coerce(mdl, x),
+        lambda x: cast(partial_types.Resume, x.cast_to(types, partial_types)),
+        lambda x: cast(types.Resume, x.cast_to(types, types)),
         self.__ctx_manager.get(),
       )
     

@@ -16,7 +16,27 @@
 import baml_py
 from enum import Enum
 from pydantic import BaseModel, ConfigDict
-from typing import Dict, List, Optional, Union
+from typing import Dict, Generic, List, Literal, Optional, TypeVar, Union, TypeAlias
+
+
+T = TypeVar('T')
+CheckName = TypeVar('CheckName', bound=str)
+
+class Check(BaseModel):
+    name: str
+    expression: str
+    status: str
+
+class Checked(BaseModel, Generic[T,CheckName]):
+    value: T
+    checks: Dict[CheckName, Check]
+
+def get_checks(checks: Dict[CheckName, Check]) -> List[Check]:
+    return list(checks.values())
+
+def all_succeeded(checks: Dict[CheckName, Check]) -> bool:
+    return all(check.status == "succeeded" for check in get_checks(checks))
+
 
 
 class Category(str, Enum):
@@ -39,20 +59,14 @@ class Role(str, Enum):
     Assistant = "Assistant"
 
 class Answer(BaseModel):
-    
-    
     answersInText: List["Citation"]
     answer: str
 
 class BookAnalysis(BaseModel):
-    
-    
     bookNames: List[str]
     popularityOverTime: List["PopularityOverTime"]
 
 class CharacterDescription(BaseModel):
-    
-    
     name: str
     clothingItems: List[str]
     hairColor: Optional[str] = None
@@ -60,76 +74,52 @@ class CharacterDescription(BaseModel):
     spells: List["Spells"]
 
 class Citation(BaseModel):
-    
-    
     documentTitle: str
     sourceLink: str
     relevantTextFromDocument: str
     number: int
 
 class Context(BaseModel):
-    
-    
     documents: List["Document"]
 
 class Document(BaseModel):
-    
-    
     title: str
     text: str
     link: str
 
 class DynamicOutput(BaseModel):
-    
     model_config = ConfigDict(extra='allow')
-    
 
 class Education(BaseModel):
-    
-    
     school: str
     degree: str
     year: int
 
 class Message(BaseModel):
-    
-    
     role: "Role"
     content: str
 
 class PopularityOverTime(BaseModel):
-    
-    
     bookName: str
     scores: List["Score"]
 
 class Ranking(BaseModel):
-    
-    
     bookName: str
     score: int
 
 class Resume(BaseModel):
-    
-    
     name: str
     education: List["Education"]
     skills: List[str]
 
 class Score(BaseModel):
-    
-    
     year: int
     score: int
 
 class Spells(BaseModel):
-    
-    
     name: str
     description: str
 
 class WordCount(BaseModel):
-    
-    
     bookName: str
     count: int

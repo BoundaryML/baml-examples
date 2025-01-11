@@ -14,7 +14,8 @@
 # pylint: disable=unused-import,line-too-long
 # fmt: off
 import typing
-from baml_py.type_builder import FieldType, TypeBuilder as _TypeBuilder, ClassPropertyBuilder, EnumValueBuilder, EnumBuilder, ClassBuilder
+from baml_py.baml_py import FieldType, EnumValueBuilder, EnumBuilder, ClassBuilder
+from baml_py.type_builder import TypeBuilder as _TypeBuilder, ClassPropertyBuilder
 
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
@@ -25,19 +26,20 @@ class TypeBuilder(_TypeBuilder):
         ))
 
 
-
-    @property
     
+    @property
     def DynamicOutput(self) -> "DynamicOutputBuilder":
         return DynamicOutputBuilder(self)
 
 
 
 
+
 class DynamicOutputBuilder:
     def __init__(self, tb: _TypeBuilder):
-        self.__bldr = tb._tb.class_("DynamicOutput")
-        self.__properties = set([])
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self.__bldr = _tb.class_("DynamicOutput")
+        self.__properties: typing.Set[str] = set([])
         self.__props = DynamicOutputProperties(self.__bldr, self.__properties)
 
     def type(self) -> FieldType:
@@ -48,7 +50,7 @@ class DynamicOutputBuilder:
         return self.__props
     
     def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, self.__bldr.property(name)) for name in self.__properties]
+        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
 
     def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
         if name in self.__properties:
@@ -66,6 +68,7 @@ class DynamicOutputProperties:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+
 
 
 
