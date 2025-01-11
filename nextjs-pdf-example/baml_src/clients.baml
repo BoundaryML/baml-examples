@@ -44,6 +44,6 @@ client<llm> Openai {
   provider fallback
   options {
     // This will try the clients in order until one succeeds
-    strategy [GPT4, FastOpenAI]
+    strategy [GPT4o, FastOpenAI]
   }
 }
