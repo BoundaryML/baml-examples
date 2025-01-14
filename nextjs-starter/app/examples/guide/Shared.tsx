@@ -74,9 +74,9 @@ export const Content: React.FC<{
                       Or try one of these:
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {preloadedExamples.map((example, index) => (
+                      {preloadedExamples.map((example) => (
                         <Button
-                          key={index}
+                          key={example.name}
                           variant="outline"
                           size="sm"
                           onClick={() => handleSubmit(example.query)}
@@ -90,8 +90,7 @@ export const Content: React.FC<{
                 </div>
               </CardContent>
             </Card>
-            <DebugPanel answer={answer} />
-
+            {/* <DebugPanel answer={answer} /> */}
           </div>
 
           <AnimatePresence>

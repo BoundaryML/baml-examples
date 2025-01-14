@@ -124,8 +124,8 @@ export interface Experience {
 
 export interface Guide {
   related_topics: Query[]
-  packaging_instructions: string[]
   processing_instructions: string[]
+  packaging_instructions: string[]
   
 }
 
@@ -172,7 +172,7 @@ export interface PopularityOverTime {
 }
 
 export interface Query {
-  category: "packaging" | "processing"
+  category: "processing" | "packaging"
   phrase: string
   
 }

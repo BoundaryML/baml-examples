@@ -3,12 +3,12 @@ class Guide {
     related_topics Query[] @description(#"
         more refined (around 4) to make a user more likely to find the information they need.
     "#)
-    packaging_instructions string[]
     processing_instructions string[]
+    packaging_instructions string[]
 }
 
 class Query {
-    category "packaging" | "processing"
+    category "processing" | "packaging"
     phrase string
 }
 
