@@ -10,7 +10,8 @@
     "generate": "baml-cli generate --from ./baml_src"
   },
   "dependencies": {
-    "@boundaryml/baml": "^0.72.0",
+    "@boundaryml/baml": "link:../../baml/engine/language_client_typescript",
+    "@boundaryml/baml-nextjs-plugin": "link:../../baml/typescript/nextjs-plugin",
     "@headlessui/react": "^2.0.4",
     "@headlessui/tailwindcss": "^0.2.1",
     "@hookform/resolvers": "^3.9.0",

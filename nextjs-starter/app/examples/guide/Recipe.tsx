@@ -3,7 +3,7 @@
 import type { Guide, Query } from "@/baml_client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { RecursivePartialNull } from "@/baml_client/async_client";
+import type { RecursivePartialNull } from "@/baml_client/types";
 import { type ReactNode, useState, useEffect } from "react";
 import { CheckCircle, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,12 +19,12 @@ export const GuideRender = ({
   guide: RecursivePartialNull<Guide>;
   state: "idle" | "loading" | "success";
 }) => {
-  const filterTopics = (category: "packaging" | "processing") => 
-    guide.related_topics?.filter((t): t is NonNullableQuery => 
-      t?.category === category && 
-      t.category !== null && 
-      t.category !== undefined && 
-      t.phrase !== null && 
+  const filterTopics = (category: "packaging" | "processing") =>
+    guide.related_topics?.filter((t): t is NonNullableQuery =>
+      t?.category === category &&
+      t.category !== null &&
+      t.category !== undefined &&
+      t.phrase !== null &&
       t.phrase !== undefined
     ) ?? [];
 
@@ -60,7 +60,7 @@ export const GuideRender = ({
           </TabsList>
           <TabsContent value="processing">
             <ScrollArea className="h-[400px]">
-              <InstructionsRender 
+              <InstructionsRender
                 instructions={guide.processing_instructions}
                 topics={processingTopics}
                 inProgress={state === "loading"}
@@ -69,8 +69,8 @@ export const GuideRender = ({
           </TabsContent>
           <TabsContent value="packaging">
             <ScrollArea className="h-[400px]">
-              <InstructionsRender 
-                instructions={guide.packaging_instructions} 
+              <InstructionsRender
+                instructions={guide.packaging_instructions}
                 topics={packagingTopics}
                 inProgress={state === "loading"}
               />
@@ -161,7 +161,7 @@ const InstructionStep = ({
           <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500 inline" />
         )}
       </div>
-      
+
       {!inProgress && isLoading && (
         <div className="ml-6 text-sm text-gray-500">
           <Loader2 className="mr-2 h-4 w-4 animate-spin text-blue-500 inline" />
@@ -174,7 +174,7 @@ const InstructionStep = ({
           {error}
         </div>
       )}
-      
+
       {!inProgress && searchResult && (
         <div className="ml-6">
           <SearchResultCard searchResult={searchResult} />

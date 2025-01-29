@@ -1,6 +1,6 @@
 "use client"
 
-import { Bar, BarChart, XAxis, YAxis, Cell } from "recharts"
+import { Bar, BarChart, XAxis, YAxis, Cell, ResponsiveContainer } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
@@ -31,45 +31,45 @@ export function RankingChart({ rankingData, bookColors }: RankingChartProps) {
   )
 
   return (
-    <Card className="w-fit h-full min-h-96">
+    <Card>
       <CardHeader>
         <CardTitle>Ratings</CardTitle>
       </CardHeader>
       <CardContent>
         {chartData && (
           <ChartContainer config={chartConfig}>
-            <BarChart 
-              data={chartData} 
-              layout="vertical" 
-              width={400}
-              height={300}
-            >
-              <XAxis 
-                type="number" 
-                tick={{ fill: 'var(--foreground)' }}
-                tickLine={{ stroke: 'var(--foreground)' }}
-                axisLine={{ stroke: 'var(--foreground)' }}
-              />
-              <YAxis 
-                dataKey="name" 
-                type="category" 
-                tick={{ fill: 'var(--foreground)' }}
-                tickLine={{ stroke: 'var(--foreground)' }}
-                axisLine={{ stroke: 'var(--foreground)' }}
-              />
-              <ChartTooltip 
-                content={
-                  <ChartTooltipContent 
-                    
-                  />
-                } 
-              />
-              <Bar dataKey="value">
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
+            <ResponsiveContainer>
+              <BarChart
+                data={chartData}
+                layout="vertical"
+              >
+                <XAxis
+                  type="number"
+                  tick={{ fill: 'var(--foreground)' }}
+                  tickLine={{ stroke: 'var(--foreground)' }}
+                  axisLine={{ stroke: 'var(--foreground)' }}
+                />
+                <YAxis
+                  dataKey="name"
+                  type="category"
+                  tick={{ fill: 'var(--foreground)' }}
+                  tickLine={{ stroke: 'var(--foreground)' }}
+                  axisLine={{ stroke: 'var(--foreground)' }}
+                />
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+
+                    />
+                  }
+                />
+                <Bar dataKey="value">
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </ChartContainer>
         )}
       </CardContent>

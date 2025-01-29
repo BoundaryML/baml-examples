@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Cog, AlertCircle, CheckCircle } from "lucide-react"
-import type { StreamState } from "@/app/_hooks/useStream"
 import preloadedExamples from "./examples"
 import { GuideRender } from "./Recipe"
 import { useState } from "react"
@@ -14,11 +13,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import JsonView from 'react18-json-view'
+import type { HookResult } from "@/baml_client/react/types"
+import { GenerateGuideAction } from "@/baml_client/react/server"
+import ErrorPreview from "../_components/ErrorPreview"
 
 export const Content: React.FC<{
   query: string
   setQuery: (value: string) => void
-  answer: StreamState<typeof generateGuide>
+  answer: HookResult<typeof GenerateGuideAction>
 }> = ({ query, setQuery, answer }) => {
   const [name, setName] = useState<string>("")
 
@@ -29,11 +31,11 @@ export const Content: React.FC<{
 
   const data = answer.isSuccess
     ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
+    : answer.isPending
+    ? answer.partialData
     : undefined
 
-  const state = answer.isLoading ? "loading" : answer.isSuccess ? "success" : "idle"
+  const state = answer.isPending ? "loading" : answer.isSuccess ? "success" : "idle"
 
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -59,10 +61,10 @@ export const Content: React.FC<{
                     />
                     <Button
                       onClick={() => handleSubmit(query)}
-                      disabled={answer.isLoading}
+                      disabled={answer.isPending}
                       className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700"
                     >
-                      {answer.isLoading ? (
+                      {answer.isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         "Generate Guide"
@@ -111,28 +113,28 @@ export const Content: React.FC<{
   )
 }
 
-const Status: React.FC<{ status: StreamState<any>["status"] }> = ({
+const Status: React.FC<{ status: HookResult["status"] }> = ({
     status,
   }) => {
     const statusConfig = {
-      loading: { icon: Loader2, className: "animate-spin text-gray-500" },
+      pending: { icon: Loader2, className: "animate-spin text-gray-500" },
       error: { icon: AlertCircle, className: "text-red-500" },
       success: { icon: CheckCircle, className: "text-green-500" },
       idle: { icon: null, className: "" },
     }
-  
+
     const { icon: Icon, className } = statusConfig[status] || statusConfig.idle
-  
+
     return Icon ? <Icon className={`h-5 w-5 ${className}`} /> : null
   }
 
 const DebugPanel: React.FC<{
-  answer: StreamState<typeof generateGuide>
+  answer: HookResult<typeof GenerateGuideAction>
 }> = ({ answer }) => {
   const data = answer.isSuccess
     ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
+    : answer.isPending
+    ? answer.partialData
     : undefined
 
   return (
@@ -148,14 +150,15 @@ const DebugPanel: React.FC<{
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 text-xs bg-muted">
-            <ScrollArea className="h-[300px]">
-              <JsonView
-                src={data || {}}
-                theme="atom"
-                collapseStringsAfterLength={50}
-              />
-            </ScrollArea>
+      <CardContent className="p-4">
+        {answer.error && <ErrorPreview error={answer.error} />}
+        <ScrollArea className="h-[300px] text-xs bg-muted">
+          <JsonView
+            src={data || {}}
+            theme="atom"
+            collapseStringsAfterLength={50}
+          />
+        </ScrollArea>
       </CardContent>
     </Card>
   )

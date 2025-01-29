@@ -1,11 +1,12 @@
 "use client";
 
-import { Ingredient, PartIngredient, PartSteps, Recipe } from "@/baml_client";
+import type { Ingredient, PartIngredient, PartSteps, Recipe } from "@/baml_client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RecursivePartialNull } from "@/baml_client/async_client";
+import type { RecursivePartialNull } from "@/baml_client/types";
 import { Slider } from "@/components/ui/slider";
-import { ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -35,7 +36,7 @@ export const RecipeRender = ({
         <div className="flex flex-col gap-2">
           <p className="text-gray-500">
             Servings: {servings}{" "}
-            {servingRatio != 1 && (
+            {servingRatio !== 1 && (
               <>(scaled from {recipe.number_of_servings})</>
             )}
           </p>
@@ -115,7 +116,7 @@ const IngredientListRender = ({
         {(ingredients as RecursivePartialNull<PartIngredient>[]).map(
           (part, index) =>
             part && (
-              <div key={index}>
+              <div key={part.title}>
                 <h3 className="font-semibold text-lg mb-2 flex flex-row items-center">
                 {(inProgress && index === ingredients.length - 1) && <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />}
                     {part.title}
@@ -125,7 +126,7 @@ const IngredientListRender = ({
                     (ingredient, idx) =>
                       ingredient && (
                         <IngredientRender
-                          key={idx}
+                          key={ingredient.name}
                           ingredient={ingredient}
                           ratio={ratio}
                           isLast={inProgress && idx === part.ingredients!.length - 1 && index === ingredients.length - 1}
@@ -142,8 +143,8 @@ const IngredientListRender = ({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {(ingredients as Ingredient[]).map((ingredient, index) => (
-        <IngredientRender key={index} ingredient={ingredient} ratio={ratio} />
+      {(ingredients as Ingredient[]).map((ingredient) => (
+        <IngredientRender key={ingredient.name} ingredient={ingredient} ratio={ratio} />
       ))}
     </div>
   );
@@ -185,10 +186,10 @@ const formatFraction = (numerator: number, denominator: number): ReactNode => {
 
 const formatAmount = (value: number): ReactNode => {
   const tolerance = 1.0e-6;
-  let h1 = 1,
-    h2 = 0,
-    k1 = 0,
-    k2 = 1;
+  let h1 = 1;
+  let h2 = 0;
+  let k1 = 0;
+  let k2 = 1;
   let b = value;
   do {
     const a = Math.floor(b);
@@ -262,7 +263,7 @@ const InstructionListRender = ({
         if (typeof instruction === "object") {
           return (
             instruction && (
-              <li key={index}>
+              <li key={instruction.title}>
                 <h3 className="font-semibold text-lg mb-2">
                   {instruction.title}
                 </h3>
@@ -273,7 +274,7 @@ const InstructionListRender = ({
         }
         return (
           instruction && (
-            <SingleStepRender key={index} step={instruction} index={index} />
+              <SingleStepRender key={instruction} step={instruction} index={index} />
           )
         );
       })}
@@ -290,7 +291,7 @@ const InstructionRender = ({
     <ol className="list-decimal list-inside space-y-2">
       {instruction?.map(
         (step, index) =>
-          step && <SingleStepRender key={index} step={step} index={index} />
+          step && <SingleStepRender key={step} step={step} index={index} />
       )}
     </ol>
   );

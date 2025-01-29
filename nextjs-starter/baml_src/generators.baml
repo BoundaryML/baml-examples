@@ -1,6 +1,5 @@
 generator lang_typescript {
-  output_type "typescript"
+  output_type "typescript/react"
   output_dir "../"
-  version "0.72.0"
+  version "0.72.1"
 }
-

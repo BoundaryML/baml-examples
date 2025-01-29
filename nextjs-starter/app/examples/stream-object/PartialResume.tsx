@@ -17,8 +17,8 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { RecursivePartialNull } from "@/baml_client/async_client";
-import { Resume } from "@/baml_client/types";
+import type { RecursivePartialNull } from "@/baml_client/types";
+import type { Resume } from "@/baml_client";
 import { ErrorWrapper } from "../_components/ErrorWrapper";
 
 const PartialResume = ({
@@ -27,11 +27,11 @@ const PartialResume = ({
   resume: RecursivePartialNull<Resume>;
 }) => {
   const [isWhyHireOpen, setIsWhyHireOpen] = useState(false);
-  const prevResumeRef = useRef<RecursivePartialNull<Resume>>({});
+  const prevResumeRef = useRef<RecursivePartialNull<Resume>>(resume);
 
   useEffect(() => {
     prevResumeRef.current = resume;
-  });
+  }, [resume]);
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 10 },
@@ -112,7 +112,7 @@ const PartialResume = ({
                     >
                       {resume.why_hire.map((reason, index) => (
                         <motion.li
-                          key={index}
+                          key={reason}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
@@ -152,7 +152,7 @@ const PartialResume = ({
             <div className="flex flex-wrap gap-2">
               <AnimatePresence>
                 {resume.links.map(
-                  (link, index) =>
+                  (link) =>
                     link?.url?.value && (
                       <motion.a
                         key={link.url.value}
@@ -165,7 +165,7 @@ const PartialResume = ({
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.2 }}
                       >
-                      <ErrorWrapper error={ link?.url?.checks?.valid_link?.status === "failed" ? "Invalid URL" : "" }>
+                      <ErrorWrapper error={ link.url?.checks?.valid_link?.status === "failed" ? "Invalid URL" : undefined}>
                         <Link className="h-4 w-4 mr-1" />
                         {link.url.value}
                       </ErrorWrapper>
@@ -236,7 +236,7 @@ const PartialResume = ({
                           <AnimatePresence>
                             {(item.description ?? []).map((desc, num) => (
                               <motion.li
-                                key={num}
+                                key={desc}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}

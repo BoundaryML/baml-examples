@@ -25,13 +25,14 @@ export function PopularityLineChart({ popularityData, bookColors }: PopularityLi
   }, [bookColors, popularityData])
 
   return (
-    <Card className="w-fit h-full min-h-96">
+    <Card>
       <CardHeader>
         <CardTitle>Book Popularity Over Time</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent >
         <ChartContainer config={chartConfig}>
-            <LineChart data={popularityData} height={300} width={400}>
+          <ResponsiveContainer>
+            <LineChart data={popularityData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="date"
@@ -59,6 +60,7 @@ export function PopularityLineChart({ popularityData, bookColors }: PopularityLi
                 />
               ))}
             </LineChart>
+          </ResponsiveContainer>
         </ChartContainer>
       </CardContent>
     </Card>

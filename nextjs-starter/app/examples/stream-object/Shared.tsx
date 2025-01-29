@@ -1,9 +1,5 @@
 'use client'
 
-import {
-  extractResume,
-  extractResumeNoStructure,
-} from "@/app/actions/streamable_objects"
 import { AlertTitle } from "@/components/ui/alert"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -17,14 +13,15 @@ import {
   Code,
   Home,
 } from "lucide-react"
-import ErrorPreview from "./ErrorPreview"
+import ErrorPreview from "../_components/ErrorPreview"
 import PartialResume from "./PartialResume"
 import examples from "./examples"
-import { BamlStreamFunction, StreamState } from "@/app/_hooks/useStream"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
-import React, { useState } from "react"
+import { useState } from "react"
 import JsonView from 'react18-json-view'
+import type { HookResult, StreamingHookResult, ServerAction } from "@/baml_client/react/types"
+import type { ExtractResumeAction, ExtractResumeNoStructureAction } from "@/baml_client/react/server"
 
 const LoadPresetExample: React.FC<{
   setResume: (value: string) => void
@@ -73,9 +70,9 @@ const ResumeInput: React.FC<{
           className="h-[300px] text-sm resize-none focus:ring-2 focus:ring-blue-500 transition-shadow duration-200"
           disabled={isLoading}
         />
-        <Button 
-          onClick={onClick} 
-          disabled={isLoading} 
+        <Button
+          onClick={onClick}
+          disabled={isLoading}
           className="mt-6 w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-md transition-all duration-300 transform hover:scale-105"
         >
           {isLoading ? (
@@ -92,11 +89,11 @@ const ResumeInput: React.FC<{
   )
 }
 
-export const Status: React.FC<{ status: StreamState<any>["status"] }> = ({
+export const Status: React.FC<{ status: HookResult["status"] }> = ({
   status,
 }) => {
   const statusConfig = {
-    loading: { icon: Loader2, className: "animate-spin text-blue-500" },
+    pending: { icon: Loader2, className: "animate-spin text-blue-500" },
     error: { icon: AlertCircle, className: "text-red-500" },
     success: { icon: CheckCircle, className: "text-green-500" },
     idle: { icon: null, className: "" },
@@ -107,12 +104,13 @@ export const Status: React.FC<{ status: StreamState<any>["status"] }> = ({
   return Icon ? <Icon className={`h-5 w-5 ${className}`} /> : null
 }
 
+
 export const Content: React.FC<{
   resumeText: string
   setResumeText: (value: string) => void
   isLoading: boolean
-  structured: StreamState<typeof extractResume>
-  unstructured: StreamState<typeof extractResumeNoStructure>
+  structured: StreamingHookResult<typeof ExtractResumeAction>,
+  unstructured: StreamingHookResult<typeof ExtractResumeNoStructureAction>,
 }> = ({ resumeText, setResumeText, isLoading, structured, unstructured }) => {
   const handleExtract = async () => {
     await Promise.allSettled([
@@ -201,48 +199,41 @@ const UnstructuredResume = ({ resume }: { resume: string }) => {
   )
 }
 
-function ResumeTabContent<T extends BamlStreamFunction>({state, renderComponent, mode} : {
-  state: StreamState<T>,
+function ResumeTabContent<T extends ServerAction>({state, renderComponent, mode} : {
+  state: StreamingHookResult<T>,
   mode: "pretty" | "json",
-  renderComponent: (props: { resume: NonNullable<StreamState<T>['streamingData']> }) => JSX.Element
-}) { 
+  renderComponent: (props: { resume: NonNullable<StreamingHookResult<T>['partialData']> }) => JSX.Element
+}) {
+  const content = (data: NonNullable<StreamingHookResult<T>['partialData']>) => {
+    if (mode === "pretty") {
+      return renderComponent({ resume: data });
+    }
+    return (
+      <Card className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+        <CardContent className="p-4">
+          <ScrollArea className="h-80">
+            <JsonView src={data} theme="atom" />
+          </ScrollArea>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="mt-4">
       {state.error && <ErrorPreview error={state.error} />}
-      {state.isLoading && state.streamingData && (
-        mode === "pretty" ? (
-          renderComponent({ resume: state.streamingData })
-        ) : (
-          <Card className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-            <CardContent className="p-4">
-              <ScrollArea className="h-80">
-                <JsonView src={state.streamingData} theme="atom" />
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )
-      )}
+      {state.isPending && state.partialData && content(state.partialData)}
       {state.isSuccess && state.data && (
         <>
           <div className="flex flex-row gap-2 items-center mb-4 bg-green-100 text-green-800 px-4 py-2 rounded-md">
             <CheckCircle className="h-5 w-5" />
             <AlertTitle className="font-semibold">Extraction Completed</AlertTitle>
           </div>
-          {mode === "pretty" ? (
-            renderComponent({ resume: state.data })
-          ) : (
-            <Card className="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-              <CardContent className="p-4">
-                <ScrollArea className="h-80">
-                  <JsonView src={state.data} theme="atom" />
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          )}
+          {content(state.data)}
         </>
       )}
     </div>
-  )
+  );
 }
 
 export default Content

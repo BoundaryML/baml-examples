@@ -1,10 +1,8 @@
 "use client"
 
-import { analyzeBooks } from "@/app/actions/streamable_objects"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { StreamState } from "@/app/_hooks/useStream"
 import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Cog } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
@@ -17,16 +15,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import JsonView from 'react18-json-view'
-import ErrorPreview from "../stream-object/ErrorPreview"
+import ErrorPreview from "../_components/ErrorPreview"
+import type { HookResult } from "@/baml_client/react/types"
+import type { AnalyzeBooksAction } from "@/baml_client/react/server"
+import type { PopularityOverTime } from "@/baml_client/types"
 
 export const Content: React.FC<{
   query: string
   setQuery: (value: string) => void
-  answer: StreamState<typeof analyzeBooks>
+  answer: HookResult<typeof AnalyzeBooksAction>
 }> = ({ query, setQuery, answer }) => {
   const [bookColors, setBookColors] = useState<Record<string, string>>({})
   const [activeColorPicker, setActiveColorPicker] = useState<string | null>(null)
-  const data = useMemo(() => answer.isSuccess ? answer.data : answer.isLoading ? answer.streamingData : undefined, [answer])
+  const data = useMemo(() => answer.isSuccess ? answer.data : answer.isPending? answer.partialData: undefined, [answer])
   const books = useMemo(() => data?.bookNames?.filter((book): book is string => !!book) ?? [], [data])
 
   const handleAnalyze = (text: string) => {
@@ -91,10 +92,10 @@ export const Content: React.FC<{
                   />
                   <Button
                     onClick={() => handleAnalyze(query)}
-                    disabled={answer.isLoading}
+                    disabled={answer.isPending}
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-all duration-200 ease-in-out transform hover:scale-105"
                   >
-                    {answer.isLoading ? (
+                    {answer.isPending ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
                       "Analyze Books"
@@ -158,27 +159,18 @@ export const Content: React.FC<{
                         </div>
                         </div>
                         <div className="space-y-8">
-                          <div>
-                            <h3 className="text-lg font-semibold mb-2">Popularity Over Time</h3>
                             <PopularityLineChart
-                              popularityData={data.popularityOverTime}
+                              popularityData={data?.popularityOverTime}
                               bookColors={bookColors}
                             />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold mb-2">Popularity Rankings</h3>
                             <RankingChart
                               rankingData={data.popularityRankings}
                               bookColors={bookColors}
                             />
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold mb-2">Word Counts</h3>
                             <WordCountChart
                               wordCountData={data.wordCounts}
                               bookColors={bookColors}
                             />
-                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -198,18 +190,18 @@ export const Content: React.FC<{
 }
 
 const DebugPanel: React.FC<{
-  answer: StreamState<typeof analyzeBooks>
+  answer: HookResult<typeof AnalyzeBooksAction>
 }> = ({ answer }) => {
   const data = answer.isSuccess
     ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
+    : answer.isPending
+    ? answer.partialData
     : undefined
 
   const Status: React.FC<{ status: string }> = ({ status }) => {
     const statusConfig = {
       idle: { color: "bg-gray-500", text: "Idle" },
-      loading: { color: "bg-blue-500", text: "Loading" },
+      pending: { color: "bg-blue-500", text: "Loading" },
       success: { color: "bg-green-500", text: "Success" },
       error: { color: "bg-red-500", text: "Error" },
     }
@@ -237,7 +229,7 @@ const DebugPanel: React.FC<{
       </CardHeader>
       <CardContent className="p-4">
         {answer.error && <ErrorPreview error={answer.error} />}
-        <ScrollArea className="h-[600px]">
+        <ScrollArea className="h-[600px] text-xs bg-muted">
               <JsonView
                 src={data}
                 theme="atom"

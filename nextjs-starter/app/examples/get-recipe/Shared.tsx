@@ -1,12 +1,12 @@
 "use client"
 
-import { getRecipe } from "@/app/actions/streamable_objects"
+import type { GetRecipeAction } from "@/baml_client/react/server"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
 import { Loader2, Cog, AlertCircle, CheckCircle } from "lucide-react"
-import { StreamState } from "@/app/_hooks/useStream"
+import type { HookResult } from "@/baml_client/react/types"
 import preloadedExamples from "./examples"
 import { RecipeRender } from "./Recipe"
 import { useState } from "react"
@@ -14,11 +14,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import JsonView from 'react18-json-view'
+import ErrorPreview from "../_components/ErrorPreview"
 
 export const Content: React.FC<{
   query: string
   setQuery: (value: string) => void
-  answer: StreamState<typeof getRecipe>
+  answer: HookResult<typeof GetRecipeAction>
 }> = ({ query, setQuery, answer }) => {
   const [name, setName] = useState<string>("")
 
@@ -29,12 +30,12 @@ export const Content: React.FC<{
 
   const data = answer.isSuccess
     ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
+    : answer.isPending
+    ? answer.partialData
     : undefined
 
-  const state = answer.isLoading ?
-    (answer.streamingData?.instructions?.length ? "instructions" : "ingredients") :
+  const state = answer.isPending ?
+    (answer.partialData?.instructions?.length ? "instructions" : "ingredients") :
     (answer.isSuccess || answer.isError) ? "done" : "idle"
 
   return (
@@ -61,10 +62,10 @@ export const Content: React.FC<{
                     />
                     <Button
                       onClick={() => handleSubmit(query)}
-                      disabled={answer.isLoading}
+                      disabled={answer.isPending}
                       className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
                     >
-                      {answer.isLoading ? (
+                      {answer.isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
                         "Generate Recipe"
@@ -78,7 +79,7 @@ export const Content: React.FC<{
                     <div className="flex flex-wrap gap-2">
                       {preloadedExamples.map((example, index) => (
                         <Button
-                          key={index}
+                          key={example.query}
                           variant="outline"
                           size="sm"
                           onClick={() => handleSubmit(example.query)}
@@ -114,32 +115,29 @@ export const Content: React.FC<{
   )
 }
 
-const Status: React.FC<{ status: StreamState<any>["status"] }> = ({
+const Status: React.FC<{ status: HookResult["status"] }> = ({
     status,
   }) => {
     const statusConfig = {
-      loading: { icon: Loader2, className: "animate-spin text-blue-500" },
+      pending: { icon: Loader2, className: "animate-spin text-blue-500" },
       error: { icon: AlertCircle, className: "text-red-500" },
       success: { icon: CheckCircle, className: "text-green-500" },
       idle: { icon: null, className: "" },
     }
-  
+
     const { icon: Icon, className } = statusConfig[status] || statusConfig.idle
-  
+
     return Icon ? <Icon className={`h-5 w-5 ${className}`} /> : null
   }
 
 const DebugPanel: React.FC<{
-  answer: StreamState<typeof getRecipe>
+  answer: HookResult<typeof GetRecipeAction>
 }> = ({ answer }) => {
   const data = answer.isSuccess
     ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
+    : answer.isPending
+    ? answer.partialData
     : undefined
-
-
-      
 
   return (
     <Card className="w-full shadow-lg h-fit">
@@ -154,14 +152,15 @@ const DebugPanel: React.FC<{
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 text-xs bg-muted">
-            <ScrollArea className="h-[300px]">
-              <JsonView
-                src={data || {}}
-                theme="atom"
-                collapseStringsAfterLength={50}
-              />
-            </ScrollArea>
+      <CardContent className="p-4">
+        {answer.error && <ErrorPreview error={answer.error} />}
+        <ScrollArea className="h-[300px] text-xs bg-muted">
+          <JsonView
+            src={data || {}}
+            theme="atom"
+            collapseStringsAfterLength={50}
+          />
+        </ScrollArea>
       </CardContent>
     </Card>
   )

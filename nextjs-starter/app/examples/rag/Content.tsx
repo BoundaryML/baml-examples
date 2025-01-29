@@ -1,8 +1,6 @@
 'use client'
 
-import { StreamState } from "@/app/_hooks/useStream"
-import { answerQuestion } from "@/app/actions/streamable_objects"
-import { Answer, Citation, Document } from "@/baml_client"
+import type { Answer, Citation, Document } from "@/baml_client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { documents } from "@/lib/rag-docs"
 import {
@@ -17,20 +15,21 @@ import { AlertCircle, CheckCircle, CheckCircle2, Clock, Cog, Loader2, Rocket, XC
 import { getCitationContext, createWikipediaLink } from "./utils"
 import examples from "./examples"
 import Link from "next/link"
-import { PropsWithChildren, useEffect, useState } from "react"
-import ErrorPreview from "../stream-object/ErrorPreview"
-import { RecursivePartialNull } from "@/baml_client/async_client"
+import type { PropsWithChildren } from "react"
+import ErrorPreview from "../_components/ErrorPreview"
+import type { RecursivePartialNull } from "@/baml_client/types"
 import { motion } from "framer-motion"
 import JsonView from "react18-json-view"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import type {  HookResult } from "@/baml_client/react/types"
+import type { AnswerQuestionAction } from "@/baml_client/react/server"
 
 export const Content: React.FC<{
   question: string
   setQuestion: (value: string) => void
-  answerAction: StreamState<typeof answerQuestion>
+  answerAction: HookResult<typeof AnswerQuestionAction>
 }> = ({ question, setQuestion, answerAction }) => {
   return (
     <div className="px-4 md:px-12 flex flex-col items-center w-full py-8 overflow-y-auto bg-gradient-to-b from-gray-50 to-white">
@@ -40,7 +39,7 @@ export const Content: React.FC<{
           <QuestionInput
             question={question}
             setQuestion={setQuestion}
-            isLoading={answerAction.isLoading}
+            isLoading={answerAction.isPending}
             onClick={() => answerAction.mutate(question, { documents })}
           >
             <AnswerContent answerAction={answerAction} />
@@ -86,9 +85,9 @@ const QuestionInput: React.FC<
           className="h-[100px] text-sm resize-none focus:ring-2 focus:ring-blue-500 transition-shadow duration-200"
           disabled={isLoading}
         />
-        <Button 
-          onClick={onClick} 
-          disabled={isLoading} 
+        <Button
+          onClick={onClick}
+          disabled={isLoading}
           className="mt-4 w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-2 px-4 rounded-md transition-all duration-200 ease-in-out transform hover:scale-105"
         >
           {isLoading ? (
@@ -126,8 +125,8 @@ const LoadPresetExample: React.FC<{ setQuestion: (value: string) => void }> = ({
 }
 
 export const AnswerContent: React.FC<{
-  answerAction: StreamState<typeof answerQuestion>
-}> = ({ answerAction: { data, streamingData, status, error } }) => {
+  answerAction: HookResult<typeof AnswerQuestionAction>
+}> = ({ answerAction: { data, partialData, status, error } }) => {
   if (status === "idle") return null
 
   return (
@@ -143,8 +142,8 @@ export const AnswerContent: React.FC<{
             answersInText: []
           }} />}
           {(status === "success" && data) ||
-          (status === "loading" && streamingData) ? (
-            <RenderAnswer data={data || streamingData!} />
+          (status === "pending" && partialData) ? (
+            <RenderAnswer data={data || partialData!} />
           ) : null}
         </CardContent>
       </Card>
@@ -161,9 +160,9 @@ const RenderAnswer: React.FC<{ data: RecursivePartialNull<Answer> }> = ({
         <div className="min-h-[50px] text-gray-600">
           Looking for citations...
         </div>
-        <div className="h-4 w-1/4 bg-gray-200 rounded mb-2 animate-pulse"></div>
-        <div className="h-4 w-3/4 bg-gray-200 rounded mb-2 animate-pulse"></div>
-        <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-4 w-1/4 bg-gray-200 rounded mb-2 animate-pulse"/>
+        <div className="h-4 w-3/4 bg-gray-200 rounded mb-2 animate-pulse"/>
+        <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"/>
       </>
     )
 
@@ -175,9 +174,9 @@ const RenderAnswer: React.FC<{ data: RecursivePartialNull<Answer> }> = ({
           {answersInText.length > 0 ? answersInText.length.toString() : ""}{" "}
           citations...
         </div>
-        <div className="h-4 w-1/4 bg-gray-200 rounded mb-2 animate-pulse"></div>
-        <div className="h-4 w-3/4 bg-gray-200 rounded mb-2 animate-pulse"></div>
-        <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-4 w-1/4 bg-gray-200 rounded mb-2 animate-pulse"/>
+        <div className="h-4 w-3/4 bg-gray-200 rounded mb-2 animate-pulse"/>
+        <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"/>
       </>
     )
   }
@@ -189,14 +188,14 @@ const RenderAnswer: React.FC<{ data: RecursivePartialNull<Answer> }> = ({
         if (part.match(/^\[\d+\]$/)) {
           const citationNumber = part.slice(1, -1)
           const citation = answersInText.find(
-            (c) => c?.number === parseInt(citationNumber)
+            (c) => c?.number === Number.parseInt(citationNumber)
           )
 
           if (!citation) return part
           const context = getCitationContext(citation as Citation, documents)
 
           return (
-            <HoverCard key={index} openDelay={100} closeDelay={100}>
+            <HoverCard key={citationNumber} openDelay={100} closeDelay={100}>
               <HoverCardTrigger asChild>
                 <sup
                   className={clsx(
@@ -248,30 +247,29 @@ const RenderAnswer: React.FC<{ data: RecursivePartialNull<Answer> }> = ({
 }
 
 const DebugPanel: React.FC<{
-  answerAction: StreamState<typeof answerQuestion>
+  answerAction: HookResult<typeof AnswerQuestionAction>
 }> = ({ answerAction }) => {
   const data = answerAction.isSuccess
     ? answerAction.data
-    : answerAction.isLoading
-    ? answerAction.streamingData
+    : answerAction.isPending
+    ? answerAction.partialData
     : null
 
-
-    const Status: React.FC<{ status: StreamState<any>["status"] }> = ({
+    const Status: React.FC<{ status: HookResult["status"] }> = ({
         status,
       }) => {
         const statusConfig = {
-          loading: { icon: Loader2, className: "animate-spin text-blue-500" },
+          pending: { icon: Loader2, className: "animate-spin text-blue-500" },
           error: { icon: AlertCircle, className: "text-red-500" },
           success: { icon: CheckCircle, className: "text-green-500" },
           idle: { icon: null, className: "" },
         }
-      
+
         const { icon: Icon, className } = statusConfig[status] || statusConfig.idle
-      
+
         return Icon ? <Icon className={`h-5 w-5 ${className}`} /> : null
       }
-      
+
   return (
     <Card className="w-full max-w-3xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden border-0">
       <CardHeader className="bg-gradient-to-r from-gray-700 to-gray-900 text-white">
@@ -297,8 +295,8 @@ const DebugPanel: React.FC<{
             >
               Citations
             </TabsTrigger>
-            <TabsTrigger 
-              value="json" 
+            <TabsTrigger
+              value="json"
               className="data-[state=active]:bg-white data-[state=active]:shadow-sm transition-all duration-200"
             >
               JSON View
@@ -312,7 +310,7 @@ const DebugPanel: React.FC<{
               )}
 
               {data?.answersInText?.map((citation, index) => citation && (
-                  <ShowCitation key={index} citation={citation} />
+                  <ShowCitation key={citation.number} citation={citation} />
               ))}
           </TabsContent>
           <TabsContent value="json" className="border-t p-4 bg-gray-50 text-xs">
@@ -352,7 +350,7 @@ const ShowCitation: React.FC<{ citation: RecursivePartialNull<Citation> }> = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger  asChild>
-              <Badge 
+              <Badge
                 variant={isCitationFound ? "default" : "destructive"}
                 className="ml-2 px-2 py-1 rounded-full text-xs font-medium"
               >
