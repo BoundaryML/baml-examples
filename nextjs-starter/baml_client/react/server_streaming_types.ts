@@ -24,18 +24,18 @@ import type * as types from "../types"
 import type { partial_types }from "../partial_types";
 
 export type StreamingServerTypes = {
-  IsResume: boolean,
   AnswerQuestion: partial_types.Answer,
-  AnalyzeVanSide: partial_types.VanSideAnalysis,
-  DescribeCharacter: partial_types.CharacterDescription,
-  IdentifyVehicleSide: partial_types.VehicleSideResponse,
-  AnalyzeBooks: partial_types.BookAnalysis,
-  ExtractResume: partial_types.Resume,
-  GenerateGuide: partial_types.Guide,
-  ExtractPerson: partial_types.Person,
-  MakeSemanticContainer: partial_types.SemanticContainer,
-  ClassifyMessage: (Category | null)[],
   ExtractResumeNoStructure: string,
+  GenerateGuide: partial_types.Guide,
+  IsResume: boolean,
+  ExtractResume: partial_types.Resume,
+  AnalyzeBooks: partial_types.BookAnalysis,
+  ClassifyMessage: (Category | null)[],
   GenerateReplies: (partial_types.Reply | null)[],
+  ExtractPerson: partial_types.Person,
+  DescribeCharacter: partial_types.CharacterDescription,
   GetRecipe: partial_types.Recipe,
+  IdentifyVehicleSide: partial_types.VehicleSideResponse,
+  MakeSemanticContainer: partial_types.SemanticContainer,
+  AnalyzeVanSide: partial_types.VanSideAnalysis,
 }

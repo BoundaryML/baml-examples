@@ -253,7 +253,7 @@ export function useBamlAction<TActionKey extends ActionKey>(
   const result = {
     data: state.data,
     error: state.error,
-    isError: state.error !== null,
+    isError: !!state.error,
     isSuccess: state.isSuccess,
     isPending,
     mutate,
@@ -315,9 +315,9 @@ export function useAnalyzeBooks(
 ): StreamingHookResult<'AnalyzeBooks'> | NonStreamingHookResult<'AnalyzeBooks'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.AnalyzeBooks, props);
-  } else {
-    return useBamlAction(Actions.AnalyzeBooks, props);
   }
+
+  return useBamlAction(Actions.AnalyzeBooks, props);
 }
 /**
  * A specialized hook for the AnalyzeVanSide BAML function that supports both streaming and non‑streaming responses.
@@ -369,9 +369,9 @@ export function useAnalyzeVanSide(
 ): StreamingHookResult<'AnalyzeVanSide'> | NonStreamingHookResult<'AnalyzeVanSide'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.AnalyzeVanSide, props);
-  } else {
-    return useBamlAction(Actions.AnalyzeVanSide, props);
   }
+
+  return useBamlAction(Actions.AnalyzeVanSide, props);
 }
 /**
  * A specialized hook for the AnswerQuestion BAML function that supports both streaming and non‑streaming responses.
@@ -425,9 +425,9 @@ export function useAnswerQuestion(
 ): StreamingHookResult<'AnswerQuestion'> | NonStreamingHookResult<'AnswerQuestion'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.AnswerQuestion, props);
-  } else {
-    return useBamlAction(Actions.AnswerQuestion, props);
   }
+
+  return useBamlAction(Actions.AnswerQuestion, props);
 }
 /**
  * A specialized hook for the ClassifyMessage BAML function that supports both streaming and non‑streaming responses.
@@ -479,9 +479,9 @@ export function useClassifyMessage(
 ): StreamingHookResult<'ClassifyMessage'> | NonStreamingHookResult<'ClassifyMessage'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.ClassifyMessage, props);
-  } else {
-    return useBamlAction(Actions.ClassifyMessage, props);
   }
+
+  return useBamlAction(Actions.ClassifyMessage, props);
 }
 /**
  * A specialized hook for the DescribeCharacter BAML function that supports both streaming and non‑streaming responses.
@@ -533,9 +533,9 @@ export function useDescribeCharacter(
 ): StreamingHookResult<'DescribeCharacter'> | NonStreamingHookResult<'DescribeCharacter'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.DescribeCharacter, props);
-  } else {
-    return useBamlAction(Actions.DescribeCharacter, props);
   }
+
+  return useBamlAction(Actions.DescribeCharacter, props);
 }
 /**
  * A specialized hook for the ExtractPerson BAML function that supports both streaming and non‑streaming responses.
@@ -587,9 +587,9 @@ export function useExtractPerson(
 ): StreamingHookResult<'ExtractPerson'> | NonStreamingHookResult<'ExtractPerson'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.ExtractPerson, props);
-  } else {
-    return useBamlAction(Actions.ExtractPerson, props);
   }
+
+  return useBamlAction(Actions.ExtractPerson, props);
 }
 /**
  * A specialized hook for the ExtractResume BAML function that supports both streaming and non‑streaming responses.
@@ -641,9 +641,9 @@ export function useExtractResume(
 ): StreamingHookResult<'ExtractResume'> | NonStreamingHookResult<'ExtractResume'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.ExtractResume, props);
-  } else {
-    return useBamlAction(Actions.ExtractResume, props);
   }
+
+  return useBamlAction(Actions.ExtractResume, props);
 }
 /**
  * A specialized hook for the ExtractResumeNoStructure BAML function that supports both streaming and non‑streaming responses.
@@ -695,9 +695,9 @@ export function useExtractResumeNoStructure(
 ): StreamingHookResult<'ExtractResumeNoStructure'> | NonStreamingHookResult<'ExtractResumeNoStructure'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.ExtractResumeNoStructure, props);
-  } else {
-    return useBamlAction(Actions.ExtractResumeNoStructure, props);
   }
+
+  return useBamlAction(Actions.ExtractResumeNoStructure, props);
 }
 /**
  * A specialized hook for the GenerateGuide BAML function that supports both streaming and non‑streaming responses.
@@ -749,9 +749,9 @@ export function useGenerateGuide(
 ): StreamingHookResult<'GenerateGuide'> | NonStreamingHookResult<'GenerateGuide'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.GenerateGuide, props);
-  } else {
-    return useBamlAction(Actions.GenerateGuide, props);
   }
+
+  return useBamlAction(Actions.GenerateGuide, props);
 }
 /**
  * A specialized hook for the GenerateReplies BAML function that supports both streaming and non‑streaming responses.
@@ -803,9 +803,9 @@ export function useGenerateReplies(
 ): StreamingHookResult<'GenerateReplies'> | NonStreamingHookResult<'GenerateReplies'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.GenerateReplies, props);
-  } else {
-    return useBamlAction(Actions.GenerateReplies, props);
   }
+
+  return useBamlAction(Actions.GenerateReplies, props);
 }
 /**
  * A specialized hook for the GetRecipe BAML function that supports both streaming and non‑streaming responses.
@@ -857,9 +857,9 @@ export function useGetRecipe(
 ): StreamingHookResult<'GetRecipe'> | NonStreamingHookResult<'GetRecipe'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.GetRecipe, props);
-  } else {
-    return useBamlAction(Actions.GetRecipe, props);
   }
+
+  return useBamlAction(Actions.GetRecipe, props);
 }
 /**
  * A specialized hook for the IdentifyVehicleSide BAML function that supports both streaming and non‑streaming responses.
@@ -911,9 +911,9 @@ export function useIdentifyVehicleSide(
 ): StreamingHookResult<'IdentifyVehicleSide'> | NonStreamingHookResult<'IdentifyVehicleSide'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.IdentifyVehicleSide, props);
-  } else {
-    return useBamlAction(Actions.IdentifyVehicleSide, props);
   }
+
+  return useBamlAction(Actions.IdentifyVehicleSide, props);
 }
 /**
  * A specialized hook for the IsResume BAML function that supports both streaming and non‑streaming responses.
@@ -965,9 +965,9 @@ export function useIsResume(
 ): StreamingHookResult<'IsResume'> | NonStreamingHookResult<'IsResume'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.IsResume, props);
-  } else {
-    return useBamlAction(Actions.IsResume, props);
   }
+
+  return useBamlAction(Actions.IsResume, props);
 }
 /**
  * A specialized hook for the MakeSemanticContainer BAML function that supports both streaming and non‑streaming responses.
@@ -1017,7 +1017,7 @@ export function useMakeSemanticContainer(
 ): StreamingHookResult<'MakeSemanticContainer'> | NonStreamingHookResult<'MakeSemanticContainer'> {
   if (props.stream) {
     return useBamlAction(StreamingActions.MakeSemanticContainer, props);
-  } else {
-    return useBamlAction(Actions.MakeSemanticContainer, props);
   }
+
+  return useBamlAction(Actions.MakeSemanticContainer, props);
 }
