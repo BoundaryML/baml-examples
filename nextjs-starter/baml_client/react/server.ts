@@ -18,23 +18,28 @@ $ pnpm add @boundaryml/baml
 'use server'
 
 import { b } from '../index';
-import type { Check, Checked } from "../types"
-import type { ServerAction } from "./types"
-import type { Image, Audio } from "@boundaryml/baml"
-import type {Answer, BookAnalysis, CharacterDescription, Citation, Context, Document, Education, Experience, Guide, Ingredient, Link, Message, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, Resume, Score, Spells, Tweet, Van, VanSideAnalysis, VehicleSideResponse, Visibility, WordCount, Category, ReplyType, Role, VehicleSide} from "../types"
+import type { Check, Checked  } from "../types";
+import type { Image, Audio } from "@boundaryml/baml";
+
+import type {  Answer,  BookAnalysis,  CharacterDescription,  Citation,  ClassWithBlockDone,  ClassWithoutDone,  Context,  Document,  Education,  Experience,  Guide,  Ingredient,  Link,  Message,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  Resume,  Score,  SemanticContainer,  SmallThing,  Spells,  Tweet,  Van,  VanSideAnalysis,  VehicleSideResponse,  Visibility,  WordCount,  Category,  ReplyType,  Role,  VehicleSide } from "../types"
+
+import type * as types from "../types"
+
 /**
- * Server action for the AnalyzeBooks BAML function.
- *
- * Input Types:
- *
- * - input: string
- *
- *
- * Return Type:
- * - Non-streaming: BookAnalysis
- * - Streaming: ReadableStream
+ * Regular BAML server actions that return direct responses.
  */
-export const AnalyzeBooksAction = async (
+
+/**
+ * Executes the "AnalyzeBooks" BAML action.
+ *
+ * This server action calls the underlying BAML function "AnalyzeBooks"
+ * with the specified parameters.
+ *
+ * @param { string } input - Input parameter.
+ *
+ * @returns {Promise<BookAnalysis>} A promise that resolves with the result of the action.
+ */
+export const AnalyzeBooks = async (
   input: string,
 ): Promise<BookAnalysis> => {
   return b.AnalyzeBooks(
@@ -42,28 +47,17 @@ export const AnalyzeBooksAction = async (
   );
 };
 
-export const AnalyzeBooksStreamingAction = async (
-  input: string,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.AnalyzeBooks(
-    input,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the AnalyzeVanSide BAML function.
+ * Executes the "AnalyzeVanSide" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "AnalyzeVanSide"
+ * with the specified parameters.
  *
- * - vanImage: Image
+ * @param { Image } vanImage - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: VanSideAnalysis
- * - Streaming: ReadableStream
+ * @returns {Promise<VanSideAnalysis>} A promise that resolves with the result of the action.
  */
-export const AnalyzeVanSideAction = async (
+export const AnalyzeVanSide = async (
   vanImage: Image,
 ): Promise<VanSideAnalysis> => {
   return b.AnalyzeVanSide(
@@ -71,30 +65,18 @@ export const AnalyzeVanSideAction = async (
   );
 };
 
-export const AnalyzeVanSideStreamingAction = async (
-  vanImage: Image,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.AnalyzeVanSide(
-    vanImage,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the AnswerQuestion BAML function.
+ * Executes the "AnswerQuestion" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "AnswerQuestion"
+ * with the specified parameters.
  *
- * - question: string
+ * @param { string } question - Input parameter.
+ * @param { Context } context - Input parameter.
  *
- * - context: Context
- *
- *
- * Return Type:
- * - Non-streaming: Answer
- * - Streaming: ReadableStream
+ * @returns {Promise<Answer>} A promise that resolves with the result of the action.
  */
-export const AnswerQuestionAction = async (
+export const AnswerQuestion = async (
   question: string,
   context: Context,
 ): Promise<Answer> => {
@@ -104,30 +86,17 @@ export const AnswerQuestionAction = async (
   );
 };
 
-export const AnswerQuestionStreamingAction = async (
-  question: string,
-  context: Context,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.AnswerQuestion(
-    question,
-    context,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the ClassifyMessage BAML function.
+ * Executes the "ClassifyMessage" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "ClassifyMessage"
+ * with the specified parameters.
  *
- * - convo: Message[]
+ * @param { Message[] } convo - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: Category[]
- * - Streaming: ReadableStream
+ * @returns {Promise<Category[]>} A promise that resolves with the result of the action.
  */
-export const ClassifyMessageAction = async (
+export const ClassifyMessage = async (
   convo: Message[],
 ): Promise<Category[]> => {
   return b.ClassifyMessage(
@@ -135,28 +104,17 @@ export const ClassifyMessageAction = async (
   );
 };
 
-export const ClassifyMessageStreamingAction = async (
-  convo: Message[],
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.ClassifyMessage(
-    convo,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the DescribeCharacter BAML function.
+ * Executes the "DescribeCharacter" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "DescribeCharacter"
+ * with the specified parameters.
  *
- * - first_image: Image
+ * @param { Image } first_image - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: CharacterDescription
- * - Streaming: ReadableStream
+ * @returns {Promise<CharacterDescription>} A promise that resolves with the result of the action.
  */
-export const DescribeCharacterAction = async (
+export const DescribeCharacter = async (
   first_image: Image,
 ): Promise<CharacterDescription> => {
   return b.DescribeCharacter(
@@ -164,28 +122,17 @@ export const DescribeCharacterAction = async (
   );
 };
 
-export const DescribeCharacterStreamingAction = async (
-  first_image: Image,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.DescribeCharacter(
-    first_image,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the ExtractPerson BAML function.
+ * Executes the "ExtractPerson" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "ExtractPerson"
+ * with the specified parameters.
  *
- * - input: string
+ * @param { string } input - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: Person
- * - Streaming: ReadableStream
+ * @returns {Promise<Person>} A promise that resolves with the result of the action.
  */
-export const ExtractPersonAction = async (
+export const ExtractPerson = async (
   input: string,
 ): Promise<Person> => {
   return b.ExtractPerson(
@@ -193,28 +140,17 @@ export const ExtractPersonAction = async (
   );
 };
 
-export const ExtractPersonStreamingAction = async (
-  input: string,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.ExtractPerson(
-    input,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the ExtractResume BAML function.
+ * Executes the "ExtractResume" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "ExtractResume"
+ * with the specified parameters.
  *
- * - raw_text: string
+ * @param { string } raw_text - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: Resume
- * - Streaming: ReadableStream
+ * @returns {Promise<Resume>} A promise that resolves with the result of the action.
  */
-export const ExtractResumeAction = async (
+export const ExtractResume = async (
   raw_text: string,
 ): Promise<Resume> => {
   return b.ExtractResume(
@@ -222,28 +158,17 @@ export const ExtractResumeAction = async (
   );
 };
 
-export const ExtractResumeStreamingAction = async (
-  raw_text: string,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.ExtractResume(
-    raw_text,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the ExtractResumeNoStructure BAML function.
+ * Executes the "ExtractResumeNoStructure" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "ExtractResumeNoStructure"
+ * with the specified parameters.
  *
- * - raw_text: string
+ * @param { string } raw_text - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: string
- * - Streaming: ReadableStream
+ * @returns {Promise<string>} A promise that resolves with the result of the action.
  */
-export const ExtractResumeNoStructureAction = async (
+export const ExtractResumeNoStructure = async (
   raw_text: string,
 ): Promise<string> => {
   return b.ExtractResumeNoStructure(
@@ -251,28 +176,17 @@ export const ExtractResumeNoStructureAction = async (
   );
 };
 
-export const ExtractResumeNoStructureStreamingAction = async (
-  raw_text: string,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.ExtractResumeNoStructure(
-    raw_text,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the GenerateGuide BAML function.
+ * Executes the "GenerateGuide" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "GenerateGuide"
+ * with the specified parameters.
  *
- * - arg: string
+ * @param { string } arg - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: Guide
- * - Streaming: ReadableStream
+ * @returns {Promise<Guide>} A promise that resolves with the result of the action.
  */
-export const GenerateGuideAction = async (
+export const GenerateGuide = async (
   arg: string,
 ): Promise<Guide> => {
   return b.GenerateGuide(
@@ -280,28 +194,17 @@ export const GenerateGuideAction = async (
   );
 };
 
-export const GenerateGuideStreamingAction = async (
-  arg: string,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.GenerateGuide(
-    arg,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the GenerateReplies BAML function.
+ * Executes the "GenerateReplies" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "GenerateReplies"
+ * with the specified parameters.
  *
- * - tweets: Tweet[]
+ * @param { Tweet[] } tweets - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: Reply[]
- * - Streaming: ReadableStream
+ * @returns {Promise<Reply[]>} A promise that resolves with the result of the action.
  */
-export const GenerateRepliesAction = async (
+export const GenerateReplies = async (
   tweets: Tweet[],
 ): Promise<Reply[]> => {
   return b.GenerateReplies(
@@ -309,28 +212,17 @@ export const GenerateRepliesAction = async (
   );
 };
 
-export const GenerateRepliesStreamingAction = async (
-  tweets: Tweet[],
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.GenerateReplies(
-    tweets,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the GetRecipe BAML function.
+ * Executes the "GetRecipe" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "GetRecipe"
+ * with the specified parameters.
  *
- * - arg: string
+ * @param { string } arg - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: Recipe
- * - Streaming: ReadableStream
+ * @returns {Promise<Recipe>} A promise that resolves with the result of the action.
  */
-export const GetRecipeAction = async (
+export const GetRecipe = async (
   arg: string,
 ): Promise<Recipe> => {
   return b.GetRecipe(
@@ -338,28 +230,17 @@ export const GetRecipeAction = async (
   );
 };
 
-export const GetRecipeStreamingAction = async (
-  arg: string,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.GetRecipe(
-    arg,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the IdentifyVehicleSide BAML function.
+ * Executes the "IdentifyVehicleSide" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "IdentifyVehicleSide"
+ * with the specified parameters.
  *
- * - vanImage: Image
+ * @param { Image } vanImage - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: VehicleSideResponse
- * - Streaming: ReadableStream
+ * @returns {Promise<VehicleSideResponse>} A promise that resolves with the result of the action.
  */
-export const IdentifyVehicleSideAction = async (
+export const IdentifyVehicleSide = async (
   vanImage: Image,
 ): Promise<VehicleSideResponse> => {
   return b.IdentifyVehicleSide(
@@ -367,28 +248,17 @@ export const IdentifyVehicleSideAction = async (
   );
 };
 
-export const IdentifyVehicleSideStreamingAction = async (
-  vanImage: Image,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.IdentifyVehicleSide(
-    vanImage,
-  );
-  return stream.toStreamable();
-};
-
 /**
- * Server action for the IsResume BAML function.
+ * Executes the "IsResume" BAML action.
  *
- * Input Types:
+ * This server action calls the underlying BAML function "IsResume"
+ * with the specified parameters.
  *
- * - raw_text: string
+ * @param { string } raw_text - Input parameter.
  *
- *
- * Return Type:
- * - Non-streaming: boolean
- * - Streaming: ReadableStream
+ * @returns {Promise<boolean>} A promise that resolves with the result of the action.
  */
-export const IsResumeAction = async (
+export const IsResume = async (
   raw_text: string,
 ): Promise<boolean> => {
   return b.IsResume(
@@ -396,11 +266,17 @@ export const IsResumeAction = async (
   );
 };
 
-export const IsResumeStreamingAction = async (
-  raw_text: string,
-): Promise<ReadableStream<Uint8Array>> => {
-  const stream = b.stream.IsResume(
-    raw_text,
+/**
+ * Executes the "MakeSemanticContainer" BAML action.
+ *
+ * This server action calls the underlying BAML function "MakeSemanticContainer"
+ * with the specified parameters.
+ *
+ *
+ * @returns {Promise<SemanticContainer>} A promise that resolves with the result of the action.
+ */
+export const MakeSemanticContainer = async (
+): Promise<SemanticContainer> => {
+  return b.MakeSemanticContainer(
   );
-  return stream.toStreamable();
 };

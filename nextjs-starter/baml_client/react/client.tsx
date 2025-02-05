@@ -19,36 +19,44 @@ $ pnpm add @boundaryml/baml
 
 import { useCallback, useMemo, useReducer, useTransition } from 'react';
 import type {
-  PartialResponse,
-  FinalResponse,
   StreamingProps,
   NonStreamingProps,
   StreamingHookResult,
   NonStreamingHookResult,
   HookProps,
-  HookResult
+  PartialReturnType,
+  FinalReturnType,
+  ServerAction,
+  BamlStreamResponse,
+  ActionKey,
 } from './types';
-import type { RecursivePartialNull, Check, Checked } from '../types';
-import type { Image, Audio } from "@boundaryml/baml"
-import { BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/baml/errors"
-import * as ServerActions from './server';
-
-import type {Answer, BookAnalysis, CharacterDescription, Citation, Context, Document, Education, Experience, Guide, Ingredient, Link, Message, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, Resume, Score, Spells, Tweet, Van, VanSideAnalysis, VehicleSideResponse, Visibility, WordCount, Category, ReplyType, Role, VehicleSide} from "../types"
+import { BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/baml/errors";
+import * as Actions from './server';
+import * as StreamingActions from './server_streaming'
 
 /**
- * Type guard to check if props are for streaming mode
+ * Type guard to check if the hook props are configured for streaming mode.
+ *
+ * @template TActionKey - The key of the Actions namespace.
+ * @param props - The hook props.
+ * @returns {boolean} True if the props indicate streaming mode.
  */
-function isStreamingProps<Action>(
-  props: HookProps<Action>
-): props is StreamingProps<Action> {
+function isStreamingProps<TActionKey extends ActionKey>(
+  props: HookProps<TActionKey>
+): props is StreamingProps<TActionKey> {
   return props.stream === true;
+}
+
+function isBamlError(error?: Error | BamlValidationError | BamlClientFinishReasonError): error is (BamlValidationError | BamlClientFinishReasonError) & { type: string } {
+  const errorType = (error as any)?.type;
+  return errorType === 'BamlValidationError' || errorType === 'BamlClientFinishReasonError';
 }
 
 interface HookState<TPartial, TFinal> {
   isSuccess: boolean;
-  error: Error | BamlValidationError | BamlClientFinishReasonError | null;
-  data: TFinal | null;
-  partialData: TPartial | null;
+  error?: Error | BamlValidationError | BamlClientFinishReasonError;
+  data?: TFinal;
+  partialData?: TPartial;
 }
 
 type HookStateAction<TPartial, TFinal> =
@@ -58,6 +66,15 @@ type HookStateAction<TPartial, TFinal> =
   | { type: 'SET_FINAL'; payload: TFinal }
   | { type: 'RESET' };
 
+/**
+ * Reducer function to manage the hook state transitions.
+ *
+ * @template TPartial - The type of the partial (streaming) data.
+ * @template TFinal - The type of the final (non‑streaming) data.
+ * @param state - The current hook state.
+ * @param action - The action to apply.
+ * @returns The updated state.
+ */
 function hookReducer<TPartial, TFinal>(
   state: HookState<TPartial, TFinal>,
   action: HookStateAction<TPartial, TFinal>
@@ -67,17 +84,17 @@ function hookReducer<TPartial, TFinal>(
       return {
         ...state,
         isSuccess: false,
-        error: null,
-        data: null,
-        partialData: null,
+        error: undefined,
+        data: undefined,
+        partialData: undefined,
       };
     case 'SET_ERROR':
       return {
         ...state,
         isSuccess: false,
         error: action.payload,
-        data: null,
-        partialData: null,
+        data: undefined,
+        partialData: undefined,
       };
     case 'SET_PARTIAL':
       return {
@@ -89,14 +106,14 @@ function hookReducer<TPartial, TFinal>(
         ...state,
         isSuccess: true,
         data: action.payload,
-        partialData: null,
+        partialData: undefined,
       };
     case 'RESET':
       return {
         isSuccess: false,
-        error: null,
-        data: null,
-        partialData: null,
+        error: undefined,
+        data: undefined,
+        partialData: undefined,
       };
     default:
       return state;
@@ -104,241 +121,105 @@ function hookReducer<TPartial, TFinal>(
 }
 
 /**
- * Base hook for making BAML function calls with support for both streaming and non-streaming modes.
- * Provides a unified interface for handling loading states, errors, and data updates.
+ * Base hook for executing BAML server actions, supporting both streaming and non‑streaming modes.
  *
- * This hook can be used directly with any BAML server action, or through the specialized hooks
- * generated for each BAML function.
+ * This hook provides a unified interface for handling loading states, partial updates, errors,
+ * and final responses. It is designed to be used directly with any BAML server action.
  *
  * Features:
- * 1. Streaming Support
- *    - Real-time partial updates via `partialData`
- *    - Progress indicators and incremental UI updates
- *    - Automatic stream cleanup and error handling
+ * - **Streaming Support:** Real‑time partial updates via `partialData`, progress indicators, and incremental UI updates.
+ * - **State Management:** Manages loading state (`isPending`), success/error flags, and final/partial results.
+ * - **Error Handling:** Supports type‑safe error handling for BamlValidationError, BamlClientFinishReasonError, and standard errors.
  *
- * 2. State Management
- *    - Loading state via `isPending`
- *    - Success/error states
- *    - Final result in `data`
- *    - Partial results in `partialData` (streaming mode)
- *
- * 3. Error Handling
- *    - Type-safe error handling with three possible error types:
- *      1. BamlValidationError: Thrown when BAML fails to parse LLM output
- *         - Access error.prompt for the original prompt
- *         - Access error.raw_output for the LLM's raw response
- *         - Access error.message for parsing error details
- *      2. BamlClientFinishReasonError: Thrown when LLM terminates with disallowed finish reason
- *         - Access error.prompt for the original prompt
- *         - Access error.raw_output for the LLM's raw response
- *         - Access error.message for error details
- *         - Access error.finish_reason for the specific termination reason
- *      3. Error: Standard JavaScript errors for other cases
- *    - Example error handling:
- *      ```typescript
- *      try {
- *        await mutate(params);
- *      } catch (e) {
- *        if (e instanceof BamlValidationError) {
- *          console.error('Failed to parse LLM output:', e.raw_output);
- *          console.error('Original prompt:', e.prompt);
- *        } else if (e instanceof BamlClientFinishReasonError) {
- *          console.error('LLM terminated early:', e.finish_reason);
- *          console.error('Partial output:', e.raw_output);
- *        } else {
- *          console.error('Other error:', e);
- *        }
- *      }
- *      ```
- *    - Network error detection
- *    - Stream interruption handling
- *
- * 4. Type Safety
- *    - Full TypeScript support
- *    - Inferred types from server actions
- *    - Proper typing for streaming/non-streaming modes
- *
- * @template Action The type of the server action
- * @param serverAction The server action function to execute
- * @param props Configuration props for the hook
- * @returns An object containing the current state and controls
+ * @param Action - The server action to invoke.
+ * @param props - Configuration props for the hook.
+ * @returns An object with the current state and a `mutate` function to trigger the action.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
- * const { data, error, isPending, mutate } = useBamlAction(myServerAction);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,         // Final result (Action's return type | null)
- *   partialData,  // Latest partial update (RecursivePartialNull<ReturnType> | null)
- *   isPending,    // Whether a request is in progress
- *   isSuccess,    // Whether the last request succeeded
- *   isError,      // Whether the last request failed
- *   error,        // Error object if failed
- *   status,       // 'idle' | 'pending' | 'success' | 'error'
- *   mutate        // Function to trigger the action
- * } = useBamlAction(myServerAction, {
- *   stream: true,
- *
- *   // Called on each partial update
- *   onPartial: (partial) => {
- *     console.log('Partial update:', partial);
- *   },
- *
- *   // Called when streaming completes successfully
- *   onFinal: (final) => {
- *     console.log('Final result:', final);
- *   },
- *
- *   // Called on any error
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
- * });
- *
- * // 3. Making Requests
- * const handleClick = async () => {
- *   try {
- *     const result = await mutate({
- *       // your action's parameters
- *       param1: 'value1',
- *       param2: 'value2'
- *     });
- *
- *     if (result) {
- *       // Handle success
- *     }
- *   } catch (e) {
- *     // Handle errors
- *   }
- * };
- *
- * // 4. Using with React Effects
- * useEffect(() => {
- *   if (data) {
- *     // Handle final data
- *   }
- * }, [data]);
- *
- * useEffect(() => {
- *   if (partialData) {
- *     // Handle streaming updates
- *   }
- * }, [partialData]);
- *
- * // 5. Error Handling
- * useEffect(() => {
- *   if (error) {
- *     console.error('Request failed:', error);
- *   }
- * }, [error]);
- *
- * // 6. Conditional Rendering
- * if (isPending) return <LoadingSpinner />;
- * if (error) return <ErrorMessage error={error} />;
- * if (data) return <SuccessView data={data} />;
- *
- * // 7. Streaming Progress
- * return (
- *   <div>
- *     {isPending && <ProgressIndicator />}
- *     {partialData && <PartialResult data={partialData} />}
- *     {data && <FinalResult data={data} />}
- *
- *     <button
- *       onClick={handleClick}
- *       disabled={isPending}
- *     >
- *       {isPending ? 'Processing...' : 'Start'}
- *     </button>
- *   </div>
- * );
+ * const { data, error, isPending, mutate } = useBamlAction(StreamingActions.TestAws, { stream: true });
  * ```
  */
-export function useBamlAction<Action>(
-  action: Action,
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useBamlAction<TActionKey extends ActionKey>(
+  action: ServerAction,
+  props: StreamingProps<TActionKey>
+): StreamingHookResult<TActionKey>;
 
-export function useBamlAction<Action>(
-  action: Action,
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useBamlAction<TActionKey extends ActionKey>(
+  action: ServerAction,
+  props?: NonStreamingProps<TActionKey>
+): NonStreamingHookResult<TActionKey>;
 
-export function useBamlAction<Action>(
-  serverAction: Action,
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useBamlAction<TActionKey extends ActionKey>(
+  action: ServerAction,
+  props: HookProps<TActionKey> = {}
+): StreamingHookResult<TActionKey> | NonStreamingHookResult<TActionKey> {
   const { onFinal, onError, onPartial } = props;
   const isStreaming = isStreamingProps(props);
   const [isPending, startTransition] = useTransition();
 
-  const [state, dispatch] = useReducer(hookReducer<RecursivePartialNull<Awaited<ReturnType<Action>>>, Awaited<ReturnType<Action>>>, {
-    isSuccess: false,
-    error: null,
-    data: null,
-    partialData: null,
-  });
+  const [state, dispatch] = useReducer(
+    hookReducer<PartialReturnType<TActionKey>, FinalReturnType<TActionKey>>,
+    {
+      isSuccess: false,
+      error: undefined,
+      data: undefined,
+      partialData: undefined,
+    }
+  );
 
   const mutate = useCallback(
-    async (...input: Parameters<typeof serverAction>) => {
+    async (...input: Parameters<ServerAction>) => {
       dispatch({ type: 'START_REQUEST' });
-
       try {
-        let response: Awaited<ReturnType<Action>>;
-        await startTransition(async () => {
-          response = await serverAction(...input);
-
+        let response: Awaited<ReturnType<ServerAction>>;
+        startTransition(async () => {
+          response = await action(...input);
           if (isStreaming && response instanceof ReadableStream) {
             const reader = response.getReader();
             const decoder = new TextDecoder();
-
             try {
               while (true) {
                 const { value, done } = await reader.read();
-
                 if (done) break;
-
                 if (value) {
                   const chunk = decoder.decode(value, { stream: true }).trim();
                   try {
-                    const parsed: BamlStreamResponse<Awaited<ReturnType<NonStreamingAction>>> = JSON.parse(chunk);
-
+                    const parsed: BamlStreamResponse<PartialReturnType<TActionKey>, FinalReturnType<TActionKey>> = JSON.parse(chunk);
                     if (parsed.error) {
-                      // Create appropriate error type
-                      let error: Error | BamlValidationError | BamlClientFinishReasonError;
-                      if (parsed.error.type === "BamlValidationError") {
-                        error = new BamlValidationError(
-                          parsed.error.prompt,
-                          parsed.error.raw_output,
-                          parsed.error.message
-                        );
-                      } else if (parsed.error.type === "BamlClientFinishReasonError") {
-                        error = new BamlClientFinishReasonError(
-                          parsed.error.prompt,
-                          parsed.error.raw_output,
-                          parsed.error.message
-                        );
+                      let error: Error | BamlValidationError | BamlClientFinishReasonError = new Error('Unknown error')
+
+                      if (isBamlError(parsed.error)) {
+                        if (parsed.error?.type === 'BamlValidationError') {
+                          error = new BamlValidationError(
+                            parsed.error.prompt,
+                            parsed.error.raw_output,
+                            parsed.error.message,
+                          )
+                        } else if (parsed.error.type === 'BamlClientFinishReasonError') {
+                          error = new BamlClientFinishReasonError(
+                            parsed.error.prompt,
+                            parsed.error.raw_output,
+                            parsed.error.message,
+                          )
+                        }
                       } else {
-                        error = new Error(parsed.error.message);
+                        error = new Error(parsed.error.message)
                       }
                       throw error;
                     }
-
                     if (parsed.partial !== undefined) {
                       dispatch({ type: 'SET_PARTIAL', payload: parsed.partial });
                       onPartial?.(parsed.partial);
                     }
-
                     if (parsed.final !== undefined) {
                       dispatch({ type: 'SET_FINAL', payload: parsed.final });
                       onFinal?.(parsed.final);
-                      return parsed.final;
+                      return;
                     }
-                  } catch (err) {
-                    dispatch({ type: "SET_ERROR", payload: err });
-                    onError?.(err);
+                  } catch (err: unknown) {
+                    dispatch({ type: "SET_ERROR", payload: err as Error | BamlValidationError | BamlClientFinishReasonError });
+                    onError?.(err as Error | BamlValidationError | BamlClientFinishReasonError);
                     break;
                   }
                 }
@@ -346,21 +227,20 @@ export function useBamlAction<Action>(
             } finally {
               reader.releaseLock();
             }
-            return response;
+            return;
           }
-
-          // Non-streaming case
+          // Non‑streaming case
           dispatch({ type: 'SET_FINAL', payload: response });
           onFinal?.(response);
         });
         return response;
-      } catch (error_) {
-        dispatch({ type: 'SET_ERROR', payload: error_ });
-        onError?.(error_);
+      } catch (error_: unknown) {
+        dispatch({ type: 'SET_ERROR', payload: error_ as Error | BamlValidationError | BamlClientFinishReasonError });
+        onError?.(error_ as Error | BamlValidationError | BamlClientFinishReasonError);
         throw error_;
       }
     },
-    [serverAction, isStreaming, onPartial, onFinal, onError],
+    [action, isStreaming, onPartial, onFinal, onError]
   );
 
   const status = useMemo<"idle" | "pending" | "success" | "error">(() => {
@@ -386,1722 +266,758 @@ export function useBamlAction<Action>(
   };
 }
 /**
- * A specialized hook for the AnalyzeBooks BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the AnalyzeBooks BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - input: string
  *
  *
- * Return Type:
- * - Non-streaming: BookAnalysis
- * - Streaming Partial: RecursivePartialNull<BookAnalysis>
- * - Streaming Final: BookAnalysis
+ * **Return Type:**
+ * - **Non‑streaming:** BookAnalysis
+ * - **Streaming Partial:** partial_types.BookAnalysis
+ * - **Streaming Final:** BookAnalysis
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useAnalyzeBooks();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to BookAnalysis
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: BookAnalysis | null
- *   partialData, // Type: RecursivePartialNull<BookAnalysis> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useAnalyzeBooks({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useAnalyzeBooks({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       input: someValue as string,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       input: firstValue as string,
- *     }),
- *     mutate({
- *       input: secondValue as string,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useAnalyzeBooks<Action extends typeof ServerActions.AnalyzeBooksAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useAnalyzeBooks(
+  props: StreamingProps<'AnalyzeBooks'>
+): StreamingHookResult<'AnalyzeBooks'>;
 
-export function useAnalyzeBooks<Action extends typeof ServerActions.AnalyzeBooksAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useAnalyzeBooks(
+  props?: NonStreamingProps<'AnalyzeBooks'>
+): NonStreamingHookResult<'AnalyzeBooks'>;
 
-export function useAnalyzeBooks<Action extends typeof ServerActions.AnalyzeBooksAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useAnalyzeBooks(
+  props: HookProps<'AnalyzeBooks'> = {}
+): StreamingHookResult<'AnalyzeBooks'> | NonStreamingHookResult<'AnalyzeBooks'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.AnalyzeBooksStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.AnalyzeBooks, props);
+  } else {
+    return useBamlAction(Actions.AnalyzeBooks, props);
   }
-
-  return useBamlAction(
-    ServerActions.AnalyzeBooksAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the AnalyzeVanSide BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the AnalyzeVanSide BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - vanImage: Image
  *
  *
- * Return Type:
- * - Non-streaming: VanSideAnalysis
- * - Streaming Partial: RecursivePartialNull<VanSideAnalysis>
- * - Streaming Final: VanSideAnalysis
+ * **Return Type:**
+ * - **Non‑streaming:** VanSideAnalysis
+ * - **Streaming Partial:** partial_types.VanSideAnalysis
+ * - **Streaming Final:** VanSideAnalysis
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useAnalyzeVanSide();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to VanSideAnalysis
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: VanSideAnalysis | null
- *   partialData, // Type: RecursivePartialNull<VanSideAnalysis> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useAnalyzeVanSide({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useAnalyzeVanSide({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       vanImage: someValue as Image,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       vanImage: firstValue as Image,
- *     }),
- *     mutate({
- *       vanImage: secondValue as Image,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useAnalyzeVanSide<Action extends typeof ServerActions.AnalyzeVanSideAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useAnalyzeVanSide(
+  props: StreamingProps<'AnalyzeVanSide'>
+): StreamingHookResult<'AnalyzeVanSide'>;
 
-export function useAnalyzeVanSide<Action extends typeof ServerActions.AnalyzeVanSideAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useAnalyzeVanSide(
+  props?: NonStreamingProps<'AnalyzeVanSide'>
+): NonStreamingHookResult<'AnalyzeVanSide'>;
 
-export function useAnalyzeVanSide<Action extends typeof ServerActions.AnalyzeVanSideAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useAnalyzeVanSide(
+  props: HookProps<'AnalyzeVanSide'> = {}
+): StreamingHookResult<'AnalyzeVanSide'> | NonStreamingHookResult<'AnalyzeVanSide'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.AnalyzeVanSideStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.AnalyzeVanSide, props);
+  } else {
+    return useBamlAction(Actions.AnalyzeVanSide, props);
   }
-
-  return useBamlAction(
-    ServerActions.AnalyzeVanSideAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the AnswerQuestion BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the AnswerQuestion BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - question: string
  *
  * - context: Context
  *
  *
- * Return Type:
- * - Non-streaming: Answer
- * - Streaming Partial: RecursivePartialNull<Answer>
- * - Streaming Final: Answer
+ * **Return Type:**
+ * - **Non‑streaming:** Answer
+ * - **Streaming Partial:** partial_types.Answer
+ * - **Streaming Final:** Answer
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useAnswerQuestion();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to Answer
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: Answer | null
- *   partialData, // Type: RecursivePartialNull<Answer> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useAnswerQuestion({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useAnswerQuestion({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       question: someValue as string,  // Replace someValue with your data
- *       context: someValue as Context,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       question: firstValue as string,
- *       context: firstValue as Context,
- *     }),
- *     mutate({
- *       question: secondValue as string,
- *       context: secondValue as Context,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useAnswerQuestion<Action extends typeof ServerActions.AnswerQuestionAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useAnswerQuestion(
+  props: StreamingProps<'AnswerQuestion'>
+): StreamingHookResult<'AnswerQuestion'>;
 
-export function useAnswerQuestion<Action extends typeof ServerActions.AnswerQuestionAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useAnswerQuestion(
+  props?: NonStreamingProps<'AnswerQuestion'>
+): NonStreamingHookResult<'AnswerQuestion'>;
 
-export function useAnswerQuestion<Action extends typeof ServerActions.AnswerQuestionAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useAnswerQuestion(
+  props: HookProps<'AnswerQuestion'> = {}
+): StreamingHookResult<'AnswerQuestion'> | NonStreamingHookResult<'AnswerQuestion'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.AnswerQuestionStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.AnswerQuestion, props);
+  } else {
+    return useBamlAction(Actions.AnswerQuestion, props);
   }
-
-  return useBamlAction(
-    ServerActions.AnswerQuestionAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the ClassifyMessage BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the ClassifyMessage BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - convo: Message[]
  *
  *
- * Return Type:
- * - Non-streaming: Category[]
- * - Streaming Partial: RecursivePartialNull<Category[]>
- * - Streaming Final: Category[]
+ * **Return Type:**
+ * - **Non‑streaming:** Category[]
+ * - **Streaming Partial:** (Category | null)[]
+ * - **Streaming Final:** Category[]
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useClassifyMessage();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to Category[]
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: Category[] | null
- *   partialData, // Type: RecursivePartialNull<Category[]> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useClassifyMessage({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useClassifyMessage({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       convo: someValue as Message[],  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       convo: firstValue as Message[],
- *     }),
- *     mutate({
- *       convo: secondValue as Message[],
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useClassifyMessage<Action extends typeof ServerActions.ClassifyMessageAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useClassifyMessage(
+  props: StreamingProps<'ClassifyMessage'>
+): StreamingHookResult<'ClassifyMessage'>;
 
-export function useClassifyMessage<Action extends typeof ServerActions.ClassifyMessageAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useClassifyMessage(
+  props?: NonStreamingProps<'ClassifyMessage'>
+): NonStreamingHookResult<'ClassifyMessage'>;
 
-export function useClassifyMessage<Action extends typeof ServerActions.ClassifyMessageAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useClassifyMessage(
+  props: HookProps<'ClassifyMessage'> = {}
+): StreamingHookResult<'ClassifyMessage'> | NonStreamingHookResult<'ClassifyMessage'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.ClassifyMessageStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.ClassifyMessage, props);
+  } else {
+    return useBamlAction(Actions.ClassifyMessage, props);
   }
-
-  return useBamlAction(
-    ServerActions.ClassifyMessageAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the DescribeCharacter BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the DescribeCharacter BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - first_image: Image
  *
  *
- * Return Type:
- * - Non-streaming: CharacterDescription
- * - Streaming Partial: RecursivePartialNull<CharacterDescription>
- * - Streaming Final: CharacterDescription
+ * **Return Type:**
+ * - **Non‑streaming:** CharacterDescription
+ * - **Streaming Partial:** partial_types.CharacterDescription
+ * - **Streaming Final:** CharacterDescription
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useDescribeCharacter();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to CharacterDescription
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: CharacterDescription | null
- *   partialData, // Type: RecursivePartialNull<CharacterDescription> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useDescribeCharacter({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useDescribeCharacter({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       first_image: someValue as Image,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       first_image: firstValue as Image,
- *     }),
- *     mutate({
- *       first_image: secondValue as Image,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useDescribeCharacter<Action extends typeof ServerActions.DescribeCharacterAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useDescribeCharacter(
+  props: StreamingProps<'DescribeCharacter'>
+): StreamingHookResult<'DescribeCharacter'>;
 
-export function useDescribeCharacter<Action extends typeof ServerActions.DescribeCharacterAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useDescribeCharacter(
+  props?: NonStreamingProps<'DescribeCharacter'>
+): NonStreamingHookResult<'DescribeCharacter'>;
 
-export function useDescribeCharacter<Action extends typeof ServerActions.DescribeCharacterAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useDescribeCharacter(
+  props: HookProps<'DescribeCharacter'> = {}
+): StreamingHookResult<'DescribeCharacter'> | NonStreamingHookResult<'DescribeCharacter'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.DescribeCharacterStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.DescribeCharacter, props);
+  } else {
+    return useBamlAction(Actions.DescribeCharacter, props);
   }
-
-  return useBamlAction(
-    ServerActions.DescribeCharacterAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the ExtractPerson BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the ExtractPerson BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - input: string
  *
  *
- * Return Type:
- * - Non-streaming: Person
- * - Streaming Partial: RecursivePartialNull<Person>
- * - Streaming Final: Person
+ * **Return Type:**
+ * - **Non‑streaming:** Person
+ * - **Streaming Partial:** partial_types.Person
+ * - **Streaming Final:** Person
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useExtractPerson();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to Person
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: Person | null
- *   partialData, // Type: RecursivePartialNull<Person> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useExtractPerson({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useExtractPerson({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       input: someValue as string,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       input: firstValue as string,
- *     }),
- *     mutate({
- *       input: secondValue as string,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useExtractPerson<Action extends typeof ServerActions.ExtractPersonAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useExtractPerson(
+  props: StreamingProps<'ExtractPerson'>
+): StreamingHookResult<'ExtractPerson'>;
 
-export function useExtractPerson<Action extends typeof ServerActions.ExtractPersonAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useExtractPerson(
+  props?: NonStreamingProps<'ExtractPerson'>
+): NonStreamingHookResult<'ExtractPerson'>;
 
-export function useExtractPerson<Action extends typeof ServerActions.ExtractPersonAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useExtractPerson(
+  props: HookProps<'ExtractPerson'> = {}
+): StreamingHookResult<'ExtractPerson'> | NonStreamingHookResult<'ExtractPerson'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.ExtractPersonStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.ExtractPerson, props);
+  } else {
+    return useBamlAction(Actions.ExtractPerson, props);
   }
-
-  return useBamlAction(
-    ServerActions.ExtractPersonAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the ExtractResume BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the ExtractResume BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - raw_text: string
  *
  *
- * Return Type:
- * - Non-streaming: Resume
- * - Streaming Partial: RecursivePartialNull<Resume>
- * - Streaming Final: Resume
+ * **Return Type:**
+ * - **Non‑streaming:** Resume
+ * - **Streaming Partial:** partial_types.Resume
+ * - **Streaming Final:** Resume
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useExtractResume();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to Resume
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: Resume | null
- *   partialData, // Type: RecursivePartialNull<Resume> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useExtractResume({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useExtractResume({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       raw_text: someValue as string,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       raw_text: firstValue as string,
- *     }),
- *     mutate({
- *       raw_text: secondValue as string,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useExtractResume<Action extends typeof ServerActions.ExtractResumeAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useExtractResume(
+  props: StreamingProps<'ExtractResume'>
+): StreamingHookResult<'ExtractResume'>;
 
-export function useExtractResume<Action extends typeof ServerActions.ExtractResumeAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useExtractResume(
+  props?: NonStreamingProps<'ExtractResume'>
+): NonStreamingHookResult<'ExtractResume'>;
 
-export function useExtractResume<Action extends typeof ServerActions.ExtractResumeAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useExtractResume(
+  props: HookProps<'ExtractResume'> = {}
+): StreamingHookResult<'ExtractResume'> | NonStreamingHookResult<'ExtractResume'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.ExtractResumeStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.ExtractResume, props);
+  } else {
+    return useBamlAction(Actions.ExtractResume, props);
   }
-
-  return useBamlAction(
-    ServerActions.ExtractResumeAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the ExtractResumeNoStructure BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the ExtractResumeNoStructure BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - raw_text: string
  *
  *
- * Return Type:
- * - Non-streaming: string
- * - Streaming Partial: RecursivePartialNull<string>
- * - Streaming Final: string
+ * **Return Type:**
+ * - **Non‑streaming:** string
+ * - **Streaming Partial:** string
+ * - **Streaming Final:** string
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useExtractResumeNoStructure();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to string
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: string | null
- *   partialData, // Type: RecursivePartialNull<string> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useExtractResumeNoStructure({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useExtractResumeNoStructure({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       raw_text: someValue as string,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       raw_text: firstValue as string,
- *     }),
- *     mutate({
- *       raw_text: secondValue as string,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useExtractResumeNoStructure<Action extends typeof ServerActions.ExtractResumeNoStructureAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useExtractResumeNoStructure(
+  props: StreamingProps<'ExtractResumeNoStructure'>
+): StreamingHookResult<'ExtractResumeNoStructure'>;
 
-export function useExtractResumeNoStructure<Action extends typeof ServerActions.ExtractResumeNoStructureAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useExtractResumeNoStructure(
+  props?: NonStreamingProps<'ExtractResumeNoStructure'>
+): NonStreamingHookResult<'ExtractResumeNoStructure'>;
 
-export function useExtractResumeNoStructure<Action extends typeof ServerActions.ExtractResumeNoStructureAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useExtractResumeNoStructure(
+  props: HookProps<'ExtractResumeNoStructure'> = {}
+): StreamingHookResult<'ExtractResumeNoStructure'> | NonStreamingHookResult<'ExtractResumeNoStructure'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.ExtractResumeNoStructureStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.ExtractResumeNoStructure, props);
+  } else {
+    return useBamlAction(Actions.ExtractResumeNoStructure, props);
   }
-
-  return useBamlAction(
-    ServerActions.ExtractResumeNoStructureAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the GenerateGuide BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the GenerateGuide BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - arg: string
  *
  *
- * Return Type:
- * - Non-streaming: Guide
- * - Streaming Partial: RecursivePartialNull<Guide>
- * - Streaming Final: Guide
+ * **Return Type:**
+ * - **Non‑streaming:** Guide
+ * - **Streaming Partial:** partial_types.Guide
+ * - **Streaming Final:** Guide
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useGenerateGuide();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to Guide
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: Guide | null
- *   partialData, // Type: RecursivePartialNull<Guide> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useGenerateGuide({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useGenerateGuide({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       arg: someValue as string,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       arg: firstValue as string,
- *     }),
- *     mutate({
- *       arg: secondValue as string,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useGenerateGuide<Action extends typeof ServerActions.GenerateGuideAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useGenerateGuide(
+  props: StreamingProps<'GenerateGuide'>
+): StreamingHookResult<'GenerateGuide'>;
 
-export function useGenerateGuide<Action extends typeof ServerActions.GenerateGuideAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useGenerateGuide(
+  props?: NonStreamingProps<'GenerateGuide'>
+): NonStreamingHookResult<'GenerateGuide'>;
 
-export function useGenerateGuide<Action extends typeof ServerActions.GenerateGuideAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useGenerateGuide(
+  props: HookProps<'GenerateGuide'> = {}
+): StreamingHookResult<'GenerateGuide'> | NonStreamingHookResult<'GenerateGuide'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.GenerateGuideStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.GenerateGuide, props);
+  } else {
+    return useBamlAction(Actions.GenerateGuide, props);
   }
-
-  return useBamlAction(
-    ServerActions.GenerateGuideAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the GenerateReplies BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the GenerateReplies BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - tweets: Tweet[]
  *
  *
- * Return Type:
- * - Non-streaming: Reply[]
- * - Streaming Partial: RecursivePartialNull<Reply[]>
- * - Streaming Final: Reply[]
+ * **Return Type:**
+ * - **Non‑streaming:** Reply[]
+ * - **Streaming Partial:** (partial_types.Reply | null)[]
+ * - **Streaming Final:** Reply[]
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useGenerateReplies();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to Reply[]
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: Reply[] | null
- *   partialData, // Type: RecursivePartialNull<Reply[]> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useGenerateReplies({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useGenerateReplies({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       tweets: someValue as Tweet[],  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       tweets: firstValue as Tweet[],
- *     }),
- *     mutate({
- *       tweets: secondValue as Tweet[],
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useGenerateReplies<Action extends typeof ServerActions.GenerateRepliesAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useGenerateReplies(
+  props: StreamingProps<'GenerateReplies'>
+): StreamingHookResult<'GenerateReplies'>;
 
-export function useGenerateReplies<Action extends typeof ServerActions.GenerateRepliesAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useGenerateReplies(
+  props?: NonStreamingProps<'GenerateReplies'>
+): NonStreamingHookResult<'GenerateReplies'>;
 
-export function useGenerateReplies<Action extends typeof ServerActions.GenerateRepliesAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useGenerateReplies(
+  props: HookProps<'GenerateReplies'> = {}
+): StreamingHookResult<'GenerateReplies'> | NonStreamingHookResult<'GenerateReplies'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.GenerateRepliesStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.GenerateReplies, props);
+  } else {
+    return useBamlAction(Actions.GenerateReplies, props);
   }
-
-  return useBamlAction(
-    ServerActions.GenerateRepliesAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the GetRecipe BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the GetRecipe BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - arg: string
  *
  *
- * Return Type:
- * - Non-streaming: Recipe
- * - Streaming Partial: RecursivePartialNull<Recipe>
- * - Streaming Final: Recipe
+ * **Return Type:**
+ * - **Non‑streaming:** Recipe
+ * - **Streaming Partial:** partial_types.Recipe
+ * - **Streaming Final:** Recipe
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useGetRecipe();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to Recipe
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: Recipe | null
- *   partialData, // Type: RecursivePartialNull<Recipe> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useGetRecipe({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useGetRecipe({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       arg: someValue as string,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       arg: firstValue as string,
- *     }),
- *     mutate({
- *       arg: secondValue as string,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useGetRecipe<Action extends typeof ServerActions.GetRecipeAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useGetRecipe(
+  props: StreamingProps<'GetRecipe'>
+): StreamingHookResult<'GetRecipe'>;
 
-export function useGetRecipe<Action extends typeof ServerActions.GetRecipeAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useGetRecipe(
+  props?: NonStreamingProps<'GetRecipe'>
+): NonStreamingHookResult<'GetRecipe'>;
 
-export function useGetRecipe<Action extends typeof ServerActions.GetRecipeAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useGetRecipe(
+  props: HookProps<'GetRecipe'> = {}
+): StreamingHookResult<'GetRecipe'> | NonStreamingHookResult<'GetRecipe'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.GetRecipeStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.GetRecipe, props);
+  } else {
+    return useBamlAction(Actions.GetRecipe, props);
   }
-
-  return useBamlAction(
-    ServerActions.GetRecipeAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the IdentifyVehicleSide BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the IdentifyVehicleSide BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - vanImage: Image
  *
  *
- * Return Type:
- * - Non-streaming: VehicleSideResponse
- * - Streaming Partial: RecursivePartialNull<VehicleSideResponse>
- * - Streaming Final: VehicleSideResponse
+ * **Return Type:**
+ * - **Non‑streaming:** VehicleSideResponse
+ * - **Streaming Partial:** partial_types.VehicleSideResponse
+ * - **Streaming Final:** VehicleSideResponse
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useIdentifyVehicleSide();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to VehicleSideResponse
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: VehicleSideResponse | null
- *   partialData, // Type: RecursivePartialNull<VehicleSideResponse> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useIdentifyVehicleSide({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useIdentifyVehicleSide({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       vanImage: someValue as Image,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       vanImage: firstValue as Image,
- *     }),
- *     mutate({
- *       vanImage: secondValue as Image,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useIdentifyVehicleSide<Action extends typeof ServerActions.IdentifyVehicleSideAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useIdentifyVehicleSide(
+  props: StreamingProps<'IdentifyVehicleSide'>
+): StreamingHookResult<'IdentifyVehicleSide'>;
 
-export function useIdentifyVehicleSide<Action extends typeof ServerActions.IdentifyVehicleSideAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useIdentifyVehicleSide(
+  props?: NonStreamingProps<'IdentifyVehicleSide'>
+): NonStreamingHookResult<'IdentifyVehicleSide'>;
 
-export function useIdentifyVehicleSide<Action extends typeof ServerActions.IdentifyVehicleSideAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useIdentifyVehicleSide(
+  props: HookProps<'IdentifyVehicleSide'> = {}
+): StreamingHookResult<'IdentifyVehicleSide'> | NonStreamingHookResult<'IdentifyVehicleSide'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.IdentifyVehicleSideStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.IdentifyVehicleSide, props);
+  } else {
+    return useBamlAction(Actions.IdentifyVehicleSide, props);
   }
-
-  return useBamlAction(
-    ServerActions.IdentifyVehicleSideAction,
-    props
-  );
 }
-
 /**
- * A specialized hook for the IsResume BAML function that handles both streaming and non-streaming responses.
+ * A specialized hook for the IsResume BAML function that supports both streaming and non‑streaming responses.
  *
- * Input Types:
+ * **Input Types:**
  *
  * - raw_text: string
  *
  *
- * Return Type:
- * - Non-streaming: boolean
- * - Streaming Partial: RecursivePartialNull<boolean>
- * - Streaming Final: boolean
+ * **Return Type:**
+ * - **Non‑streaming:** boolean
+ * - **Streaming Partial:** boolean
+ * - **Streaming Final:** boolean
  *
- * Common Usage Patterns:
- * 1. Non-streaming (Default)
- *    - Best for: Quick responses, simple UI updates
- *    - Avoid when: Response takes >5s or UI needs progressive updates
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
  *
- * 2. Streaming
- *    - Best for: Long-running operations, real-time UI feedback
- *    - Required when: Using features like chat interfaces or progress indicators
- *
- * Edge Cases & Gotchas:
- * 1. Error Handling
- *    - Network failures won't trigger onPartial/onFinal
- *    - Always implement onError for graceful degradation
- *    - Check error.message for specific failure reasons
- *
- * 2. Streaming Mode
- *    - partialData may be null even after updates (handle this case!)
- *    - Stream can end without final data (connection loss)
- *    - Partial results may be incomplete/invalid
- *
- * 3. State Management
- *    - data persists after completion (clear if needed)
- *    - isPending stays true until final/error
- *    - Multiple rapid calls can race (latest wins)
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
  *
  * @example
  * ```tsx
- * // 1. Basic Usage (Non-streaming)
+ * // Basic non‑streaming usage:
  * const { data, error, isPending, mutate } = useIsResume();
  *
- * // Handle the response
- * useEffect(() => {
- *   if (data) {
- *     // Type-safe access to boolean
- *     console.log('Success:', data);
- *   }
- * }, [data]);
- *
- * // 2. Streaming with Progress
- * const {
- *   data,        // Type: boolean | null
- *   partialData, // Type: RecursivePartialNull<boolean> | null
- *   isPending,
- *   error,
- *   mutate
- * } = useIsResume({
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useIsResume({
  *   stream: true,
- *
- *   // Handle partial updates (may be incomplete!)
- *   onPartial: (partial) => {
- *     console.log('Partial:', partial);
- *   },
- *
- *   // Handle successful completion
- *   onFinal: (final) => {
- *     console.log('Final:', final);
- *   },
- *
- *   // Robust error handling
- *   onError: (error) => {
- *     console.error('Request failed:', error);
- *   }
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
  * });
- *
- * // 3. Making the Request
- * const handleSubmit = async () => {
- *   try {
- *     const result = await mutate({
- *       // Type-safe parameters:
- *       raw_text: someValue as string,  // Replace someValue with your data
- *     });
- *
- *     if (result) {
- *       // Success case
- *     }
- *   } catch (e) {
- *     // Handle any synchronous errors
- *   }
- * };
- *
- * // 4. Race Condition Handling
- * const handleMultipleCalls = async () => {
- *   // Only the latest call's results will be reflected in the UI
- *   const results = await Promise.all([
- *     mutate({
- *       raw_text: firstValue as string,
- *     }),
- *     mutate({
- *       raw_text: secondValue as string,
- *     })
- *   ]);
- *   // Check results[1] for the final state
- * };
  * ```
  */
-export function useIsResume<Action extends typeof ServerActions.IsResumeAction>(
-  props: StreamingProps<Action>
-): StreamingHookResult<Action>;
+export function useIsResume(
+  props: StreamingProps<'IsResume'>
+): StreamingHookResult<'IsResume'>;
 
-export function useIsResume<Action extends typeof ServerActions.IsResumeAction>(
-  props?: NonStreamingProps<Action>
-): NonStreamingHookResult<Action>;
+export function useIsResume(
+  props?: NonStreamingProps<'IsResume'>
+): NonStreamingHookResult<'IsResume'>;
 
-export function useIsResume<Action extends typeof ServerActions.IsResumeAction>(
-  props: HookProps<Action> = {},
-): StreamingHookResult<Action> | NonStreamingHookResult<Action> {
+export function useIsResume(
+  props: HookProps<'IsResume'> = {}
+): StreamingHookResult<'IsResume'> | NonStreamingHookResult<'IsResume'> {
   if (props.stream) {
-    return useBamlAction(
-      ServerActions.IsResumeStreamingAction,
-      props
-    );
+    return useBamlAction(StreamingActions.IsResume, props);
+  } else {
+    return useBamlAction(Actions.IsResume, props);
   }
+}
+/**
+ * A specialized hook for the MakeSemanticContainer BAML function that supports both streaming and non‑streaming responses.
+ *
+ * **Input Types:**
+ *
+ *
+ * **Return Type:**
+ * - **Non‑streaming:** SemanticContainer
+ * - **Streaming Partial:** partial_types.SemanticContainer
+ * - **Streaming Final:** SemanticContainer
+ *
+ * **Usage Patterns:**
+ * 1. **Non‑streaming (Default)**
+ *    - Best for quick responses and simple UI updates.
+ * 2. **Streaming**
+ *    - Ideal for long‑running operations or real‑time feedback.
+ *
+ * **Edge Cases:**
+ * - Ensure robust error handling via `onError`.
+ * - Handle cases where partial data may be incomplete or missing.
+ *
+ * @example
+ * ```tsx
+ * // Basic non‑streaming usage:
+ * const { data, error, isPending, mutate } = useMakeSemanticContainer();
+ *
+ * // Streaming usage:
+ * const { data, partialData, isPending, error, mutate } = useMakeSemanticContainer({
+ *   stream: true,
+ *   onPartial: (partial) => console.log('Partial update:', partial),
+ *   onFinal: (final) => console.log('Final result:', final),
+ *   onError: (err) => console.error('Error:', err),
+ * });
+ * ```
+ */
+export function useMakeSemanticContainer(
+  props: StreamingProps<'MakeSemanticContainer'>
+): StreamingHookResult<'MakeSemanticContainer'>;
 
-  return useBamlAction(
-    ServerActions.IsResumeAction,
-    props
-  );
+export function useMakeSemanticContainer(
+  props?: NonStreamingProps<'MakeSemanticContainer'>
+): NonStreamingHookResult<'MakeSemanticContainer'>;
+
+export function useMakeSemanticContainer(
+  props: HookProps<'MakeSemanticContainer'> = {}
+): StreamingHookResult<'MakeSemanticContainer'> | NonStreamingHookResult<'MakeSemanticContainer'> {
+  if (props.stream) {
+    return useBamlAction(StreamingActions.MakeSemanticContainer, props);
+  } else {
+    return useBamlAction(Actions.MakeSemanticContainer, props);
+  }
 }

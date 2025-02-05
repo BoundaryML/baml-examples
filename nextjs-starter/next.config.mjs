@@ -1,4 +1,4 @@
-import { withBaml } from "@boundaryml/baml-nextjs-plugin";
+import { withBaml } from '@boundaryml/baml-nextjs-plugin';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

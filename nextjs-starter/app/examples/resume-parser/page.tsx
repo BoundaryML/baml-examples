@@ -1,12 +1,11 @@
-"use client";
+'use client';
 
-import type React from "react";
-import { useState } from "react";
-import examples from "./examples";
-import { Content } from "./Shared";
-import { useExtractResume, useExtractResumeNoStructure } from "@/baml_client/react/client";
+import { useExtractResume, useExtractResumeNoStructure } from '@/baml_client/react/client';
+import { useState } from 'react';
+import { Content } from './Shared';
+import examples from './examples';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
 export default function Home() {
@@ -23,4 +22,4 @@ export default function Home() {
       unstructured={unstructuredResume}
     />
   );
-};
+}
