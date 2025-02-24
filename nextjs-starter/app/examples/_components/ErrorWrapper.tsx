@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/tooltip"
 import { AlertCircle } from "lucide-react"
 
-export const ErrorWrapper = ({ children, error }: { children: React.ReactNode; error: string }) => {
+export const ErrorWrapper = ({ children, error }: { children: React.ReactNode; error?: string }) => {
   if (!error) return children;
 
   return (

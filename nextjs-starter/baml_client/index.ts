@@ -19,6 +19,7 @@ $ pnpm add @boundaryml/baml
 export { b } from "./async_client"
 
 export * from "./types"
+export type { partial_types } from "./partial_types"
 export * from "./tracing"
 export { resetBamlEnvVars } from "./globals"
 export { BamlValidationError } from "@boundaryml/baml"
