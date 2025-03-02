@@ -1,48 +1,47 @@
-"use client";
+'use client';
 
-import { BookAnalysis } from "@/baml_client";
-import {
-  BarChart
-} from "@/components/charts/bar_chart";
-import {
-    LineChart,
-    LineChartEventProps
-} from "@/components/charts/line_chart";
-import {
-    BarList
-} from "@/components/charts/bar_list";
-import { b, RecursivePartialNull } from "@/baml_client/async_client";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { useEffect, useMemo, useState } from "react";
-import { PopularityLineChart as InternalPopularityLineChart } from "./PopularityChart";
+import type { HookResultPartialData } from '@/baml_client/react/types';
+import { useMemo } from 'react';
+import { PopularityLineChart as InternalPopularityLineChart } from './PopularityChart';
 
 export const PopularityLineChart = ({
   popularityData,
   bookColors,
 }: {
-  popularityData: RecursivePartialNull<BookAnalysis>['popularityOverTime'];
+  popularityData: HookResultPartialData<'AnalyzeBooks'>['popularityOverTime'];
   bookColors: Record<string, string>;
 }) => {
   // Transform into {date: year, [book]: score}[]
   const data = useMemo(() => {
-    const transformedData: { date: number, [key: string]: number }[] = [];
+    const transformedData: { date: number; [key: string]: number }[] = [];
 
-    popularityData?.forEach((item) => {
-      if (item && item.bookName && bookColors[item.bookName] !== undefined) {
-        const name = item.bookName;
-        item.scores?.forEach((score) => {
-          if (score && score.year && score.score !== null && score.score !== undefined) {
-            const year = score.year;
-            let yearData = transformedData.find((entry) => entry.date === year);
-            if (!yearData) {
-              transformedData.push({ date: year, [name]: score.score });
-            } else {
-              yearData[name] = score.score;
-            }
+    // Filter out undefined/null values and ensure type safety
+    const validData =
+      popularityData?.filter(
+        (item): item is NonNullable<typeof item> =>
+          item !== undefined &&
+          item !== null &&
+          item.bookName !== undefined &&
+          item.bookName !== null &&
+          Array.isArray(item.scores),
+      ) ?? [];
+
+    for (const item of validData) {
+      const name = item.bookName;
+      if (bookColors[name ?? ''] === undefined) continue;
+
+      for (const score of item.scores ?? []) {
+        if (score?.year != null && score.score != null) {
+          const year = score.year;
+          const yearData = transformedData.find((entry) => entry.date === year);
+          if (!yearData) {
+            transformedData.push({ date: year, [name ?? '']: score.score });
+          } else {
+            yearData[name ?? ''] = score.score;
           }
-        });
+        }
       }
-    });
+    }
 
     // Sort by date
     return transformedData.sort((a, b) => a.date - b.date);

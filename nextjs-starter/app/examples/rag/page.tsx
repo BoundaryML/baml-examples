@@ -1,16 +1,16 @@
 "use client";
-import { answerQuestion } from "@/app/actions/streamable_objects";
+import type React from "react";
 import { useState } from "react";
-import { useStream } from "@/app/_hooks/useStream";
 import examples from "./examples";
 import { Content } from "./Content";
+import { useAnswerQuestion } from "@/baml_client/react/client";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 const Home: React.FC = () => {
   const [text, setText] = useState(examples.basic.value);
-  const answer = useStream(answerQuestion);
+  const answer = useAnswerQuestion({ stream: true });
 
   return (
     <Content
