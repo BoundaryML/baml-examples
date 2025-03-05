@@ -9,6 +9,7 @@ import { CircleDot, Code2, FileCode, Loader2, Play, RotateCcw, Type } from "luci
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
+import { MarkdownRenderer } from "./markdown/MarkdownRenderer"
 
 // Define a type for BAML objects
 interface BAML {
@@ -21,18 +22,27 @@ interface GeneratedBAMLSectionProps {
   onExecute: (code: BAML) => Promise<void>
   isExecuting: boolean
 }
+const testGeneratedBAML = {
+  interface_code: `
+  \`\`\`baml
+class Resume {
+  name string
+  age int
+}
+\`\`\`
+  `,
+  return_type: "string",
+}
 
 export function GeneratedBAMLSection({
   generatedBAML: originalGeneratedBAML,
   onExecute,
   isExecuting,
 }: GeneratedBAMLSectionProps) {
+
   // Local state for modifications
   const [generatedBAML, setGeneratedBAML] = useState<BAML>(
-    originalGeneratedBAML || {
-      interface_code: "",
-      return_type: "",
-    },
+    originalGeneratedBAML || testGeneratedBAML,
   )
 
   // Update local state when props change
@@ -41,6 +51,8 @@ export function GeneratedBAMLSection({
       setGeneratedBAML(originalGeneratedBAML)
     }
   }, [originalGeneratedBAML])
+
+  // originalGeneratedBAML = testGeneratedBAML
 
   // Check if content has been modified
   const isInterfaceModified =
@@ -105,12 +117,13 @@ export function GeneratedBAMLSection({
 
               <TabsContent value="interface" className="space-y-4">
                 <div className="relative">
-                  <Textarea
+                  {/* <Textarea
                     className="font-mono bg-slate-950 text-slate-100 p-4 rounded-md overflow-auto min-h-[300px] text-sm w-full border-slate-800 focus-visible:ring-slate-700"
                     value={generatedBAML.interface_code}
                     onChange={(e) => updateField("interface_code", e.target.value)}
                     spellCheck={false}
-                  />
+                  /> */}
+                  <MarkdownRenderer source={generatedBAML.interface_code.trim()} />
                   {isInterfaceModified && (
                     <Button
                       size="sm"
