@@ -1,7 +1,8 @@
 import asyncio
 import json
 import base64
-from typing import Optional
+from typing import Any, Callable, Optional, TypeVar
+from baml_py import BamlStream
 
 import httpx
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
@@ -10,6 +11,8 @@ from baml_client import b
 from baml_client.type_builder import TypeBuilder
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from baml_client.types import Schema
+from baml_py.errors import BamlError
 
 app = FastAPI()
 
@@ -21,6 +24,107 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.post("/execute_baml/call")
+async def execute_baml_call(
+    file: UploadFile = File(None),
+    content: str = Form(None),
+    url: str = Form(None),
+    baml_code: str = Form(...),
+    return_type: str = Form(...)
+) -> Schema:
+    return await execute_baml(stream=False, file=file, content=content, url=url, baml_code=baml_code, return_type=return_type)
+
+
+@app.post("/execute_baml/stream")
+async def execute_baml_stream(
+    file: UploadFile = File(None),
+    content: str = Form(None),
+    url: str = Form(None),
+    baml_code: str = Form(...),
+    return_type: str = Form(...)
+) -> StreamingResponse:
+    return await execute_baml(stream=True, file=file, content=content, url=url, baml_code=baml_code, return_type=return_type)
+
+
+@app.post("/generate_baml/call")
+async def generate_baml_call(
+    file: UploadFile = File(None),
+    content: str = Form(None),
+    url: str = Form(None),
+) -> Schema:
+    return await generate_baml(stream=False, file=file, content=content, url=url)
+
+
+@app.post("/generate_baml/stream")
+async def generate_baml_stream(
+    file: UploadFile = File(None),
+    content: str = Form(None),
+    url: str = Form(None),
+) -> StreamingResponse:
+    return await generate_baml(stream=True, file=file, content=content, url=url)
+
+
+async def generate_baml(
+    stream: bool,
+    file: UploadFile = File(None),
+    content: str = Form(None),
+    url: str = Form(None),
+) -> Schema | StreamingResponse:   
+    final_content = await read_input_content(file, content, url)
+    if stream:
+        stream = b.stream.GenerateBAML(final_content)
+        return handle_stream(stream, lambda x: x)
+    else:
+        schema = await b.GenerateBAML(final_content)
+        return schema
+
+
+async def execute_baml(
+    stream: bool,
+    file: UploadFile = File(None),
+    content: str = Form(None),
+    url: str = Form(None),
+    baml_code: str = Form(...),
+    return_type: str = Form(...),
+):   
+    final_content = await read_input_content(file, content, url)
+    tb = TypeBuilder()
+    try:
+        tb.add_baml(f"""
+        {baml_code}
+
+        dynamic class Response {{
+            data {return_type}
+        }}
+        """)
+    except BamlError as e:
+        raise HTTPException(status_code=400, detail={
+            "error": "BamlError",
+            "message": str(e),
+        })
+    if stream:
+        stream = b.stream.ExecuteBAML(final_content, { "tb": tb })
+        return handle_stream(stream, lambda x: x.data)
+    else:
+        response = await b.ExecuteBAML(final_content, { "tb": tb })
+        return response.data
+
+StreamTypeVar = TypeVar("StreamTypeVar")
+FinalTypeVar = TypeVar("FinalTypeVar")
+
+def handle_stream(stream: BamlStream[StreamTypeVar, FinalTypeVar], to_data: Callable[[StreamTypeVar | FinalTypeVar], Any]):
+    async def stream_baml():
+        try:
+            async for chunk in stream:
+                yield json.dumps({ "partial": to_data(chunk) }) + "\n\n"
+                await asyncio.sleep(0)
+            result = await stream.get_final_response()
+            yield json.dumps({ "final": to_data(result) }) + "\n\n"
+        except Exception as e:
+            yield json.dumps({ "error": str(e) }) + "\n\n"
+    return StreamingResponse(stream_baml(), media_type="text/event-stream")
+
 
 async def read_input_content(
     file: Optional[UploadFile] = None,
@@ -57,83 +161,6 @@ async def read_input_content(
                 return base64.b64encode(response.content).decode("utf-8")
     else:
         raise HTTPException(status_code=400, detail="No valid content provided. Please provide a file, content, or URL.")
-
-@app.post("/generate_baml/stream")
-async def generate_baml_stream(
-    file: UploadFile = File(None),
-    content: str = Form(None),
-    url: str = Form(None)
-):  
-    final_content = await read_input_content(file, content, url)
-
-    async def stream_baml(content_str: str):
-        stream = b.stream.GenerateBAML(content_str)
-        async for chunk in stream:
-            yield str(chunk.model_dump_json()) + "\n"
-            # yield backpressure handling
-            await asyncio.sleep(0)
-
-    return StreamingResponse(stream_baml(final_content), media_type="text/event-stream")
-
-
-@app.post("/generate_baml/call")
-async def generate_baml_call(
-    file: UploadFile = File(None),
-    content: str = Form(None),
-    url: str = Form(None)
-):   
-    final_content = await read_input_content(file, content, url)
-    schema = await b.GenerateBAML(final_content)
-    return schema
-
-
-@app.post("/execute_baml/stream")
-async def execute_baml_stream(
-    file: UploadFile = File(None),
-    content: str = Form(None),
-    url: str = Form(None),
-    baml_code: str = Form(...),
-    return_type: str = Form(...)
-):   
-    final_content = await read_input_content(file, content, url)
-    tb = TypeBuilder()
-    tb.add_baml(f"""
-    {baml_code}
-
-    dynamic class Response {{
-        data {return_type}
-    }}
-    """)
-    
-    async def stream_baml(content_str: str):
-        stream = b.stream.ExecuteBAML(content_str, { "tb": tb })
-        async for chunk in stream:
-            if chunk.data is not None:
-                yield json.dumps(chunk.data) + "\n\n"
-                await asyncio.sleep(0)
-
-    return StreamingResponse(stream_baml(final_content), media_type="text/event-stream")
-
-
-@app.post("/execute_baml/call")
-async def execute_baml_call(
-    file: UploadFile = File(None),
-    content: str = Form(None),
-    url: str = Form(None),
-    baml_code: str = Form(...),
-    return_type: str = Form(...)
-):   
-    final_content = await read_input_content(file, content, url)
-    tb = TypeBuilder()
-    tb.add_baml(f"""
-    {baml_code}
-
-    dynamic class Response {{
-        data {return_type}
-    }}
-    """)
-    response = await b.ExecuteBAML(final_content, { "tb": tb })
-    return response.data
 
 
 if __name__ == "__main__":

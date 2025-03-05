@@ -16,7 +16,7 @@ class Schema {
 }
 
 function GenerateBAML(content: string | image | audio) -> Schema {
-  client "openai/gpt-4o" // Set OPENAI_API_KEY to use this client.
+  client CustomSonnet
   prompt #"
     Generate BAML schema for the given content.
 
