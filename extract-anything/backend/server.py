@@ -74,7 +74,7 @@ async def generate_baml(
     final_content = await read_input_content(file, content, url)
     if stream:
         stream = b.stream.GenerateBAML(final_content)
-        return handle_stream(stream, lambda x: x)
+        return handle_stream(stream, lambda x: x.model_dump())
     else:
         schema = await b.GenerateBAML(final_content)
         return schema

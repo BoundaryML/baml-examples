@@ -5,6 +5,9 @@ import { InputSection } from "@/components/input-section"
 import { GeneratedBAMLSection } from "@/components/generated-baml-section"
 import { type AnyObject, ExecutionResultSection } from "@/components/execution-result-section"
 import { ErrorMessage } from "@/components/error-message"
+import { fetchSSE } from "@/lib/utils"
+import type { Schema } from "../baml_client/types"
+import type { partial_types } from "../baml_client/partial_types"
 
 export default function Home() {
   const [isGenerating, setIsGenerating] = useState(false)
@@ -41,23 +44,17 @@ export default function Home() {
         throw new Error("Please provide text or upload a file")
       }
 
-      const response = await fetch("http://localhost:8000/generate_baml/call", {
-        method: "POST",
-        body: formData,
+
+      const response = await fetchSSE<partial_types.Schema, Schema>("http://localhost:8000/generate_baml/stream", formData, (onPartial) => {
+        setGeneratedBAML({
+          interface_code: onPartial.interface_code ?? "",
+          return_type: onPartial.return_type ?? "",
+        })
       })
 
-      console.log(response)
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
-      }
-
-      console.log("Response ok")
-      const data = await response.json()
-      console.log(data)
       setGeneratedBAML({
-        interface_code: data.interface_code,
-        return_type: data.return_type,
+        interface_code: response.interface_code,
+        return_type: response.return_type,
       })
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to generate BAML")

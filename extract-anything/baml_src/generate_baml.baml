@@ -1,6 +1,6 @@
 // Defining a data model.
 class Schema {
-  interface_code string @stream.not_null @description(#"
+  interface_code string @description(#"
     Answer with ` to prevent needing escape characters.
 
     Example:
@@ -11,11 +11,11 @@ class Schema {
     }
     `
   "#)
-  return_type string @stream.done
+  return_type string
   other_code string
 }
 
-function GenerateBAML(content: string | image | audio) -> Schema {
+function GenerateBAML(content: string | image | audio) -> Schema @stream.not_null {
   client CustomSonnet
   prompt #"
     Generate BAML schema for the given content.
