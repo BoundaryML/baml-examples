@@ -95,7 +95,17 @@ export default function Home() {
       })
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`)
+        const getError = async () => {
+          try {
+            const body = await response.json()
+            return body.detail.message
+          } catch {
+            return "Unknown error"
+          }
+        }
+
+        // Remove
+        throw new Error(`Error: ${response.status} ${await getError()}`)
       }
 
       const result = await response.json()
