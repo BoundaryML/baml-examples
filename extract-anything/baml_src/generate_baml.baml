@@ -35,7 +35,7 @@ template_string BAMLBackground() ##"
   Its almost like typescript, but with some differences.
   - no colons for example
 
-  <Schema>
+  <Example Definition>
     // Define output schemas using classes
     class MyObject {
       // Optional string fields use ?
@@ -83,7 +83,7 @@ template_string BAMLBackground() ##"
 
     // Comments use double slashes
     // inline class definitions are not supported
-  </Schema>
+  </Example Definition>
 
   Do NOT use numbers as confidence intervals if you need to use them. Prefer an enum with descriptions or literals like "high", "medium", "low".
 

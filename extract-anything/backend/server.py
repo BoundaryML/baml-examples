@@ -117,10 +117,12 @@ def handle_stream(stream: BamlStream[StreamTypeVar, FinalTypeVar], to_data: Call
     async def stream_baml():
         try:
             async for chunk in stream:
-                yield json.dumps({ "partial": to_data(chunk) }) + "\n\n"
+                chunk = to_data(chunk)
+                yield json.dumps({ "partial": chunk }) + "\n\n"
                 await asyncio.sleep(0)
             result = await stream.get_final_response()
-            yield json.dumps({ "final": to_data(result) }) + "\n\n"
+            final = to_data(result)
+            yield json.dumps({ "final": final }) + "\n\n"
         except Exception as e:
             yield json.dumps({ "error": str(e) }) + "\n\n"
     return StreamingResponse(stream_baml(), media_type="text/event-stream")

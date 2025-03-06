@@ -117,13 +117,12 @@ export function GeneratedBAMLSection({
 
               <TabsContent value="interface" className="space-y-4">
                 <div className="relative">
-                  {/* <Textarea
-                    className="font-mono bg-slate-950 text-slate-100 p-4 rounded-md overflow-auto min-h-[300px] text-sm w-full border-slate-800 focus-visible:ring-slate-700"
+                  <Textarea
+                    className="font-mono bg-slate-950 text-slate-100 p-4 rounded-md overflow-auto min-h-[300px] max-h-[400px] text-sm w-full border-slate-800 focus-visible:ring-slate-700"
                     value={generatedBAML.interface_code}
                     onChange={(e) => updateField("interface_code", e.target.value)}
                     spellCheck={false}
-                  /> */}
-                  <MarkdownRenderer source={generatedBAML.interface_code.trim()} />
+                  />
                   {isInterfaceModified && (
                     <Button
                       size="sm"

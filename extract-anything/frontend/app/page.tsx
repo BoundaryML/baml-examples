@@ -71,6 +71,7 @@ export default function Home() {
 
     setError(null)
     setIsExecuting(true)
+    setExecutionResult(null)
 
     try {
       const formData = new FormData()
@@ -86,27 +87,11 @@ export default function Home() {
       formData.append("baml_code", baml.interface_code)
       formData.append("return_type", baml.return_type)
 
-      const response = await fetch("http://localhost:8000/execute_baml/call", {
-        method: "POST",
-        body: formData,
+      const response = await fetchSSE<AnyObject, AnyObject>("http://localhost:8000/execute_baml/stream", formData, (onPartial) => {
+        setExecutionResult(onPartial)
       })
 
-      if (!response.ok) {
-        const getError = async () => {
-          try {
-            const body = await response.json()
-            return body.detail.message
-          } catch {
-            return "Unknown error"
-          }
-        }
-
-        // Remove
-        throw new Error(`Error: ${response.status} ${await getError()}`)
-      }
-
-      const result = await response.json()
-      setExecutionResult(result)
+      setExecutionResult(response)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to execute BAML")
     } finally {
