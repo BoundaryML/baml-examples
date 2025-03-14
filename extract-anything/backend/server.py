@@ -13,6 +13,9 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from baml_client.types import Schema
 from baml_py.errors import BamlError
+from pdf2image import convert_from_bytes
+from PIL import Image as PILImage
+import io
 
 app = FastAPI()
 
@@ -70,7 +73,7 @@ async def generate_baml(
     file: UploadFile = File(None),
     content: str = Form(None),
     url: str = Form(None),
-) -> Schema | StreamingResponse:   
+) -> Schema | StreamingResponse:
     final_content = await read_input_content(file, content, url)
     if stream:
         stream = b.stream.GenerateBAML(final_content)
@@ -127,12 +130,16 @@ def handle_stream(stream: BamlStream[StreamTypeVar, FinalTypeVar], to_data: Call
             yield json.dumps({ "error": str(e) }) + "\n\n"
     return StreamingResponse(stream_baml(), media_type="text/event-stream")
 
+def convert_to_base64(img: PILImage):
+    buffered = io.BytesIO()
+    img.save(buffered, format="JPEG")
+    return Image.from_base64(base64=base64.b64encode(buffered.getvalue()).decode("utf-8"), media_type="image/jpeg")
 
 async def read_input_content(
     file: Optional[UploadFile] = None,
     content: Optional[str] = None,
     url: Optional[str] = None
-) -> str | Image:
+) -> str | Image | list[Image]:
     """
     Processes the input from one of the following:
     - file: an uploaded file (image, audio, PDF or text)
@@ -148,6 +155,11 @@ async def read_input_content(
         if file.content_type.startswith("text"):
             file_content = await file.read()
             return file_content.decode("utf-8")
+        elif file.content_type == "application/pdf":
+            # Convert PDF to images
+            file_content = await file.read()
+            images = convert_from_bytes(file_content)
+            return [convert_to_base64(img) for img in images]
         else:
             file_content = await file.read()
             file_content_base64 = base64.b64encode(file_content).decode("utf-8")

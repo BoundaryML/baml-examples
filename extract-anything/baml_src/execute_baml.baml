@@ -3,7 +3,7 @@ class Response {
   @@dynamic
 }
 
-function ExecuteBAML(content: string | image | audio) -> Response {
+function ExecuteBAML(content: string | image | audio | image[]) -> Response {
   client "openai/gpt-4o"
   prompt #"
     Extract the data from the given content.

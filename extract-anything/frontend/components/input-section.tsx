@@ -30,6 +30,29 @@ export function InputSection({ onGenerate, isGenerating }: InputSectionProps) {
     onGenerate(inputType, textInput, file)
   }
 
+  const renderFilePreview = () => {
+    if (!file) return null;
+
+    const fileType = file.type;
+
+    if (fileType.startsWith('image/')) {
+      return <img src={URL.createObjectURL(file)} alt="Preview" className="max-w-full max-h-64" />;
+    }
+    if (fileType === 'application/pdf') {
+      return <embed src={URL.createObjectURL(file)} type="application/pdf" className="w-full h-64" />;
+    }
+    if (fileType.startsWith('text/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target?.result;
+        setTextInput(text as string);
+      };
+      reader.readAsText(file);
+      return <Textarea value={textInput} readOnly className="min-h-[200px] max-h-[400px]" />;
+    }
+    return <p className="text-sm text-muted-foreground">Preview not available for this file type.</p>;
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -61,6 +84,9 @@ export function InputSection({ onGenerate, isGenerating }: InputSectionProps) {
                   <Button variant="outline" onClick={() => setFile(null)}>
                     Remove
                   </Button>
+                  <div className="mt-4">
+                    {renderFilePreview()}
+                  </div>
                 </div>
               ) : (
                 <>

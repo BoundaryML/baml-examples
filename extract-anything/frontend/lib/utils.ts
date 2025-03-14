@@ -5,6 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+
 /**
  * Fetches an SSE stream from the given URL using the provided FormData.
  *
@@ -20,7 +21,13 @@ export async function fetchSSE<PartialType, FinalType>(url: string, formData: Fo
   });
 
   if (!response.ok) {
-    throw new Error(`Error: ${response.status}`);
+    const json = await response.json();
+    if (json.detail && json.detail.error === "BamlError") {
+      throw new Error(`Error: ${response.status}. ${json.detail.message}`);
+    }
+
+    const text = await response.text();
+    throw new Error(`Error: ${response.status}. ${text}`);
   }
 
   const reader = response.body?.getReader();

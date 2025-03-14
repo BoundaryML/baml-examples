@@ -93,6 +93,7 @@ export default function Home() {
 
       setExecutionResult(response)
     } catch (err) {
+      console.error(err)
       setError(err instanceof Error ? err.message : "Failed to execute BAML")
     } finally {
       setIsExecuting(false)
@@ -100,8 +101,12 @@ export default function Home() {
   }
 
   return (
-    <main className="container mx-auto py-8 px-4">
+    <main className="container mx-auto py-8 px-4 gap-6 flex flex-col">
       <h1 className="text-3xl font-bold mb-6">BAML Code Generator and Executor</h1>
+
+      <ErrorMessage error={error} />
+
+      <ExecutionResultSection executionResult={executionResult} />
 
       <div className="grid gap-6 md:grid-cols-2">
         <InputSection onGenerate={handleGenerate} isGenerating={isGenerating} />
@@ -109,8 +114,6 @@ export default function Home() {
         <GeneratedBAMLSection generatedBAML={generatedBAML} onExecute={handleExecute} isExecuting={isExecuting} />
       </div>
 
-      <ExecutionResultSection executionResult={executionResult} />
-      <ErrorMessage error={error} />
     </main>
   )
 }

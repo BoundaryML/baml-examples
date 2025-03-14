@@ -15,7 +15,7 @@ class Schema {
   other_code string
 }
 
-function GenerateBAML(content: string | image | audio) -> Schema @stream.not_null {
+function GenerateBAML(content: string | image | audio | image[]) -> Schema @stream.not_null {
   client CustomSonnet
   prompt #"
     Generate BAML schema for the given content.
