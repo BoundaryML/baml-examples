@@ -49,7 +49,7 @@ client<llm> OpenaiFallback {
   provider fallback
   options {
     // This will try the clients in order until one succeeds
-    strategy [CustomGPT4oMini, CustomGPT4oMini]
+    strategy [CustomGPT4oMini, CustomHaiku]
   }
 }
 
