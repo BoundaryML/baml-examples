@@ -2,7 +2,7 @@ import asyncio
 import json
 import base64
 from typing import Any, Callable, Optional, TypeVar
-from baml_py import BamlStream
+from baml_py import BamlStream, Image
 
 import httpx
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
@@ -132,7 +132,7 @@ async def read_input_content(
     file: Optional[UploadFile] = None,
     content: Optional[str] = None,
     url: Optional[str] = None
-) -> str:
+) -> str | Image:
     """
     Processes the input from one of the following:
     - file: an uploaded file (image, audio, PDF or text)
@@ -150,7 +150,9 @@ async def read_input_content(
             return file_content.decode("utf-8")
         else:
             file_content = await file.read()
-            return base64.b64encode(file_content).decode("utf-8")
+            file_content_base64 = base64.b64encode(file_content).decode("utf-8")
+            media_type = file.content_type
+            return Image.from_base64(base64=file_content_base64, media_type=media_type)
     elif url is not None:
         async with httpx.AsyncClient() as client:
             response = await client.get(url)
