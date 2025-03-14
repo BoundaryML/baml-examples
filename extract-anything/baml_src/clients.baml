@@ -22,6 +22,7 @@ client<llm> CustomSonnet {
   options {
     model "claude-3-5-sonnet-20241022"
     api_key env.ANTHROPIC_API_KEY
+    default_role "system"
   }
 }
 
