@@ -64,7 +64,7 @@ export function ExecutionResultSection({ executionResult }: ExecutionResultSecti
 }
 
 // JSON Syntax Highlighting
-function JsonSyntaxHighlight({ json }: { json: any }) {
+function JsonSyntaxHighlight({ json }: { json: AnyObject }) {
   const jsonString = JSON.stringify(json, null, 2)
 
   // Simple syntax highlighting
@@ -75,6 +75,7 @@ function JsonSyntaxHighlight({ json }: { json: any }) {
     .replace(/:(\s*)(null)/g, ':$1<span class="text-gray-500">$2</span>') // null
     .replace(/:(\s*)(\d+)/g, ':$1<span class="text-blue-500">$2</span>') // numbers
 
+  // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
   return <div dangerouslySetInnerHTML={{ __html: highlighted }} />
 }
 
@@ -83,7 +84,7 @@ function formatAsYaml(data: AnyObject): string {
   if (data === null) return "null"
   if (typeof data === "undefined") return "undefined"
 
-  const formatValue = (value: any, indent = 0): string => {
+  const formatValue = (value: AnyObject, indent = 0): string => {
     const spaces = " ".repeat(indent)
 
     if (value === null || value === undefined) {
@@ -92,7 +93,7 @@ function formatAsYaml(data: AnyObject): string {
 
     if (typeof value === "string") {
       // Check if string needs quotes (contains special chars)
-      if (/[:#{}[\],&*?|<>=!%@`]/.test(value) || value === "" || !isNaN(Number(value))) {
+      if (/[:#{}[\],&*?|<>=!%@`]/.test(value) || value === "" || !Number.isNaN(Number(value))) {
         return `"${value.replace(/"/g, '\\"')}"`
       }
       return value
@@ -105,7 +106,7 @@ function formatAsYaml(data: AnyObject): string {
     if (Array.isArray(value)) {
       if (value.length === 0) return "[]"
 
-      return value.map((item) => `${spaces}- ${formatValue(item, indent + 2).trimStart()}`).join("\n")
+      return value.map((item) => `${spaces}- ${formatValue(item as AnyObject, indent + 2).trimStart()}`).join("\n")
     }
 
     if (typeof value === "object") {
@@ -113,7 +114,7 @@ function formatAsYaml(data: AnyObject): string {
 
       return Object.entries(value)
         .map(([key, val]) => {
-          const formattedVal = formatValue(val, indent + 2)
+          const formattedVal = formatValue(val as AnyObject, indent + 2)
           // If the formatted value is multiline, add a newline after the key
           if (formattedVal.includes("\n")) {
             return `${spaces}${key}:\n${" ".repeat(indent + 2)}${formattedVal.trimStart()}`
@@ -130,7 +131,7 @@ function formatAsYaml(data: AnyObject): string {
 }
 
 // Pretty Print component for hierarchical view
-function PrettyPrint({ data, level = 0 }: { data: any; level?: number }) {
+function PrettyPrint({ data, level = 0 }: { data: AnyObject; level?: number }) {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   const toggleExpand = (key: string) => {
@@ -146,7 +147,7 @@ function PrettyPrint({ data, level = 0 }: { data: any; level?: number }) {
   }
 
   if (typeof data === "string") {
-    return <span className="text-emerald-600">"{data}"</span>
+    return <span className="text-emerald-600">&quot;{data}&quot;</span>
   }
 
   if (typeof data === "number") {
@@ -164,6 +165,7 @@ function PrettyPrint({ data, level = 0 }: { data: any; level?: number }) {
 
     return (
       <div className="ml-4">
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
         <div
           className="flex items-center cursor-pointer hover:bg-secondary/50 rounded px-1"
           onClick={() => toggleExpand(`array-${level}`)}
@@ -179,9 +181,10 @@ function PrettyPrint({ data, level = 0 }: { data: any; level?: number }) {
         {expanded[`array-${level}`] && (
           <div className="ml-4 border-l-2 border-blue-200 pl-2">
             {data.map((item, index) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
               <div key={index} className="flex py-0.5">
                 <span className="text-blue-500 mr-2 font-mono">{index}:</span>
-                <PrettyPrint data={item} level={level + 1} />
+                <PrettyPrint data={item as AnyObject} level={level + 1} />
               </div>
             ))}
           </div>
@@ -199,6 +202,7 @@ function PrettyPrint({ data, level = 0 }: { data: any; level?: number }) {
 
     return (
       <div className="ml-4">
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
         <div
           className="flex items-center cursor-pointer hover:bg-secondary/50 rounded px-1"
           onClick={() => toggleExpand(`object-${level}`)}
@@ -216,7 +220,7 @@ function PrettyPrint({ data, level = 0 }: { data: any; level?: number }) {
             {keys.map((key) => (
               <div key={key} className="flex py-0.5">
                 <span className="text-purple-600 font-medium mr-2">{key}:</span>
-                <PrettyPrint data={data[key]} level={level + 1} />
+                <PrettyPrint data={data[key] as AnyObject} level={level + 1} />
               </div>
             ))}
           </div>
@@ -228,24 +232,8 @@ function PrettyPrint({ data, level = 0 }: { data: any; level?: number }) {
   return <span>{String(data)}</span>
 }
 
-// Get color for status badges
-function getStatusColor(status: string): string {
-  const statusLower = status.toLowerCase()
-  if (statusLower === "open") return "bg-green-100 text-green-800 hover:bg-green-200"
-  if (statusLower === "closed") return "bg-red-100 text-red-800 hover:bg-red-200"
-  if (statusLower === "pending") return "bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
-  if (statusLower === "in progress") return "bg-blue-100 text-blue-800 hover:bg-blue-200"
-  return "bg-gray-100 text-gray-800 hover:bg-gray-200"
-}
-
-// Get color for activity badges
-function getActivityColor(activity: string): string {
-  if (activity === "NEW_ACTIVITY") return "bg-amber-100 text-amber-800 border-amber-200"
-  return "bg-gray-100 text-gray-800 border-gray-200"
-}
-
 // Table View component
-function TableView({ data }: { data: any }) {
+function TableView({ data }: { data: AnyObject }) {
   // Handle primitive types
   if (
     data === null ||
@@ -286,11 +274,13 @@ function TableView({ data }: { data: any }) {
     if (data.length > 0 && typeof data[0] === "object" && data[0] !== null) {
       // Get all unique keys from all objects in the array
       const allKeys = new Set<string>()
-      data.forEach((item) => {
+      for (const item of data) {
         if (typeof item === "object" && item !== null) {
-          Object.keys(item).forEach((key) => allKeys.add(key))
+          for (const key of Object.keys(item)) {
+            allKeys.add(key)
+          }
         }
-      })
+      }
 
       const keys = Array.from(allKeys)
 
@@ -310,20 +300,13 @@ function TableView({ data }: { data: any }) {
               </TableHeader>
               <TableBody>
                 {data.map((item, index) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
                   <TableRow key={index} className={index % 2 === 0 ? "bg-muted/20" : ""}>
                     <TableCell className="sticky left-0 bg-muted/20 z-10 font-mono text-xs">{index}</TableCell>
                     {keys.map((key) => (
                       <TableCell key={key} className="min-w-[120px]">
                         {typeof item === "object" && item !== null && key in item ? (
-                          key === "status" ? (
-                            <Badge className={getStatusColor(String(item[key]))}>{String(item[key])}</Badge>
-                          ) : key === "activity_status" && item[key] ? (
-                            <Badge variant="outline" className={getActivityColor(String(item[key]))}>
-                              {String(item[key])}
-                            </Badge>
-                          ) : (
-                            formatCellValue(item[key], key)
-                          )
+                          formatCellValue((item as Record<string, unknown>)[key] as AnyObject, key)
                         ) : (
                           <span className="text-gray-400">—</span>
                         )}
@@ -350,9 +333,10 @@ function TableView({ data }: { data: any }) {
         </TableHeader>
         <TableBody>
           {data.map((item, index) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             <TableRow key={index} className={index % 2 === 0 ? "bg-muted/20" : ""}>
               <TableCell className="font-mono text-xs">{index}</TableCell>
-              <TableCell className="min-w-[300px]">{formatCellValue(item)}</TableCell>
+              <TableCell className="min-w-[300px]">{formatCellValue(item as AnyObject)}</TableCell>
               <TableCell>
                 <Badge variant="outline" className="font-mono text-xs">
                   {item === null ? "null" : typeof item}
@@ -388,13 +372,11 @@ function TableView({ data }: { data: any }) {
               <TableCell className="font-medium text-purple-700">{key}</TableCell>
               <TableCell className="min-w-[300px]">
                 {key === "status" ? (
-                  <Badge className={getStatusColor(String(data[key]))}>{String(data[key])}</Badge>
+                  <Badge>{String(data[key])}</Badge>
                 ) : key === "activity_status" && data[key] ? (
-                  <Badge variant="outline" className={getActivityColor(String(data[key]))}>
-                    {String(data[key])}
-                  </Badge>
+                  <Badge variant="outline">{String(data[key])}</Badge>
                 ) : (
-                  formatCellValue(data[key], key)
+                  formatCellValue(data[key] as AnyObject, key)
                 )}
               </TableCell>
               <TableCell>
@@ -413,7 +395,7 @@ function TableView({ data }: { data: any }) {
 }
 
 // Update the formatCellValue function to better handle arrays and add colors
-function formatCellValue(value: any, key?: string): React.ReactNode {
+function formatCellValue(value: AnyObject, key?: string): React.ReactNode {
   if (value === null) {
     return <span className="text-gray-500 italic">null</span>
   }
@@ -457,6 +439,7 @@ function formatCellValue(value: any, key?: string): React.ReactNode {
       return (
         <div className="flex flex-wrap gap-1">
           {value.map((item, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             <Badge key={i} variant="outline" className="bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100">
               {item === null ? "null" : String(item)}
             </Badge>
@@ -474,9 +457,10 @@ function formatCellValue(value: any, key?: string): React.ReactNode {
         </summary>
         <div className="pl-2 mt-1 border-l-2 border-blue-200">
           {value.map((item, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
             <div key={i} className="flex items-start gap-2 text-xs py-0.5">
               <span className="text-blue-500 font-mono">{i}:</span>
-              {formatCellValue(item)}
+              {formatCellValue(item as AnyObject)}
             </div>
           ))}
         </div>
@@ -500,7 +484,7 @@ function formatCellValue(value: any, key?: string): React.ReactNode {
           {keys.map((key) => (
             <div key={key} className="flex items-start gap-2 text-xs py-0.5">
               <span className="text-purple-600 font-medium">{key}:</span>
-              {formatCellValue(value[key], key)}
+              {formatCellValue(value[key] as AnyObject, key)}
             </div>
           ))}
         </div>
