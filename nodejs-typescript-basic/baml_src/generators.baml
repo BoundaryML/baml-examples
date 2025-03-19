@@ -9,7 +9,7 @@ generator target {
     output_dir "../src/"
     // The version of the BAML package you have installed (e.g. same version as your baml-py or @boundaryml/baml).
     // The BAML VSCode extension version should also match this version.
-    version "0.72.0"
+    version "0.80.1"
     // Valid values: "sync", "async"
     // This controls what `b.FunctionName()` will be (sync or async).
     // Regardless of this setting, you can always explicitly call either of the following:
