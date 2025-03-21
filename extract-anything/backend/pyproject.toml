@@ -5,7 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "baml-py==0.78.0",
+    "baml-py==0.80.1",
     "fastapi[standard]>=0.115.11",
     "httpx>=0.28.1",
     "pdf2image>=1.17.0",

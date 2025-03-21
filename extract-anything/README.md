@@ -16,3 +16,16 @@ Backend is python + FASTAPI + BAML
 Frontend is React
 
 We try and stream whatever possible!
+
+```bash
+# Start the backend
+cd backend
+uv run fastapi run server.py --reload
+
+```
+
+```bash
+# Start the frontend
+cd frontend
+pnpm dev
+```
