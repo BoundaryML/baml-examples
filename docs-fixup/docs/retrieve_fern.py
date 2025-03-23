@@ -6,7 +6,7 @@ import frontmatter
 import yaml
 from pydantic import BaseModel, computed_field
 
-DOCS_PATH = "/Users/sam/baml2/fern-eval"
+DOCS_PATH = "/Users/aaronvillalpando/Projects/baml/fern"
 
 
 def normalize_slug(title: str) -> str:

@@ -5,7 +5,7 @@
     "start": "npx ts-node-dev src/index.ts"
   },
   "dependencies": {
-    "@boundaryml/baml": "^0.56.1",
+    "@boundaryml/baml": "^0.80.1",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
