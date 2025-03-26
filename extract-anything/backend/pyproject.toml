@@ -1,0 +1,15 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "baml-py==0.80.1",
+    "fastapi[standard]>=0.115.11",
+    "httpx>=0.28.1",
+    "pdf2image>=1.17.0",
+    "pydantic>=2.10.6",
+    "python-multipart>=0.0.20",
+    "uvicorn>=0.34.0",
+]

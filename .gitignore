@@ -50,3 +50,5 @@ poetry/core/*
 baml_client/
 
 node_modules/
+
+dist/
