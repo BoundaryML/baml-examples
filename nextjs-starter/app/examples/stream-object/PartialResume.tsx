@@ -17,17 +17,16 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { RecursivePartialNull } from "@/baml_client/async_client";
-import { Resume } from "@/baml_client/types";
 import { ErrorWrapper } from "../_components/ErrorWrapper";
+import type { partial_types } from "@/baml_client/partial_types";
 
 const PartialResume = ({
   resume,
 }: {
-  resume: RecursivePartialNull<Resume>;
+  resume: partial_types.Resume;
 }) => {
   const [isWhyHireOpen, setIsWhyHireOpen] = useState(false);
-  const prevResumeRef = useRef<RecursivePartialNull<Resume>>({});
+  const prevResumeRef = useRef<partial_types.Resume>({});
 
   useEffect(() => {
     prevResumeRef.current = resume;

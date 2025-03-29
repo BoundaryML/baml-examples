@@ -3,14 +3,10 @@
 import { Bar, BarChart, XAxis, YAxis, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-
-interface WordCountItem {
-  bookName?: string | null
-  count?: number | null
-}
+import type { partial_types } from "@/baml_client/partial_types"
 
 interface WordCountChartProps {
-  wordCountData: (WordCountItem | undefined)[] | null | undefined
+  wordCountData: partial_types.BookAnalysis['wordCounts'] | null | undefined
   bookColors: Record<string, string>
 }
 

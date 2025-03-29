@@ -1,11 +1,10 @@
 "use client";
 
-import { Ingredient, PartIngredient, PartSteps, Recipe } from "@/baml_client";
+import type { Ingredient, partial_types, PartIngredient, PartSteps, Recipe, RecursivePartialNull } from "@/baml_client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RecursivePartialNull } from "@/baml_client/async_client";
 import { Slider } from "@/components/ui/slider";
-import { ReactNode, useEffect, useState } from "react";
+import  { type ReactNode, useEffect, useState } from "react";
 import { CheckCircle, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -15,7 +14,7 @@ export const RecipeRender = ({
   state,
 }: {
   name: string;
-  recipe: RecursivePartialNull<Recipe>;
+  recipe: partial_types.Recipe;
   state: "idle" | "instructions" | "ingredients" | "done";
 }) => {
   const [servings, setServings] = useState(recipe.number_of_servings);
@@ -101,7 +100,7 @@ const IngredientListRender = ({
   ratio,
   inProgress
 }: {
-  ingredients: RecursivePartialNull<Recipe>["ingredients"];
+  ingredients: partial_types.Recipe["ingredients"];
   ratio: number;
   inProgress?: boolean;
 }) => {
@@ -112,7 +111,7 @@ const IngredientListRender = ({
   if ("title" in ingredients[0]!) {
     return (
       <div className="space-y-6">
-        {(ingredients as RecursivePartialNull<PartIngredient>[]).map(
+        {(ingredients as partial_types.PartIngredient[]).map(
           (part, index) =>
             part && (
               <div key={index}>
@@ -142,7 +141,7 @@ const IngredientListRender = ({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {(ingredients as Ingredient[]).map((ingredient, index) => (
+      {(ingredients as partial_types.Ingredient[]).map((ingredient, index) => (
         <IngredientRender key={index} ingredient={ingredient} ratio={ratio} />
       ))}
     </div>
@@ -230,7 +229,7 @@ const IngredientRender = ({
   ratio,
   isLast
 }: {
-  ingredient: RecursivePartialNull<Ingredient>;
+  ingredient: partial_types.Ingredient;
   ratio: number;
   isLast?: boolean;
 }) => {
@@ -250,7 +249,7 @@ const IngredientRender = ({
 const InstructionListRender = ({
   instructions,
 }: {
-  instructions: RecursivePartialNull<Recipe>["instructions"];
+  instructions: partial_types.Recipe["instructions"];
 }) => {
   if (!instructions || instructions.length === 0) {
     return <p className="text-gray-500">No instructions found.</p>;
@@ -284,7 +283,7 @@ const InstructionListRender = ({
 const InstructionRender = ({
   instruction,
 }: {
-  instruction: RecursivePartialNull<PartSteps>["steps"];
+  instruction: partial_types.PartSteps["steps"];
 }) => {
   return (
     <ol className="list-decimal list-inside space-y-2">

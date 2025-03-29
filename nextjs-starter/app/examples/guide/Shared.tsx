@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import JsonView from 'react18-json-view'
+import { partial_types } from "@/baml_client/partial_types"
 
 export const Content: React.FC<{
   query: string
@@ -101,7 +102,7 @@ export const Content: React.FC<{
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <GuideRender name={name} guide={data} state={state} />
+                  <GuideRender name={name} guide={data as partial_types.Guide} state={state} />
                 </motion.div>
               )}
             </AnimatePresence>

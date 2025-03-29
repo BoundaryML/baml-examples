@@ -19,13 +19,13 @@ import examples from "./examples"
 import Link from "next/link"
 import { PropsWithChildren, useEffect, useState } from "react"
 import ErrorPreview from "../stream-object/ErrorPreview"
-import { RecursivePartialNull } from "@/baml_client/async_client"
 import { motion } from "framer-motion"
 import JsonView from "react18-json-view"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import type { partial_types } from "@/baml_client/partial_types"
 
 export const Content: React.FC<{
   question: string
@@ -152,7 +152,7 @@ export const AnswerContent: React.FC<{
   )
 }
 
-const RenderAnswer: React.FC<{ data: RecursivePartialNull<Answer> }> = ({
+const RenderAnswer: React.FC<{ data: partial_types.Answer }> = ({
   data: { answer, answersInText },
 }) => {
   if (!answersInText)
@@ -328,7 +328,7 @@ const DebugPanel: React.FC<{
   )
 }
 
-const ShowCitation: React.FC<{ citation: RecursivePartialNull<Citation> }> = ({
+const ShowCitation: React.FC<{ citation: partial_types.Citation }> = ({
   citation,
 }) => {
   const context =

@@ -1,6 +1,6 @@
 "use client";
 
-import { BookAnalysis } from "@/baml_client";
+import type { partial_types } from "@/baml_client/partial_types";
 import {
   BarChart
 } from "@/components/charts/bar_chart";
@@ -11,7 +11,7 @@ import {
 import {
     BarList
 } from "@/components/charts/bar_list";
-import { b, RecursivePartialNull } from "@/baml_client/async_client";
+import { b } from "@/baml_client/async_client";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { PopularityLineChart as InternalPopularityLineChart } from "./PopularityChart";
@@ -20,7 +20,7 @@ export const PopularityLineChart = ({
   popularityData,
   bookColors,
 }: {
-  popularityData: RecursivePartialNull<BookAnalysis>['popularityOverTime'];
+  popularityData: partial_types.BookAnalysis['popularityOverTime'];
   bookColors: Record<string, string>;
 }) => {
   // Transform into {date: year, [book]: score}[]

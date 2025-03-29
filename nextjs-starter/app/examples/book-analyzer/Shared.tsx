@@ -136,6 +136,7 @@ export const Content: React.FC<{
                           {books.map((book, index) => (
                             <div key={index} className="relative">
                               <button
+                                type="button"
                                 className="text-blue-900 dark:text-blue-100 p-2 rounded-md flex items-center gap-2 hover:bg-blue-100 transition-colors"
                                 onClick={() => setActiveColorPicker(activeColorPicker === book ? null : book)}
                               >

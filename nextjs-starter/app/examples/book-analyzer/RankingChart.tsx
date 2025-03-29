@@ -3,14 +3,10 @@
 import { Bar, BarChart, XAxis, YAxis, Cell } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-
-interface RankingItem {
-  bookName?: string | null
-  score?: number | null
-}
+import type { partial_types } from "@/baml_client/partial_types"
 
 interface RankingChartProps {
-  rankingData: (RankingItem | undefined)[] | null | undefined
+  rankingData: partial_types.BookAnalysis['popularityRankings'] | null | undefined
   bookColors: Record<string, string>
 }
 

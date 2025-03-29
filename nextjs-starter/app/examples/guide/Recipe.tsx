@@ -9,14 +9,14 @@ import { CheckCircle, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { searchProsource, type SearchResult, type Classification, type NonNullableQuery } from "@/app/actions/prosource";
 import { Badge } from "@/components/ui/badge";
-
+import type { partial_types } from "@/baml_client/partial_types";
 export const GuideRender = ({
   name,
   guide,
   state,
 }: {
   name: string;
-  guide: RecursivePartialNull<Guide>;
+  guide: partial_types.Guide;
   state: "idle" | "loading" | "success";
 }) => {
   const filterTopics = (category: "packaging" | "processing") => 
