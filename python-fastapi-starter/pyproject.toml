@@ -1,21 +1,26 @@
-[tool.poetry]
+[project]
 name = "fastapi-starter"
 version = "0.1.0"
 description = ""
-authors = ["None"]
+authors = [{ name = "None" }]
+requires-python = "~=3.11"
 readme = "README.md"
-packages = [
-    { include = "fast_api_starter", from = "." }
+dependencies = [
+    "fastapi>=0.115.0,<0.116",
+    "uvicorn[standard]>=0.31.0,<0.32",
+    "baml-py==0.80.2",
+    "python-dotenv>=1.0.1,<2",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.31.0"}
-baml-py = "^0.72.0"
-python-dotenv = "^1.0.1"
+[tool.hatch.build.targets.sdist]
+include = ["./fast_api_starter"]
 
+[tool.hatch.build.targets.wheel]
+include = ["./fast_api_starter"]
+
+[tool.hatch.build.targets.wheel.sources]
+"./fast_api_starter" = "fast_api_starter"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -13,13 +13,7 @@
 # flake8: noqa: E501,F401,F821
 # pylint: disable=unused-import,line-too-long
 # fmt: off
-from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX
+from baml_py.logging import set_log_level, get_log_level, set_log_json_mode, set_log_max_chunk_length
+from .globals import reset_baml_env_vars
 
-trace = DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX.trace_fn
-set_tags = DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX.upsert_tags
-def flush():
-  DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX.flush()
-on_log_event = DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_CTX.on_log_event
-
-
-__all__ = ['trace', 'set_tags', "flush", "on_log_event"]
+__all__ = ["set_log_level", "get_log_level", "set_log_json_mode", "reset_baml_env_vars", "set_log_max_chunk_length"]
