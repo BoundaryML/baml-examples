@@ -1,0 +1,17 @@
+[project]
+name = "blog-analyzer"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "baml-py>=0.84.4",
+    "bs4>=0.0.2",
+    "fastapi[standard]>=0.115.12",
+    "pillow>=11.2.1",
+    "pydantic>=2.11.3",
+    "python-dotenv>=1.1.0",
+    "requests>=2.32.3",
+    "selenium>=4.31.0",
+    "tqdm>=4.67.1",
+]
