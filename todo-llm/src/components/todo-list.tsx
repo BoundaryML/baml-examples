@@ -11,17 +11,6 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { MessagesToUser } from "./message-list";
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      when: "beforeChildren",
-    },
-  },
-};
-
 const itemVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
@@ -82,24 +71,20 @@ export function TodoList(props: {
         </div>
       </div>
       <div className="flex gap-4">
-        {state.todo_list.items.length == 0 ?
-          <div className="w-1/2 rounded-lg p-4"></div> : 
-          <div className="w-1/2 border border-border rounded-lg shadow-sm p-4">
-            <AnimatePresence mode="popLayout">
-              {state.todo_list.items.map((item) => (
-                <motion.div key={`todo-${item.id}`} variants={itemVariants} layout>
-                  <TodoItem item={item} onCheckboxClick={props.onCheckboxClick} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            <div className="text-sm text-muted-foreground mt-4">
-              {state.todo_list.items.filter((item) => !item.completed_at).length}{" "}
-              items left!
-            </div>
+        <div className="w-1/2 border border-border rounded-lg shadow-sm p-4">
+          <AnimatePresence mode="popLayout">
+            {state.todo_list.items.map((item) => (
+              <motion.div key={`todo-${item.id}`} variants={itemVariants} layout>
+                <TodoItem item={item} onCheckboxClick={props.onCheckboxClick} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+          <div className="text-sm text-muted-foreground mt-4">
+            {state.todo_list.items.filter((item) => !item.completed_at).length}{" "}
+            items left!
           </div>
-
-        }
-                <div className="w-1/2">
+        </div>
+        <div className="w-1/2">
           <MessagesToUser />
         </div>
       </div>
