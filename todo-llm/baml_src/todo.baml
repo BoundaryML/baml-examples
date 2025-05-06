@@ -14,7 +14,7 @@ class TodoList {
 enum Tag {
     Work
     Personal
-    Errands
+    Errand
     @@dynamic
 }
 
@@ -108,7 +108,7 @@ test TimeOutput {
                     created_at 171927000
                     completed_at null
                     deleted false
-                    tags [Errands]
+                    tags [Errand]
                 }]
             }
         }
@@ -129,7 +129,7 @@ test NewFirstItem {
             }
         }
         query {
-            message "Add 'Take otu the trash' to Errands"
+            message "Add 'Take otu the trash' to Errand"
             date_time 1719225600
         }
     }
@@ -164,7 +164,7 @@ test CompleteSecondItem {
                         created_at 1719225600
                         completed_at null
                         deleted false
-                        tags [Errands]
+                        tags [Errand]
                     },
                     {
                         id 2
@@ -172,7 +172,7 @@ test CompleteSecondItem {
                         created_at 1719225600
                         completed_at null
                         deleted false
-                        tags [Errands]
+                        tags [Errand]
                     }
                 ]
             }
