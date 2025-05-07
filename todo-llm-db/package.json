@@ -10,7 +10,6 @@
     "test:db": "node -r dotenv/config src/components/tests/database.test.js"
   },
   "dependencies": {
-    "@boundaryml/baml": "^0.86.1",
     "@boundaryml/baml-nextjs-plugin": "^0.1.0",
     "@libsql/client": "^0.15.4",
     "@radix-ui/react-checkbox": "^1.2.3",
@@ -43,6 +42,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
+    "@boundaryml/baml": "^0.87.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
