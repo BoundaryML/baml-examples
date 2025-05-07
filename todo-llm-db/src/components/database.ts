@@ -37,10 +37,29 @@ export async function createTodos(todoItems: TodoItem[], user: string | null) {
     return { success: true };
 }
 
-export async function nearest_todos(query: string, user: string | null, limit: number): Promise<TodoItem[]> {
+export async function resetItems(user: string | null) {
     const client = tursoClient();
+    if (user) {
+        const todo_ids_rows = await client.execute("SELECT id FROM user_todos WHERE user = ?", [user]);
+        const todo_ids: string = JSON.stringify(todo_ids_rows.rows.map((row) => row[0] as string));
+        await client.execute("DELETE FROM todos WHERE id in ?", [todo_ids]);
+    } else {
+        const todo_ids_rows = await client.execute(`
+            SELECT id FROM todos
+            LEFT JOIN user_todos ON todos.id = user_todos.todo
+            WHERE user_todos.user is null
+            `)
+        const todo_ids: string = JSON.stringify(todo_ids_rows.rows.map((row) => row[0] as string));
+        await client.execute("DELETE FROM todos WHERE id in ?", [todo_ids]);
+    }
+}
+
+export async function nearestTodos(query: string, user: string | null, limit: number): Promise<TodoItem[]> {
+    const client = tursoClient();
+    console.log("nearestTodos")
     const query_embedding = (await createEmbeddings([query]))[0];
     const query_embedding_string = JSON.stringify(query_embedding);
+    console.log("About to run nearestTodos: ", query);
     
     // Different query based on whether user is null or not
     let results;
@@ -87,7 +106,7 @@ export async function nearest_todos(query: string, user: string | null, limit: n
         );
     }
 
-    return results.rows.map((row) => ({
+    const res = results.rows.map((row) => ({
         id: row.id as string,
         title: row.title as string,
         created_at: row.created_at as number,
@@ -95,4 +114,8 @@ export async function nearest_todos(query: string, user: string | null, limit: n
         deleted: row.deleted as unknown as boolean,
         tags: JSON.parse(row.tags as string),
     }));
+
+    console.log(res);
+
+    return res;
 }

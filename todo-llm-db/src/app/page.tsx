@@ -1,7 +1,7 @@
 "use client";
 
 import { TodoInterface } from '@/components/todo-app';
-import { createTodos, nearest_todos } from '@/components/database';
+import { createTodos, nearestTodos } from '@/components/database';
 import { useEffect } from 'react';
 
 export default function Home() {
@@ -22,7 +22,7 @@ async function runDatabaseTests() {
       created_at: 123,
       completed_at: null,
       deleted: false,
-      tags: ["Work"]
+      tags: []
     },
     {
       id: crypto.randomUUID(),
@@ -30,7 +30,7 @@ async function runDatabaseTests() {
       created_at: 123,
       completed_at: null,
       deleted: false,
-      tags: ["Personal"]
+      tags: []
     }
   ], null);
     console.log("Todos created", res);
@@ -40,19 +40,19 @@ async function runDatabaseTests() {
       created_at: 123,
       completed_at: null,
       deleted: false,
-      tags: ["Personal"]
+      tags: []
     }], "greg");
   };
 
   const initialQuery = async () => {
     console.log("querying todos");
-    const res = await nearest_todos("Art", null, 2);
+    const res = await nearestTodos("Art", null, 2);
     console.log("Unauthenticated Todos queried", res);
   }
 
   const gregQuery = async () => {
     console.log("querying todos");
-    const res = await nearest_todos("Fun", "greg", 2);
+    const res = await nearestTodos("Fun", "greg", 2);
     console.log("Greg Todos queried", res);
   }
 

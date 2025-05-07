@@ -1,18 +1,21 @@
 'use client';
 
-import { stateAtom } from '@/lib/atoms';
-import { useAtom } from 'jotai';
+import { stateAtom, loggedInUserAtom } from '@/lib/atoms';
+import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useRef } from 'react';
 import type { partial_types } from '../../baml_client/partial_types';
 import { useSelectTools } from '../../baml_client/react/hooks';
 import type * as types from '../../baml_client/types';
+import { tursoClient } from '@/lib/tursoClient';
+import * as db from './database';
 
 // Helper functions for tool handling
-const createTodoItem = (title: string, tags: string[] = []): types.TodoItem => {
+const createTodoItem = (title: string, tags: types.Tag[] = []): types.TodoItem => {
   const timestamp = Math.floor(Date.now() / 1000);
   const randomStr = Math.random().toString(36).substring(2, 15);
   const cuid2 = `c${randomStr}${Math.random().toString(36).substring(2, 12)}`.slice(0, 25);
-  return {
+  const user = useAtomValue(loggedInUserAtom);
+  const item = {
     id: cuid2,
     title,
     tags,
@@ -20,6 +23,8 @@ const createTodoItem = (title: string, tags: string[] = []): types.TodoItem => {
     completed_at: null,
     deleted: false,
   };
+  db.createTodos([item], user);
+  return item;
 };
 
 const updateTodoItem = (
@@ -33,6 +38,7 @@ const updateTodoItem = (
 
 export function useTodoToolHandler() {
   const [state, setState] = useAtom(stateAtom);
+  const user = useAtomValue(loggedInUserAtom);
   const finishedInstructionsRef = useRef(new Set<number>());
 
   const handleAddItem = useCallback(
@@ -50,6 +56,19 @@ export function useTodoToolHandler() {
     },
     [setState],
   );
+
+  const handleFetchItems = useCallback(async (tool: types.FetchItems) => {
+    const items = await db.nearestTodos(tool.items_query, user, 5)
+    setState((prevState) => {
+      return ({
+        ...prevState,
+        todo_list: {
+          ...prevState.todo_list,
+          items: items,
+        },
+      })}
+    )
+   }, [setState]);
 
   const handleAdjustItem = useCallback(
     (tool: types.AdjustItem) => {
@@ -119,6 +138,10 @@ export function useTodoToolHandler() {
           handleAdjustItem(tool as types.AdjustItem);
           finishedInstructionsRef.current.add(tool_id);
           break;
+        case 'fetch_items':
+          handleFetchItems(tool as types.FetchItems);
+          finishedInstructionsRef.current.add(tool_id);
+          break;
         case 'message_to_user':
           handleMessageToUser(tool as partial_types.MessageToUser);
           if (
@@ -127,6 +150,8 @@ export function useTodoToolHandler() {
             finishedInstructionsRef.current.add(tool_id);
           }
           break;
+        case 'fetch_items':
+
       }
     },
   });

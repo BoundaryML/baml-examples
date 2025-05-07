@@ -2,17 +2,19 @@
 
 import { MessagesToUser } from '@/components/message-list';
 import { TodoList } from '@/components/todo-list';
-import { stateAtom } from '@/lib/atoms';
-import { useSetAtom } from 'jotai';
+import { loggedInUserAtom, stateAtom } from '@/lib/atoms';
+import { useAtomValue, useSetAtom } from 'jotai';
 import { useTodoToolHandler } from './tool-handler';
+import * as db from './database';
 
 export function TodoInterface() {
+  const user = useAtomValue(loggedInUserAtom);
   const { onUserQuery, onCheckboxClick } = useTodoToolHandler();
   const setState = useSetAtom(stateAtom);
 
   const handleReset = () => {
+    db.resetItems(user);
     setState({
-      tool_history: [],
       todo_list: { items: [] },
       running: false,
       messages: [],
