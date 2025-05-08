@@ -2,7 +2,7 @@
 
 import { MessagesToUser } from '@/components/message-list';
 import { TodoList } from '@/components/todo-list';
-import { loggedInUserAtom, stateAtom } from '@/lib/atoms';
+import { loggedInUserAtom, stateAtom, Phase } from '@/lib/atoms';
 import { useAtomValue, useSetAtom } from 'jotai';
 import { useTodoToolHandler } from './tool-handler';
 import * as db from './database';
@@ -16,8 +16,9 @@ export function TodoInterface() {
     db.resetItems(user);
     setState({
       todo_list: { items: [] },
-      running: false,
+      phase: Phase.Awaiting,
       messages: [],
+      query: null,
     });
   };
 

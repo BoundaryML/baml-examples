@@ -1,5 +1,5 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { stateAtom } from "@/lib/atoms";
+import { Phase, stateAtom } from "@/lib/atoms";
 import { formatDistanceToNow } from "date-fns";
 import { useAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
@@ -39,6 +39,11 @@ export function TodoList(props: {
   const [state] = useAtom(stateAtom);
   const [message, setMessage] = useState("");
 
+  const sendButtonLabel =
+    state.phase === Phase.Awaiting
+    ? "Run" : state.phase === Phase.Interacting
+    ? "Answer" : "Running";
+
   return (
     <div className="flex flex-col w-full max-w-2xl mx-auto">
       <div className="flex flex-col items-center gap-2 mb-4 w-full">
@@ -56,14 +61,14 @@ export function TodoList(props: {
             }}
           />
           <Button
-            disabled={state.running}
+            disabled={state.phase == Phase.Running}
             variant="default"
             onClick={() => {
               props.onRun(message);
               setMessage("");
             }}
           >
-            {state.running ? "Pending..." : "Send"}
+            {sendButtonLabel}
           </Button>
           <Button variant="outline"  onClick={props.onReset}>
             Reset

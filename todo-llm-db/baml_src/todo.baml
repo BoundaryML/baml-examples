@@ -54,6 +54,7 @@ class ClearItems {
 
 class Resume {
     type "resume"
+    original_query Query @description("Original query from the user")
     question_to_user string? @description("Question to the user. Their answer will be send in the next LLM call.")
     @@stream.done
 }

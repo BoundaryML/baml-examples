@@ -1,20 +1,21 @@
 'use client';
 
-import { stateAtom, loggedInUserAtom } from '@/lib/atoms';
+import { stateAtom, loggedInUserAtom, Phase, resumeAtom } from '@/lib/atoms';
 import { useAtom, useAtomValue } from 'jotai';
 import { useCallback, useRef } from 'react';
 import type { partial_types } from '../../baml_client/partial_types';
 import { useSelectTools } from '../../baml_client/react/hooks';
+import { b } from '../../baml_client/async_client';
 import type * as types from '../../baml_client/types';
 import { tursoClient } from '@/lib/tursoClient';
 import * as db from './database';
+import { Tool } from 'openai/resources/responses/responses.mjs';
 
 // Helper functions for tool handling
-const createTodoItem = (title: string, tags: types.Tag[] = []): types.TodoItem => {
+const createTodoItem = async (title: string, tags: types.Tag[] = [], user: string | null): Promise<types.TodoItem> => {
   const timestamp = Math.floor(Date.now() / 1000);
   const randomStr = Math.random().toString(36).substring(2, 15);
   const cuid2 = `c${randomStr}${Math.random().toString(36).substring(2, 12)}`.slice(0, 25);
-  const user = useAtomValue(loggedInUserAtom);
   const item = {
     id: cuid2,
     title,
@@ -23,7 +24,7 @@ const createTodoItem = (title: string, tags: types.Tag[] = []): types.TodoItem =
     completed_at: null,
     deleted: false,
   };
-  db.createTodos([item], user);
+  await db.createTodos([item], user);
   return item;
 };
 
@@ -38,18 +39,21 @@ const updateTodoItem = (
 
 export function useTodoToolHandler() {
   const [state, setState] = useAtom(stateAtom);
+  const [resume, setResume] = useAtom(resumeAtom);
   const user = useAtomValue(loggedInUserAtom);
   const finishedInstructionsRef = useRef(new Set<number>());
+  const hookRef = useRef<any>(null);
 
   const handleAddItem = useCallback(
-    (tool: types.AddItem) => {
+    async (tool: types.AddItem) => {
+      const new_item = await createTodoItem(tool.title, tool.tags, user)
       setState((prevState) => ({
         ...prevState,
         todo_list: {
           ...prevState.todo_list,
           items: [
             ...prevState.todo_list.items,
-            createTodoItem(tool.title, tool.tags),
+            new_item,
           ],
         },
       }));
@@ -111,17 +115,34 @@ export function useTodoToolHandler() {
     [setState],
   );
 
-  const hook = useSelectTools({
-    stream: true,
-    onFinalData: () => {
-      hook.reset();
-      finishedInstructionsRef.current = new Set<number>();
+  const handleGetWeather = useCallback(
+    (tool: types.GetWeather) => {
       setState((prevState) => ({
         ...prevState,
-        running: false,
-      }));
+        weather: {
+          temperature_f: 10,
+          precipitation: 1,
+          report_time: Math.floor(Date.now() / 1000),
+        },
+      }))
     },
-    onStreamData: (chunk) => {
+    [setState],
+  )
+
+  const handleResume = useCallback(
+    (tool: types.Resume) => {
+      console.log("handleResume")
+      setResume((prevResume) => ({
+        ...prevResume,
+        query: tool.original_query,
+        message_to_user: tool.question_to_user ?? null,
+      }))
+      // console.log("resume from handleResume: ", JSON.stringify(resume))
+    },
+    [setResume],
+  )
+
+  const onStreamData = useCallback((chunk: any) => {
       if (!chunk?.length) return;
 
       const tool_id = chunk.length - 1;
@@ -150,26 +171,166 @@ export function useTodoToolHandler() {
             finishedInstructionsRef.current.add(tool_id);
           }
           break;
-        case 'fetch_items':
-
+        case 'get_weather':
+          handleGetWeather(tool as types.GetWeather);
+          break;
+        case 'resume':
+          handleResume(tool as types.Resume);
+          break;
       }
-    },
+
+  }, [handleAddItem, handleAdjustItem, handleFetchItems, handleMessageToUser, handleGetWeather, handleResume])
+
+  const onFinalData = useCallback(async (finalTools: any) => {
+      let shouldResume = false;
+      let varState: types.State | null = null;
+      let varOriginalQuery: types.Query | null = null;
+      setState((currentState) => {
+        currentState 
+        console.log("state: ", JSON.stringify(currentState))
+        console.log("resume: ", JSON.stringify(resume))
+        finishedInstructionsRef.current = new Set<number>();
+
+        let has_resume_todo = finalTools?.some((tool: any) => tool.type === 'resume');
+        if (!has_resume_todo) {
+          console.log("no resume todo, resetting resume")
+          setResume(null);
+        }
+
+        console.log("onFinalData");
+        console.log("has_resume_todo:" , resume !== null)
+        varState = currentState;
+        varOriginalQuery = currentState.query;
+
+        if (resume) {
+          console.log("resuming")
+          if (resume.message_to_user) {
+            // Handle case where we need user input
+            return {
+              ...currentState,
+              phase: Phase.Awaiting,
+            };
+          } else {
+            // Resume with the stored query
+            shouldResume = true;
+            varState = currentState;
+            varOriginalQuery = resume.query;
+            
+            return currentState;
+          }
+        } else {
+          console.log("not resuming")
+          return {
+            ...currentState,
+            phase: Phase.Awaiting,
+          };
+        }
+      });
+      shouldResume = finalTools.some((tool: any) => tool.type === 'resume');
+      console.log("shouldResume: ", shouldResume)
+      while (shouldResume) {
+        console.log("varState: ", JSON.stringify(varState))
+        console.log("varOriginalQuery: ", JSON.stringify(varOriginalQuery))
+        if (varState && varOriginalQuery) {
+
+          // const newHook = useSelectTools( {
+          //   stream: true,
+          //   onFinalData: (finalTools) => {
+          //     console.log("Nested Final")
+          //   },
+          //   onStreamData: onStreamData,
+          // })
+          // newHook.mutate(varState, varOriginalQuery);
+
+          // hookRef.current?.reset();
+          shouldResume = false;
+          hookRef.current?.mutate(varState, varOriginalQuery);
+          // const next_response = b.stream.SelectTools(varState, varOriginalQuery)
+          // for await (const chunk of next_response) {
+          //   console.log("Followup chunk: ", JSON.stringify(chunk))
+          //   onStreamData(chunk);
+          // }
+          // const final_response = await next_response.getFinalResponse();
+          // console.log("Final response: ", JSON.stringify(final_response))
+
+          // shouldResume = final_response.some((tool: any) => tool.type === 'resume');
+          // console.log("shouldResume: ", shouldResume)
+        }
+      }
+  }, [setState, resume, setResume])
+
+  const hook = useSelectTools({
+    stream: true,
+    // onFinalData: (finalTools) => {
+
+    //   console.log("state: ", JSON.stringify(state))
+    //   console.log("resume: ", JSON.stringify(resume))
+    //   finishedInstructionsRef.current = new Set<number>();
+
+    //   let has_resume_todo = finalTools?.some((tool: any) => tool.type === 'resume');
+    //   if (!has_resume_todo) {
+    //     console.log("no resume todo, resetting resume")
+    //     setResume(null);
+    //   }
+
+    //   console.log("onFinalData");
+    //   console.log("has resume:" , resume !== null)
+    //   if (resume) {
+    //     console.log("resuming")
+    //     if (resume.message_to_user) {
+    //       // Handle case where we need user input
+    //       setState((prevState) => ({
+    //         ...prevState,
+    //         phase: Phase.Awaiting,
+    //       }));
+    //     } else {
+    //       // Resume with the stored query
+    //       // hookRef.current?.mutate(state, resume.query);
+    //       console.log("HERE IS WHERE I WANT TO RESUME")
+    //     }
+    //   } else {
+    //     console.log("not resuming")
+    //     setState((prevState) => ({
+    //       ...prevState,
+    //       phase: Phase.Awaiting,
+    //     }));
+    //   }
+    // },
+    onFinalData,
+    onStreamData,
   });
+
+  // Store the hook in the ref
+  hookRef.current = hook;
 
   const onUserQuery = useCallback(
     async (message: string) => {
+      const query = {
+        message,
+        date_time: Math.floor(Date.now() / 1000),
+      }
       setState((prevState) => ({
         ...prevState,
         running: true,
         messages: [...prevState.messages, message, ''],
+        query: query,
       }));
 
-      hook.mutate(state, {
-        message,
-        date_time: Math.floor(Date.now() / 1000),
-      });
+      if (resume) {
+        if (resume.message_to_user) {
+          // Handle case where we need user input
+          setState((prevState) => ({
+            ...prevState,
+            phase: Phase.Awaiting,
+          }));
+        } else {
+          hook.mutate(state, resume.query);
+        }
+      } else {
+        hook.mutate(state, query);
+      }
     },
-    [hook, state, setState],
+    [hook, state, setState, resume],
   );
 
   const onCheckboxClick = useCallback(

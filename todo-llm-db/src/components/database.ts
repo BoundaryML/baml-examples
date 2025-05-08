@@ -38,20 +38,20 @@ export async function createTodos(todoItems: TodoItem[], user: string | null) {
 }
 
 export async function resetItems(user: string | null) {
-    const client = tursoClient();
-    if (user) {
-        const todo_ids_rows = await client.execute("SELECT id FROM user_todos WHERE user = ?", [user]);
-        const todo_ids: string = JSON.stringify(todo_ids_rows.rows.map((row) => row[0] as string));
-        await client.execute("DELETE FROM todos WHERE id in ?", [todo_ids]);
-    } else {
-        const todo_ids_rows = await client.execute(`
-            SELECT id FROM todos
-            LEFT JOIN user_todos ON todos.id = user_todos.todo
-            WHERE user_todos.user is null
-            `)
-        const todo_ids: string = JSON.stringify(todo_ids_rows.rows.map((row) => row[0] as string));
-        await client.execute("DELETE FROM todos WHERE id in ?", [todo_ids]);
-    }
+    // const client = tursoClient();
+    // if (user) {
+    //     const todo_ids_rows = await client.execute("SELECT id FROM user_todos WHERE user = ?", [user]);
+    //     const todo_ids: string = JSON.stringify(todo_ids_rows.rows.map((row) => row[0] as string));
+    //     await client.execute("DELETE FROM todos WHERE id in ?", [todo_ids]);
+    // } else {
+    //     const todo_ids_rows = await client.execute(`
+    //         SELECT id FROM todos
+    //         LEFT JOIN user_todos ON todos.id = user_todos.todo
+    //         WHERE user_todos.user is null
+    //         `)
+    //     const todo_ids: string = JSON.stringify(todo_ids_rows.rows.map((row) => row[0] as string));
+    //     await client.execute("DELETE FROM todos WHERE id in ?", [todo_ids]);
+    // }
 }
 
 export async function nearestTodos(query: string, user: string | null, limit: number): Promise<TodoItem[]> {
@@ -111,7 +111,7 @@ export async function nearestTodos(query: string, user: string | null, limit: nu
         title: row.title as string,
         created_at: row.created_at as number,
         completed_at: row.completed_at as number | null,
-        deleted: row.deleted as unknown as boolean,
+        deleted: false,
         tags: JSON.parse(row.tags as string),
     }));
 
