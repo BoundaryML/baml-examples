@@ -16,3 +16,10 @@ generator target {
     // This controls what `b.FunctionName()` will be (sync or async).
     default_client_mode sync
 }
+
+generator ui {
+    output_type "typescript"
+    output_dir "../../frontend/src"
+    version "0.87.2"
+    default_client_mode sync
+}

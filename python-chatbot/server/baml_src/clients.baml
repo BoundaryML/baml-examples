@@ -8,6 +8,15 @@ client<llm> CustomGPT4o {
   }
 }
 
+client<llm> VertexAI {
+  provider vertex-ai
+  options {
+    model "gemini-2.5-pro-preview-03-25"
+    location "us-central1"
+    project_id "complete-button-459317-b4"
+  }
+}
+
 client<llm> CustomGPT4oMini {
   provider openai
   retry_policy Exponential

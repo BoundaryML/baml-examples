@@ -10,6 +10,8 @@ pkgs.mkShell {
     pkgs.nodejs
     pkgs.pnpm
     pkgs.concurrently
-    
   ];
+  shellHook = ''
+    uv python pin $(uv python find)
+  '';
 }

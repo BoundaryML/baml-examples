@@ -1,108 +1,187 @@
 // Results. (LLM Inputs)
 
-enum GenderIdentity {
-  Male
-  Female
-  NonBinary
+class WeatherReport {
+  temperature int @description("Temperature in Celsius")
+  precipitation int @description("Precipitation in mm")
+  timestamp int @description("Timestamp in Unix time")
 }
 
+enum Role {
+  User
+  Assistant
+}
+
+class Message {
+  role Role
+  content string
+  timestamp int @description("Timestamp in Unix time")
+}
+
+// The state of the conversation that will be sent
+// to the agent. The client is responsible for updating
+// it with (a) the result of tool calls, and (b)
+// summarization when the message history is too long.
 class State {
-  name string?
-  gender_identity GenderIdentity?
-  age_years int?
-  test_interactions TestInteraction[]
-  article_summaries ArticleSummary[]
+  weather_report WeatherReport?
+  recent_messages Message[]
+  message_history string?
 }
 
-
-class TestInteraction {
-  question string
-  answer int
+// The query from the user.
+class Query {
+  message string
+  timestamp int @description("Timestamp in Unix time")
 }
 
-// Tools. (LLM Outputs)
-
-class GetGenderIdentity {
-  type "get_gender_identity"
+class GetWeatherReport {
+  type "get_weather_report"
+  location string
   @@stream.done
 }
 
-class GetAgeYears {
-  type "get_age_years"
+class ComputeValue {
+  type "compute_value"
+  arithmetic_expression string
   @@stream.done
 }
 
-class AdministerQuestion {
-  type "administer_question"
-  questions string
-  @@stream.done
-}
-
-class ChatToUser {
-  type "chat_to_user" @stream.not_null
+class MessageToUser {
+  type "message_to_user"
   message string
 }
 
-class ReadArticle {
-  type "read_article"
-  article_url string
+// Use this tool incatate that, in order to satisfy the
+// query, the client needs to update the state with the
+// result of the prior tool calls.
+class Restart {
+  type "restart"
   @@stream.done
 }
 
-class Query {
-  query string
-  responding_to string?
-}
 
-class ReportArticleSummary {
-  type "report_article_summary"
-  summary ArticleSummary
-  @@stream.done
-}
-
-class ReportMBTIType {
-  type "report_mbti_type"
-  mbti_type string
-  @@stream.done
-}
-
-function ChooseTools(state: State, query: Query) -> (GetGenderIdentity | GetAgeYears | AdministerQuestion | ChatToUser | ReadArticle | ReportArticleSummary | ReportMBTIType)[] {
+function ChooseTools(state: State, query: Query) -> (GetWeatherReport | ComputeValue | MessageToUser | Restart)[] {
   client CustomGPT4o
   prompt #"
-    User's name: {{ state.name if state.name else "Unknown" }}
-    User's gender identity: {{ state.gender_identity if state.gender_identity else "Unknown" }}
-    Previous interactions:
-    {% for interaction in state.test_interactions %}
-      Question: {{ interaction.question }}
-      Answer: {{ interaction.answer }}
-    {% endfor %}
-    {% if state.test_interactions|length == 0 %}
-      No interactions yet.
-    {% endif %}
 
-    {{ instructions }}
+    {{ Instructions() }}
+
+    Current state: {{ state }}
+    Current query: {{ query }}
+
     {{ ctx.output_format }}
   "#
 }
 
 template_string Instructions() #"
-    You are a MeyersBriggs test administrator.
+  Lucky you, you're a friendly chatbot!
 
-    Use the tools provided below to learn about the user and help them
-    learn their MeyersBriggs personality type.
+  Have a conversation with the user. Our users are particularly interested in
+  the weather and in arithmetic.
 
-    Start by getting their name and gender if you don't already know them.
+  You can enrich your understanding of the user and the world by issuing calls
+  arrording to the following schema.
 
-    Suggest to the user via the chat tool that they can suggest articles
-    to you by url, or request a MeyersBriggs test.
+  If the user asks about the weather, you will need to issue the right tool call,
+  and in a subsequent call to you, you will have the weather report in your context.
 
-    If they are ready for a test, use the AdministerQuestion tool to
-    administer questions. Use their responses from previous questions
-    to build up an impression of their MBTI type. When they have
-    answered enough questions that you know their type, use the
-    ReportMBTIType tool to report their type. Then invite them to chat
-    about what that type means and how you came to your conclusion.
+  In order to arrange for the new context to arrive, you may need to issue a "restart"
+  toll call. For example, if you are asked to add 5 to the current temperature, you
+  would need to issue both a get-weather call and a restart call. Then, you will
+  be called again with the updated state. In this case, your new tool calls should
+  be a compute-value call and a restart call (because you'll need the value of the
+  computation in order to know what to chat back to the user).
 
-    If they suggest an article, use the ReadArticle tool to read it.
-    Then use the ReportArticleSummary tool to report the summary.
+  Before issuing the weather tool call, you may need to ask the user where they are
+  located (and then issue a restart).
+
+  IMPORTANT: Every tool call for which you need the client to update the state before you can
+  fullfil the full query should end in a restart call. That is, the output array
+  must have at least two elements - the pramiry tool call, and then a restart call.
+
+  NEVER just ask a question without a restart after, unless your question fully satisfies
+  what the user is requesting. If they ask for the weather, and you ask their location,
+  you MUST issue a second call in the array: restart.
   "#
+
+test WeatherToolInit() {
+  functions [ChooseTools]
+  args {
+    state {
+      recent_messages []
+    }
+    query {
+      message "What is the weather?"
+      timestamp 1715222400
+    }
+  }
+  @@assert( {{ this[0].type == "message_to_user" }})
+  @@assert( {{ this[0].message|regex_match("location") }})
+  @@assert( {{ this[1].type == "restart" }})
+}
+
+test WeatherToolAfterLocation() {
+  functions [ChooseTools]
+  args {
+    state {
+      recent_messages [
+        {
+          role User
+          content "What's the weather?"
+          timestamp 1715222400
+        },
+        {
+          role Assistant
+          content "Where are you located?"
+          timestamp 1715222401
+        },
+        {
+          role User
+          content "San Francisco"
+          timestamp 1715222402
+        }
+      ]
+    }
+    query {
+        message "What's the weather?"
+        timestamp 1715222400
+    }
+  }
+  @@assert( {{ this[0].type == "get_weather_report" }})
+  @@assert( {{ this[1].type == "restart" }})
+}
+
+test WeatherToolAfterWeather() {
+  functions [ChooseTools]
+  args {
+    state {
+      weather_report {
+        temperature 20
+        precipitation 10
+        timestamp 1715222400
+      }
+      recent_messages [
+        {
+          role User
+          content "What's the weather?"
+          timestamp 1715222400
+        },
+        {
+          role Assistant
+          content "Where are you located?"
+          timestamp 1715222401
+        },
+        {
+          role User
+          content "San Francisco"
+          timestamp 1715222402
+        }
+      ]
+
+    }
+    query {
+        message "What's the weather?"
+        timestamp 1715222400
+    }
+  }
+  @@assert( {{ this[0].type == "message_to_user" }})
+}

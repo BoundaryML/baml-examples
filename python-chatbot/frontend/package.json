@@ -19,6 +19,7 @@
     "tailwind-merge": "^3.2.0"
   },
   "devDependencies": {
+    "@boundaryml/baml": "^0.87.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
