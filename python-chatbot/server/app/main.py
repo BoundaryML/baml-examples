@@ -1,18 +1,29 @@
+from typing import Set, Dict, cast
 from fastapi import FastAPI, Response, Request, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 import os
 import uuid
 import asyncio
 import json
 import logging
-from datetime import datetime, timedelta
-from .session_store import session_store
-from .session_state import SessionState
+from collections import defaultdict
 
+from datetime import datetime, timedelta
+
+from baml_client.partial_types import StreamState
+from .session_store import session_store
+from . import tool_handlers
+from .session_state import SessionState
+from baml_client import b
+from baml_client.types import Message, MessageToUser, Query, Role
+from .utils import unix_now
 # Set up logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Python Chatbot API")
@@ -25,6 +36,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global request queue to store events for each request
+request_queues: Dict[str, asyncio.Queue] = defaultdict(asyncio.Queue)
 
 async def get_session_state(request: Request) -> SessionState:
     """Dependency to get the current session's state."""
@@ -46,8 +60,7 @@ def root(request: Request, response: Response):
     
     if existing_session:
         # Ensure the session has a state
-        session_store.get_state(existing_session)
-        return {"message": "Session already exists"}
+        return FileResponse(os.path.join(static_dir, "index.html"))
     
     # Generate a random session ID
     session_id = str(uuid.uuid4())
@@ -69,8 +82,8 @@ def root(request: Request, response: Response):
     )
     logger.info("Cookie set in response")
     
-    # Return a simple response
-    return {"message": "Session initialized"}
+    return FileResponse(os.path.join(static_dir, "index.html"))
+
 
 # Example of how to use the session state in other routes
 @app.get("/api/state")
@@ -82,28 +95,103 @@ def get_state(state: SessionState = Depends(get_session_state)):
         "message_history": state.message_history
     }
 
-@app.get("/api/events")
-async def events(request: Request):
-    """Endpoint that sends Server-Sent Events with session ID and sequence number."""
+@app.post("/api/query")
+async def query(request: Request, state: SessionState = Depends(get_session_state)):
+    """Endpoint that triggers LLM call and returns a request ID for SSE connection."""
     session_id = request.cookies.get("session_id")
     if not session_id:
         raise HTTPException(status_code=401, detail="No session found")
     
-    async def event_generator():
-        sequence = 0
+    query: Query = await request.json()
+    request_id = str(uuid.uuid4())
+    
+    # Create the queue explicitly before starting the task
+    request_queues[request_id] = asyncio.Queue()
+    logger.info(f"Created queue for request {request_id}")
+    
+    # Start processing in background
+    asyncio.create_task(process_llm_request(request_id, state, query))
+    
+    return {"request_id": request_id}
+
+async def process_llm_request(request_id: str, state: SessionState, query: Query):
+    """Background task to process LLM request and queue events."""
+    try:
+        processed_commands = set()
+        res = b.stream.ChooseTools(state, query)
+        
         while True:
-            # Create the event data
-            event_data = {
-                "session_id": session_id,
-                "sequence": sequence,
-                "timestamp": datetime.utcnow().isoformat()
-            }
-            
-            # Format the SSE message
-            yield f"data: {json.dumps(event_data)}\n\n"
-            
-            sequence += 1
-            await asyncio.sleep(1)  # Wait for 1 second before sending next event
+            logger.info(f"Processing LLM request {request_id}")
+            async for chunk in res:
+                logger.info(f"Chunk: {chunk}")
+                if chunk is None or len(chunk) < 1:
+                    continue
+                command_index = len(chunk) - 1
+                if command_index in processed_commands:
+                    continue
+                    
+                current_command = chunk[command_index]
+                
+                if current_command.type == "get_weather":
+                    state.recent_messages.append(Message(role=Role.Tool, content="Get Weather", timestamp=unix_now()))
+                    weather_report = await tool_handlers.get_weather(current_command.location)
+                    state.weather_report = weather_report
+                    processed_commands.add(command_index)
+                    await request_queues[request_id].put({"type": "state_update", "data": state})
+                    
+                if current_command.type == "compute_value":
+                    state.recent_messages.append(Message(role=Role.Tool, content="Compute Value", timestamp=unix_now()))
+                    value = await tool_handlers.compute_value(current_command.expression)
+                    processed_commands.add(command_index)
+                    await request_queues[request_id].put({"type": "state_update", "data": state})
+                    
+                if current_command.type == "message_to_user":
+                    message_to_user = cast(MessageToUser, current_command)
+                    content = "" if message_to_user.message.value is None else message_to_user.message.value
+                    # content_done = message_to_user.message.stream_state == StreamState.Done
+                    if command_index not in processed_commands:
+                        state.recent_messages.append(Message(role=Role.Assistant, content=content, timestamp=unix_now()))
+                        processed_commands.add(command_index)
+                    else:
+                        if state.recent_messages:  # Check if list is not empty
+                            state.recent_messages[-1].content = content
+                        else:
+                            state.recent_messages.append(Message(role=Role.Assistant, content=content, timestamp=unix_now()))
+                    await request_queues[request_id].put({"type": "state_update", "data": state})
+                    
+                if current_command.type == "resume":
+                    res = b.stream.ChooseTools(state, query)
+                    continue
+                    
+    except Exception as e:
+        logger.error(f"Error processing LLM request: {e}")
+        await request_queues[request_id].put({"type": "error", "data": str(e)})
+    finally:
+        # Signal completion
+        await request_queues[request_id].put({"type": "complete"})
+
+@app.get("/api/events")
+async def events(request: Request, request_id: str):
+    """Endpoint that streams events for a specific request."""
+    logger.info(f"Events endpoint hit for request {request_id}")
+    logger.info(f"Request queues: {request_queues.keys()}")
+    if request_id not in request_queues:
+        raise HTTPException(status_code=404, detail="Request not found in request_queues")
+    
+    logger.info(f"Request queues: {request_queues}")
+    logger.info(f"Request queues: {request_queues[request_id]}")
+    
+    async def event_generator():
+        queue = request_queues[request_id]
+        try:
+            while True:
+                event = await queue.get()
+                if event["type"] == "complete":
+                    break
+                yield f"data: {json.dumps(event)}\n\n"
+        finally:
+            # Clean up the queue when done
+            del request_queues[request_id]
     
     return StreamingResponse(
         event_generator(),
@@ -111,11 +199,14 @@ async def events(request: Request):
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
-            "X-Accel-Buffering": "no"  # Disable buffering for nginx
+            "X-Accel-Buffering": "no"
         }
     )
 
 # Mount static files for production
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
+    logger.info(f"Serving static assets")
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+else:
+    logger.info(f"Static assets directory not found")

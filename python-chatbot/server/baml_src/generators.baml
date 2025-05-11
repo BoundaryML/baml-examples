@@ -14,7 +14,7 @@ generator target {
 
     // Valid values: "sync", "async"
     // This controls what `b.FunctionName()` will be (sync or async).
-    default_client_mode sync
+    default_client_mode async
 }
 
 generator ui {

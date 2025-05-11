@@ -1,4 +1,5 @@
 # This file contains the UI updates that can be sent to the client.
+# TODO: Delete.
 
 from pydantic import BaseModel
 from baml_client.types import WeatherReport, Message

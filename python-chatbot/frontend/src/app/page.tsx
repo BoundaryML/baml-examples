@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import apiPath from "../utils";
 import { Role, State } from "../baml_client/types";
 import { ChatMessage, ChatMessages } from "../components/chatMessages";
+import StateDrawer from "../components/stateDrawer";
+import InputArea from "../components/inputArea";
 
 export default function Home() {
   const [state, setState] = useState<State>({ recent_messages: [] });
@@ -24,14 +26,18 @@ export default function Home() {
     };
     initializeSession();
 
-    const eventSource = new EventSource(apiPath("/api/events"), { withCredentials: true });
-    eventSource.onmessage = (event) => {
-      console.log("Received event:", event);
-    }
+    // const eventSource = new EventSource(apiPath("/api/events"), { withCredentials: true });
+    // eventSource.onmessage = (event) => {
+    //   console.log("Received event:", event);
+    // }
   }, []);
 
   return (
-    <div className="bg-red-100 grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className="h-full flex flex-col">
+      <div className="flex flex-row justify-center">
+        <h1 className="text-2xl font-bold text-center p-2 flex-size-1">BAML Chatbot</h1>
+        <StateDrawer state={state} />
+      </div>
       <ChatMessages items={[
         { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
         { text: "GetWeather", icon: "🔍"},
@@ -40,8 +46,10 @@ export default function Home() {
         { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
         { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
         { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
-        { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
+        { role: Role.User, content: "Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? ", timestamp: Date.now()},
+        { role: Role.Assistant, content: "Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? ", timestamp: Date.now()},
       ]}/>
+      <InputArea setState={setState}></InputArea>
       {/* <pre> */}
         {/* {JSON.stringify(state)} */}
       {/* </pre> */}

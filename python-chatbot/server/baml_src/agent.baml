@@ -9,6 +9,7 @@ class WeatherReport {
 enum Role {
   User
   Assistant
+  Tool
 }
 
 class Message {
@@ -47,7 +48,7 @@ class ComputeValue {
 
 class MessageToUser {
   type "message_to_user"
-  message string
+  message string @stream.with_state
 }
 
 // Use this tool incatate that, in order to satisfy the
