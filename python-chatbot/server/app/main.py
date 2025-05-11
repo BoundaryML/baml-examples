@@ -15,9 +15,8 @@ from datetime import datetime, timedelta
 from baml_client.partial_types import StreamState
 from .session_store import session_store
 from . import tool_handlers
-from .session_state import SessionState
 from baml_client import b
-from baml_client.types import Message, MessageToUser, Query, Role
+from baml_client.types import Message, MessageToUser, Query, Role, State
 from .utils import unix_now
 # Set up logging
 logging.basicConfig(
@@ -40,7 +39,7 @@ app.add_middleware(
 # Global request queue to store events for each request
 request_queues: Dict[str, asyncio.Queue] = defaultdict(asyncio.Queue)
 
-async def get_session_state(request: Request) -> SessionState:
+async def get_session_state(request: Request) -> State:
     """Dependency to get the current session's state."""
     session_id = request.cookies.get("session_id")
     if not session_id:
@@ -87,16 +86,12 @@ def root(request: Request, response: Response):
 
 # Example of how to use the session state in other routes
 @app.get("/api/state")
-def get_state(state: SessionState = Depends(get_session_state)):
+def get_state(state: State = Depends(get_session_state)):
     """Example endpoint that uses the session state."""
-    return {
-        "weather_report": state.weather_report,
-        "recent_messages": state.recent_messages,
-        "message_history": state.message_history
-    }
+    return state.model_dump_json()
 
 @app.post("/api/query")
-async def query(request: Request, state: SessionState = Depends(get_session_state)):
+async def query(request: Request, state: State = Depends(get_session_state)):
     """Endpoint that triggers LLM call and returns a request ID for SSE connection."""
     session_id = request.cookies.get("session_id")
     if not session_id:
@@ -107,23 +102,20 @@ async def query(request: Request, state: SessionState = Depends(get_session_stat
     
     # Create the queue explicitly before starting the task
     request_queues[request_id] = asyncio.Queue()
-    logger.info(f"Created queue for request {request_id}")
     
     # Start processing in background
     asyncio.create_task(process_llm_request(request_id, state, query))
     
     return {"request_id": request_id}
 
-async def process_llm_request(request_id: str, state: SessionState, query: Query):
+async def process_llm_request(request_id: str, state: State, query: Query):
     """Background task to process LLM request and queue events."""
     try:
         processed_commands = set()
         res = b.stream.ChooseTools(state, query)
         
         while True:
-            logger.info(f"Processing LLM request {request_id}")
             async for chunk in res:
-                logger.info(f"Chunk: {chunk}")
                 if chunk is None or len(chunk) < 1:
                     continue
                 command_index = len(chunk) - 1
@@ -188,7 +180,10 @@ async def events(request: Request, request_id: str):
                 event = await queue.get()
                 if event["type"] == "complete":
                     break
-                yield f"data: {json.dumps(event)}\n\n"
+                print(event)
+                print(event['data'])
+
+                yield f"{event['data'].model_dump_json()}\n\n"
         finally:
             # Clean up the queue when done
             del request_queues[request_id]
