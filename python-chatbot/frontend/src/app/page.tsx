@@ -9,7 +9,11 @@ import StateDrawer from "../components/stateDrawer";
 import InputArea from "../components/inputArea";
 
 export default function Home() {
-  const [state, setState] = useState<State>({ recent_messages: [] });
+  const [state, setState] = useState<State>({ recent_messages: [
+    // { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
+    // { role: Role.Tool, content: "Getting Weather...", timestamp: Date.now()},
+    // { role: Role.Assistant, content: "Warm an sunny, no rain.", timestamp: Date.now()},
+  ] });
   useEffect(() => {
     const initializeSession = async () => {
       try {

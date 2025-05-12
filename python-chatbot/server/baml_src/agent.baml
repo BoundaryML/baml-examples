@@ -92,11 +92,12 @@ template_string Instructions() #"
   toll call. For example, if you are asked to add 5 to the current temperature, you
   would need to issue both a get-weather call and a restart call. Then, you will
   be called again with the updated state. In this case, your new tool calls should
-  be a compute-value call and a restart call (because you'll need the value of the
-  computation in order to know what to chat back to the user).
+  be a compute-value call. Iff there is something to say about the computed value,
+  then you will need to use the Restart tool after the compute-value tool, but if
+  you just want to answer the question with the value, you don't need to Restart.
 
   Before issuing the weather tool call, you may need to ask the user where they are
-  located (and then issue a restart).
+  located.
 
   IMPORTANT: Every tool call for which you need the client to update the state before you can
   fullfil the full query should end in a restart call. That is, the output array
@@ -108,6 +109,16 @@ template_string Instructions() #"
 
   IMPORTANT: If you issue the same tool call 2 times in a row, and are considering issuing
   it a 3rd time, don't! Just apologize and say you don't know how to help.
+
+  IMPORTANT: If you want to call the weather tool, you must know the location that the
+  user wants to know the weather for. If you don't know, ask them, do not call the
+  weather tool. If you are asking a question, do not finish with the Restart tool.
+  If you notice that their current query appears to be a response to
+  your most recent question (in the recent_messages array), then go ahead and use
+  that information to call the weather tool.
+
+  If a query seems strange, be sure to examine the recent_messages array, to see if it
+  is explained by that context.
   "#
 
 test WeatherToolInit() {
