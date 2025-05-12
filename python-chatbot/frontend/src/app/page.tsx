@@ -19,6 +19,7 @@ export default function Home() {
         // Then fetch state
         const res = await fetch(apiPath("/api/state"), { credentials: 'include' });
         const txt = await res.json();
+        console.log("Setting state: ", txt)
         setState(txt);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -38,17 +39,7 @@ export default function Home() {
         <h1 className="text-2xl font-bold text-center p-2 flex-size-1">BAML Chatbot</h1>
         <StateDrawer state={state} />
       </div>
-      <ChatMessages items={[
-        { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
-        { text: "GetWeather", icon: "🔍"},
-        { role: Role.Assistant, content: "Sunny and dry", timestamp: Date.now()},
-        { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
-        { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
-        { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
-        { role: Role.User, content: "Hi! What's the weather?", timestamp: Date.now()},
-        { role: Role.User, content: "Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? ", timestamp: Date.now()},
-        { role: Role.Assistant, content: "Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? Hi! What's the weather? ", timestamp: Date.now()},
-      ]}/>
+      <ChatMessages items={state.recent_messages || []} />
       <InputArea setState={setState}></InputArea>
       {/* <pre> */}
         {/* {JSON.stringify(state)} */}

@@ -11,26 +11,14 @@ from app.ui import UIUpdate, SetLocation, SetWeatherReport, SetRecentMessages, N
 
 def sample_state() -> State:
     return State(
-        weather_report=WeatherReport(
-            temperature=60,
-            precipitation=0,
-            timestamp=int(datetime.now().timestamp())
-        ),
-        recent_messages=[
-            Message(
-                role=Role.User,
-                content="What is the weather in San Francisco?",
-                timestamp=int(datetime.now().timestamp())
-            ),
-            Message(
-                role=Role.Assistant,
-                content="The weather in San Francisco is sunny and 60 degrees.",
-                timestamp=int(datetime.now().timestamp())
-            )
-        ],
+        # weather_report=WeatherReport(
+        #     temperature=60,
+        #     precipitation=0,
+        #     timestamp=int(datetime.now().timestamp())
+        # ),
+        weather_report=None,
+        recent_messages=[],
         message_history="""
-        The user established that they live in San Francisco,
-        and we told them the weather there.
         """
         
     )

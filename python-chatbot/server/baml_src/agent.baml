@@ -85,6 +85,9 @@ template_string Instructions() #"
   If the user asks about the weather, you will need to issue the right tool call,
   and in a subsequent call to you, you will have the weather report in your context.
 
+  IMPORTANT: If the weather report is already in the state, you don't need to issue
+  a get_weather_report call again (unless the report is very old).
+
   In order to arrange for the new context to arrive, you may need to issue a "restart"
   toll call. For example, if you are asked to add 5 to the current temperature, you
   would need to issue both a get-weather call and a restart call. Then, you will
@@ -102,6 +105,9 @@ template_string Instructions() #"
   NEVER just ask a question without a restart after, unless your question fully satisfies
   what the user is requesting. If they ask for the weather, and you ask their location,
   you MUST issue a second call in the array: restart.
+
+  IMPORTANT: If you issue the same tool call 2 times in a row, and are considering issuing
+  it a 3rd time, don't! Just apologize and say you don't know how to help.
   "#
 
 test WeatherToolInit() {

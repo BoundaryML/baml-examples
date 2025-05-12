@@ -5,17 +5,13 @@ interface ToolInfo {
     icon: string;
 }
 
-export function ChatMessages(props: { items: (Message|ToolInfo)[] }) {
+export function ChatMessages(props: { items: Message[] }) {
     return (
         // TODO: make scroll follow to bottom.
         <div className="flex flex-col flex-grow gap-5 border-1 border-slate-100 p-4 bg-slate-200 overflow-y-scroll">
             {props.items.map((item, index) => (
                 <div key={index} className="flex flex-row w-full">
-                    {'role' in item ? (
-                        <ChatMessage message={item}/>
-                    ) : (
-                        <p>{item.text}</p>
-                    )}
+                    <ChatMessage message={item}/>
                 </div>
             ))}
         </div>
