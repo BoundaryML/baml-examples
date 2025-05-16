@@ -18,11 +18,11 @@ $ pnpm add @boundaryml/baml
 /**
  * If this import fails, you may need to upgrade @boundaryml/baml.
  * 
- * Please upgrade @boundaryml/baml to 0.81.3.
+ * Please upgrade @boundaryml/baml to 0.88.0.
  * 
- * $ npm install @boundaryml/baml@0.81.3
- * $ yarn add @boundaryml/baml@0.81.3
- * $ pnpm add @boundaryml/baml@0.81.3
+ * $ npm install @boundaryml/baml@0.88.0
+ * $ yarn add @boundaryml/baml@0.88.0
+ * $ pnpm add @boundaryml/baml@0.88.0
  * 
  * If nothing else works, please ask for help:
  * 
@@ -32,7 +32,7 @@ $ pnpm add @boundaryml/baml
  **/
 import { ThrowIfVersionMismatch } from "@boundaryml/baml";
 
-export const version = "0.81.3";
+export const version = "0.88.0";
 
 ThrowIfVersionMismatch(version);
 
@@ -45,4 +45,3 @@ export type { partial_types } from "./partial_types"
 export * from "./tracing"
 export { resetBamlEnvVars } from "./globals"
 export { BamlClientHttpError, BamlValidationError, BamlClientFinishReasonError } from "@boundaryml/baml"
-export * as logging from "@boundaryml/baml/logging"

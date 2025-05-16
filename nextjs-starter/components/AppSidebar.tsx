@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
   BarChart,
+  CheckCheck,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
@@ -77,6 +78,13 @@ export const items = [
     tags: ["streaming", "generative UIs"],
     icon: Utensils,
   },
+  {
+    title: "Todo List",
+    description: "Collaborate on Todo Items with an LLM",
+    url: "/examples/todo-llm",
+    tags: ["streaming", "Generative UIs"],
+    icon: CheckCheck
+  }
 ];
 
 export const useSelectedItem = () => {

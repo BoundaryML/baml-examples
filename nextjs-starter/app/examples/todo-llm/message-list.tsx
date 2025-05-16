@@ -1,4 +1,4 @@
-import { stateAtom } from '@/lib/atoms';
+import { stateAtom } from './atoms';
 import { useAtom } from 'jotai';
 import { AnimatePresence, motion } from 'motion/react';
 

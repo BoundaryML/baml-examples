@@ -1,8 +1,8 @@
 'use client';
 
-import { MessagesToUser } from '@/components/message-list';
-import { TodoList } from '@/components/todo-list';
-import { stateAtom } from '@/lib/atoms';
+import { MessagesToUser } from './message-list';
+import { TodoList } from './todo-list';
+import { stateAtom } from './atoms';
 import { useSetAtom } from 'jotai';
 import { useTodoToolHandler } from './tool-handler';
 

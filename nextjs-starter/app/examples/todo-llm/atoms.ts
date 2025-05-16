@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
-import type { State } from '../../baml_client';
+import type { State } from '../../../baml_client/types';
 
 const stateAtom = atomWithStorage<
   State & { running: boolean; messages: string[] }

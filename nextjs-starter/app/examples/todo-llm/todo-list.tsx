@@ -1,14 +1,14 @@
 import { Checkbox } from "@/components/ui/checkbox";
-import { stateAtom } from "@/lib/atoms";
+import { stateAtom } from "./atoms";
 import { formatDistanceToNow } from "date-fns";
 import { useAtom } from "jotai";
 import { AnimatePresence, motion } from "motion/react";
-import type * as types from "../../baml_client/types";
-import { Badge } from "./ui/badge";
-import { Label } from "./ui/label";
+import type * as types from "../../../baml_client/types";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MessagesToUser } from "./message-list";
 
 const itemVariants = {
