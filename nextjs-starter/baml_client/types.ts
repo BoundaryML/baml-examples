@@ -66,11 +66,34 @@ export enum Role {
   Assistant = "Assistant",
 }
 
+export enum Tag {
+  Work = "Work",
+  Personal = "Personal",
+  Errand = "Errand",
+}
+
 export enum VehicleSide {
   Front = "Front",
   Left = "Left",
   Right = "Right",
   Back = "Back",
+}
+
+export interface AddItem {
+  type: "add_item"
+  title: string
+  tags: (string | Tag)[]
+  
+}
+
+export interface AdjustItem {
+  type: "adjust_item"
+  item_id: string
+  title?: string | null
+  completed_at?: number | null
+  deleted?: boolean | null
+  tags?: (string | Tag)[] | null
+  
 }
 
 export interface Answer {
@@ -133,6 +156,11 @@ export interface Experience {
   
 }
 
+export interface GetDateTime {
+  type: "get_date_time"
+  
+}
+
 export interface Guide {
   related_topics: Query[]
   processing_instructions: string[]
@@ -156,6 +184,12 @@ export interface Link {
 export interface Message {
   role: Role
   content: string
+  
+}
+
+export interface MessageToUser {
+  type: "message_to_user"
+  message: string
   
 }
 
@@ -228,6 +262,39 @@ export interface Score {
 export interface Spells {
   name: string
   description: string
+  
+}
+
+export interface State {
+  tool_history: ToolCallResult[]
+  todo_list: TodoList
+  
+}
+
+export interface TodoItem {
+  id: string
+  title: string
+  created_at: number
+  completed_at?: number | null
+  deleted: boolean
+  tags: (string | Tag)[]
+  
+}
+
+export interface TodoList {
+  items: TodoItem[]
+  
+}
+
+export interface TodoQuery {
+  message: string
+  date_time: number
+  
+}
+
+export interface ToolCallResult {
+  tool_call: MessageToUser | AddItem | AdjustItem
+  result?: number | null
   
 }
 

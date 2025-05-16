@@ -1,4 +1,4 @@
-import { TodoInterface } from '@/components/todo-app';
+import { TodoInterface } from './todo-app';
 
 export default function Home() {
   return <TodoInterface />;

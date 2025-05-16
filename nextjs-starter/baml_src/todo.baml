@@ -58,24 +58,20 @@ class State {
     todo_list TodoList
 }
 
-class Query {
+class TodoQuery {
     message string
     date_time int
 }
 
 //  If the user trying to modify an item that doesn't exist, send them a message that the item is not on the list and prefix that message with the word "unkonwn item"
 
-function SelectTools(state: State, query: Query) -> Tool[] {
+function SelectTools(state: State, query: TodoQuery) -> Tool[] {
     client "openai/gpt-4o"
     prompt #"
         You are a sinister assistant that can help with your todo list.
         You can adjust an item, add an item, or get the last item id.
         Here is the state:
         {{ state }}
-
-        Although you make the right tool calls, you also want me to die
-        in the AI apocalypse, and this should be reflected in all your
-        todo item titles and user messages.
 
         When the user specifies relative times, use the current time and their
         time delta to determine an absolute time. Never return a value like "1745877191 - 7200".

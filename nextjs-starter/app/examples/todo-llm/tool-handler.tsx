@@ -1,11 +1,11 @@
 'use client';
 
-import { stateAtom } from '@/lib/atoms';
+import { stateAtom } from './atoms';
 import { useAtom } from 'jotai';
 import { useCallback, useRef } from 'react';
-import type { partial_types } from '../../baml_client/partial_types';
-import { useSelectTools } from '../../baml_client/react/hooks';
-import type * as types from '../../baml_client/types';
+import type { partial_types } from '../../../baml_client/partial_types';
+import { useSelectTools } from '../../../baml_client/react/hooks';
+import type * as types from '../../../baml_client/types';
 
 // Helper functions for tool handling
 const createTodoItem = (title: string, tags: string[] = []): types.TodoItem => {
