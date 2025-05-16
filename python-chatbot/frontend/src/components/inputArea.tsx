@@ -5,7 +5,6 @@ import {Input} from "./ui/input"
 import {Button} from "./ui/button"
 import {apiPath} from "../lib/utils"
 
-
 export default function InputArea(props: {setState: any}) {
     const [message, setMessage] = useState("")
 

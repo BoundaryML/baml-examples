@@ -3,6 +3,7 @@ import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
+
 } 
 
 export function apiPath(path:string): string {
@@ -11,3 +12,4 @@ export function apiPath(path:string): string {
     }
     return `${path}`;
 }
+

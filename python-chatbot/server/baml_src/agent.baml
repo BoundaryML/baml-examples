@@ -58,8 +58,8 @@ class Resume {
   @@stream.done
 }
 
-
 function ChooseTools(state: State, query: Query) -> (GetWeatherReport | ComputeValue | MessageToUser | Resume)[] {
+
   client CustomGPT4o
   prompt #"
 
@@ -99,6 +99,7 @@ template_string Instructions() #"
   located.
 
   IMPORTANT: Every tool call for which you need the client to update the state before you can
+
   fullfil the full query should end in a resume call. That is, the output array
   must have at least two elements - the pramiry tool call, and then a resume call.
 
@@ -112,6 +113,7 @@ template_string Instructions() #"
   IMPORTANT: If you want to call the weather tool, you must know the location that the
   user wants to know the weather for. If you don't know, ask them, do not call the
   weather tool. If you are asking a question, do not finish with the Resume tool.
+
   If you notice that their current query appears to be a response to
   your most recent question (in the recent_messages array), then go ahead and use
   that information to call the weather tool.

@@ -2,6 +2,7 @@ from typing import Dict
 from datetime import datetime
 from baml_client.types import State, Role
 
+
 class SessionStore:
     def __init__(self):
         self._sessions: Dict[str, State] = {}
@@ -22,8 +23,8 @@ class SessionStore:
             del self._sessions[session_id]
 
 # Create a global session store instance
-session_store = SessionStore() 
 
+session_store = SessionStore() 
 
 def initial_state() -> State:
     return State(

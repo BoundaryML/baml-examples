@@ -12,6 +12,7 @@ from collections import defaultdict
 
 from datetime import datetime, timedelta
 
+
 from baml_client.partial_types import StreamState
 from .session_store import session_store, initial_state
 from . import tool_handlers
@@ -156,6 +157,7 @@ async def query(request: Request, message: str, timestamp: int, state: State = D
                         if message_to_user.message.state == "Complete":
                             processed_commands.add(command_index)
                         
+
                     if current_command.type == "resume":
                         logger.info("Resuming")
                         res = b.stream.ChooseTools(state, query)

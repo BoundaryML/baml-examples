@@ -28,6 +28,7 @@ async def get_weather(location: str) -> Optional[WeatherReport]:
         logger.error(f"Error getting weather: {e}")
         return None
 
+
 async def compute_value(expression: str) -> float:
     # Ensure the expression is safe to evaluate
     import re

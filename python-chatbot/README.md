@@ -26,6 +26,7 @@ by fulfilling all the prior Tool calls, and then re-running the
 LLM function with the updated Tool call results.
 
 
+
 ## Dependencies
 
 The following tools will fetch all other needed dependencies:
@@ -44,6 +45,7 @@ frontend:
 
 ```bash
 pnpm install
+
 pnpm run setup:frontend
 pnpm run setup:server
 pnpm run build:baml
@@ -52,6 +54,7 @@ pnpm run start:prod
 ```
 
 After running these commands, browse to localhost:8000 to interact
+
 with the chatbot.
 
 ## Project Structure
