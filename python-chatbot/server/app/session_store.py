@@ -1,6 +1,6 @@
 from typing import Dict
-from baml_client.types import State
-from .session_state import sample_state
+from datetime import datetime
+from baml_client.types import State, Role
 
 class SessionStore:
     def __init__(self):
@@ -9,7 +9,7 @@ class SessionStore:
     def get_state(self, session_id: str) -> State:
         """Get the state for a session, creating a new one if it doesn't exist."""
         if session_id not in self._sessions:
-            self._sessions[session_id] = sample_state()
+            self._sessions[session_id] = initial_state()
         return self._sessions[session_id]
     
     def set_state(self, session_id: str, state: State) -> None:
@@ -23,3 +23,14 @@ class SessionStore:
 
 # Create a global session store instance
 session_store = SessionStore() 
+
+
+def initial_state() -> State:
+    return State(
+        weather_report=None,
+        recent_messages=[{
+            "role": Role.Assistant,
+            "content": "Hello! I'm a chatbot. How can I help you today?",
+            "timestamp": int(datetime.now().timestamp())
+        }],
+    )

@@ -12,9 +12,8 @@ from collections import defaultdict
 
 from datetime import datetime, timedelta
 
-from app.session_state import sample_state
 from baml_client.partial_types import StreamState
-from .session_store import session_store
+from .session_store import session_store, initial_state
 from . import tool_handlers
 from baml_client import b
 from baml_client.types import Message, MessageToUser, Query, Role, State
@@ -36,9 +35,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Global request queue to store events for each request
-request_queues: Dict[str, asyncio.Queue] = defaultdict(asyncio.Queue)
 
 async def get_session_state(request: Request) -> State:
     """Dependency to get the current session's state."""
@@ -102,7 +98,6 @@ async def query(request: Request, message: str, timestamp: int, state: State = D
     state.recent_messages.append(Message(role=Role.User, content=message, timestamp=timestamp))
     
     async def event_generator():
-        logger.info("Event generator started")
 
         # Yield the initial state early, to get the user's message to the client.
         yield f"data: {state.model_dump_json()}\n\n"
@@ -161,8 +156,8 @@ async def query(request: Request, message: str, timestamp: int, state: State = D
                         if message_to_user.message.state == "Complete":
                             processed_commands.add(command_index)
                         
-                    if current_command.type == "restart":
-                        logger.info("Restarting")
+                    if current_command.type == "resume":
+                        logger.info("Resuming")
                         res = b.stream.ChooseTools(state, query)
                         processed_commands = set()
                         commands_with_messages = set()
@@ -185,64 +180,9 @@ async def query(request: Request, message: str, timestamp: int, state: State = D
         }
     )
 
-@app.get("/api/sample-events")
-async def sample_events():
-    """Endpoint that streams sample events once per second."""
-    logger.info("Sample events endpoint hit")
-    
-    async def event_generator():
-        sequence = 0
-        try:
-            while sequence < 4:
-                sequence += 1
-                # Create sample data with timestamp
-                state = sample_state()
-                state.recent_messages = [Message(role=Role.Assistant, content=f"Testing stream {sequence}", timestamp=unix_now())]
-                state.message_history = f"Stream test {sequence}"
-                
-                # Format as SSE with proper event format
-                data = state.model_dump_json()
-                logger.info(f"Sending event {sequence}: {data}")
-                yield f"data: {data}\n\n"
-                
-                # Wait for 1 second before sending the next event
-                await asyncio.sleep(1.0)
-        except asyncio.CancelledError:
-            logger.info("Sample events stream cancelled")
-            raise
-        except Exception as e:
-            logger.error(f"Error in event generator: {str(e)}")
-            raise
-    
-    return StreamingResponse(
-        event_generator(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-            "Access-Control-Allow-Origin": "http://localhost:3000",
-            "Access-Control-Allow-Credentials": "true"
-        }
-    )
-
-
-@app.get("/api/events")
-async def events(request: Request, request_id: str):
-    """Endpoint that streams events for a specific request."""
-    logger.info(f"Events endpoint hit for request {request_id}")
-    logger.info(f"Request queues: {request_queues.keys()}")
-    if request_id not in request_queues:
-        raise HTTPException(status_code=404, detail="Request not found in request_queues")
-    
-    logger.info(f"Request queues: {request_queues}")
-    logger.info(f"Request queues: {request_queues[request_id]}")
-    
-
 # Mount static files for production
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
-    logger.info(f"Serving static assets")
     app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
 else:
-    logger.info(f"Static assets directory not found")
+    logger.error(f"Static assets directory not found")

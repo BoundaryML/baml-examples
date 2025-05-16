@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react"
 import {Input} from "./ui/input"
 import {Button} from "./ui/button"
-import apiPath from "../utils"
+import {apiPath} from "../lib/utils"
 
 
 export default function InputArea(props: {setState: any}) {
@@ -11,14 +11,11 @@ export default function InputArea(props: {setState: any}) {
 
     const onSend = useCallback((message: string) => {
 
-        console.log("About to make new EventSource")
         const timestamp = Date.now();
         const eventsPath = apiPath(`/api/query?message=${message}&timestamp=${timestamp}`)
-        // const eventsPath = apiPath(`/api/sample-events`)
         const eventSource = new EventSource(eventsPath, {
             withCredentials: true
         })
-        console.log("Made new EventSource")
         
         eventSource.onopen = (event) => {
             console.log("EventSource connection opened:", event);
@@ -35,10 +32,8 @@ export default function InputArea(props: {setState: any}) {
         };
         
         eventSource.onmessage = (event) => {
-            console.log("Raw event data:", event.data);
             try {
                 const data = JSON.parse(event.data);
-                console.log("Parsed event data:", data);
                 props.setState(data);
             } catch (e) {
                 console.error("Error parsing event data:", e);
