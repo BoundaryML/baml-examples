@@ -1,6 +1,6 @@
-if (typeof Promise.withResolvers === "undefined") {
+if (typeof Promise.withResolvers === 'undefined') {
   // @ts-expect-error This does not exist outside of polyfill which this is doing
-  global.Promise.withResolvers = function () {
+  global.Promise.withResolvers = () => {
     let resolve, reject;
     const promise = new Promise((res, rej) => {
       resolve = res;
@@ -10,7 +10,7 @@ if (typeof Promise.withResolvers === "undefined") {
   };
 }
 
-import PDFExtractor from "./PDFExtractor";
+import PDFExtractor from './PDFExtractor';
 
 export default function Page() {
   return <PDFExtractor />;
