@@ -21,7 +21,7 @@ import { b } from '../index';
 import type { Check, Checked  } from "../types";
 import type { Image, Audio } from "@boundaryml/baml";
 
-import type {  AddItem,  AdjustItem,  Answer,  BookAnalysis,  Category,  CharacterDescription,  Citation,  Context,  Document,  Education,  Experience,  GetDateTime,  Guide,  Ingredient,  Link,  Message,  MessageToUser,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  ReplyType,  Resume,  Role,  Score,  Spells,  State,  Tag,  TodoItem,  TodoList,  TodoQuery,  ToolCallResult,  Tweet,  Van,  VanSideAnalysis,  VehicleSide,  VehicleSideResponse,  Visibility,  WordCount } from "../types"
+import type {  AddItem,  AdjustItem,  Answer,  BookAnalysis,  Category,  CharacterDescription,  Citation,  ClassWithBlockDone,  ClassWithoutDone,  Context,  Document,  Education,  Experience,  GetDateTime,  Guide,  Ingredient,  Link,  Message,  MessageToUser,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  ReplyType,  Resume,  Role,  Score,  SemanticContainer,  SmallThing,  Spells,  State,  Tag,  TodoItem,  TodoList,  TodoQuery,  ToolCallResult,  Tweet,  Van,  VanSideAnalysis,  VehicleSide,  VehicleSideResponse,  Visibility,  WordCount } from "../types"
 
 import type * as types from "../types"
 
@@ -263,6 +263,21 @@ export const IsResume = async (
 ): Promise<boolean> => {
   return b.IsResume(
     raw_text,
+  );
+};
+
+/**
+ * Executes the "MakeSemanticContainer" BAML action.
+ *
+ * This server action calls the underlying BAML function "MakeSemanticContainer"
+ * with the specified parameters.
+ *
+ *
+ * @returns {Promise<SemanticContainer>} A promise that resolves with the result of the action.
+ */
+export const MakeSemanticContainer = async (
+): Promise<SemanticContainer> => {
+  return b.MakeSemanticContainer(
   );
 };
 

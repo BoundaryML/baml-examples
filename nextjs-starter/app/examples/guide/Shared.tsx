@@ -1,40 +1,30 @@
-"use client"
-
-import type { generateGuide } from "@/app/actions/streamable_objects"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Cog, AlertCircle, CheckCircle } from "lucide-react"
-import type { StreamState } from "@/app/_hooks/useStream"
-import preloadedExamples from "./examples"
-import { GuideRender } from "./Recipe"
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import JsonView from 'react18-json-view'
-import { partial_types } from "@/baml_client/partial_types"
+'use client';
+import type { HookOutput } from '@/baml_client/react/hooks';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {} from '@/components/ui/tabs';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Cog, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import JsonView from 'react18-json-view';
+import ErrorPreview from '../_components/ErrorPreview';
+import { Status } from '../_components/Status';
+import { GuideRender } from './Recipe';
+import preloadedExamples from './examples';
 
 export const Content: React.FC<{
-  query: string
-  setQuery: (value: string) => void
-  answer: StreamState<typeof generateGuide>
+  query: string;
+  setQuery: (value: string) => void;
+  answer: HookOutput<'GenerateGuide'>;
 }> = ({ query, setQuery, answer }) => {
-  const [name, setName] = useState<string>("")
+  const [name, setName] = useState<string>('');
 
   const handleSubmit = async (text: string) => {
-    answer.mutate(text)
-    setName(text)
-  }
-
-  const data = answer.isSuccess
-    ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
-    : undefined
-
-  const state = answer.isLoading ? "loading" : answer.isSuccess ? "success" : "idle"
+    answer.mutate(text);
+    setName(text);
+  };
 
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -47,7 +37,9 @@ export const Content: React.FC<{
           <div>
             <Card className="mb-8 shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl">Generate a Manufacturing Guide</CardTitle>
+                <CardTitle className="text-2xl">
+                  Generate a Manufacturing Guide
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-col gap-4">
@@ -60,13 +52,13 @@ export const Content: React.FC<{
                     />
                     <Button
                       onClick={() => handleSubmit(query)}
-                      disabled={answer.isLoading}
+                      disabled={answer.isPending}
                       className="w-full sm:w-auto bg-gray-600 hover:bg-gray-700"
                     >
-                      {answer.isLoading ? (
+                      {answer.isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
-                        "Generate Guide"
+                        'Generate Guide'
                       )}
                     </Button>
                   </div>
@@ -95,47 +87,30 @@ export const Content: React.FC<{
           </div>
 
           <AnimatePresence>
-              {data && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <GuideRender name={name} guide={data as partial_types.Guide} state={state} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {answer.data && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                <GuideRender
+                  name={name}
+                  guide={answer.data}
+                  state={answer.status}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
-  )
-}
-
-const Status: React.FC<{ status: StreamState<any>["status"] }> = ({
-    status,
-  }) => {
-    const statusConfig = {
-      loading: { icon: Loader2, className: "animate-spin text-gray-500" },
-      error: { icon: AlertCircle, className: "text-red-500" },
-      success: { icon: CheckCircle, className: "text-green-500" },
-      idle: { icon: null, className: "" },
-    }
-  
-    const { icon: Icon, className } = statusConfig[status] || statusConfig.idle
-  
-    return Icon ? <Icon className={`h-5 w-5 ${className}`} /> : null
-  }
+  );
+};
 
 const DebugPanel: React.FC<{
-  answer: StreamState<typeof generateGuide>
+  answer: HookOutput<'GenerateGuide'>;
 }> = ({ answer }) => {
-  const data = answer.isSuccess
-    ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
-    : undefined
-
   return (
     <Card className="w-full shadow-lg h-fit">
       <CardHeader className="bg-gray-100 border-b">
@@ -149,17 +124,18 @@ const DebugPanel: React.FC<{
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 text-xs bg-muted">
-            <ScrollArea className="h-[300px]">
-              <JsonView
-                src={data || {}}
-                theme="atom"
-                collapseStringsAfterLength={50}
-              />
-            </ScrollArea>
+      <CardContent className="p-4">
+        {answer.error && <ErrorPreview error={answer.error} />}
+        <ScrollArea className="h-[300px] text-xs bg-muted">
+          <JsonView
+            src={answer.data}
+            theme="atom"
+            collapseStringsAfterLength={50}
+          />
+        </ScrollArea>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default Content
+export default Content;

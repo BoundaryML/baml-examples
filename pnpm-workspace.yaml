@@ -1,0 +1,9 @@
+packages:
+  - nextjs-starter
+  - nodejs-typescript-basic
+  - svelte-starter
+  - nuxt-starter
+  - nextjs-pdf-example
+  - form-filler
+  - json-schema-to-baml
+  - node-aws-lambda-sst

@@ -127,6 +127,18 @@ export interface Citation {
   
 }
 
+export interface ClassWithBlockDone {
+  i_16_digits: number
+  s_20_words: string
+  
+}
+
+export interface ClassWithoutDone {
+  i_16_digits: number
+  s_20_words: string
+  
+}
+
 export interface Context {
   documents: Document[]
   
@@ -256,6 +268,24 @@ export interface Resume {
 export interface Score {
   year: number
   score: number
+  
+}
+
+export interface SemanticContainer {
+  sixteen_digit_number: number
+  string_with_twenty_words: string
+  class_1: ClassWithoutDone
+  class_2: ClassWithBlockDone
+  class_done_needed: ClassWithBlockDone
+  class_needed: ClassWithoutDone
+  three_small_things: SmallThing[]
+  final_string: string
+  
+}
+
+export interface SmallThing {
+  i_16_digits: number
+  i_8_digits: number
   
 }
 

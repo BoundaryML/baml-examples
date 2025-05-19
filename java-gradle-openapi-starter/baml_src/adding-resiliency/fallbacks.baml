@@ -9,9 +9,10 @@ client<llm> SuperDuperClient {
   options {
     // clients from clients.baml
     strategy [
-      GPT4
       GPT4o
-      Gemini
+      GPT4oMini
+      Sonnet
+      Haiku
     ]
   }
 }

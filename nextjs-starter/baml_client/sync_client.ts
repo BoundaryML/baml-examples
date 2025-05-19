@@ -19,7 +19,7 @@ import type { BamlRuntime, FunctionResult, BamlCtxManager, Image, Audio, ClientR
 import { toBamlError, type HTTPRequest } from "@boundaryml/baml"
 import type { Checked, Check, RecursivePartialNull as MovedRecursivePartialNull } from "./types"
 import type * as types from "./types"
-import type {AddItem, AdjustItem, Answer, BookAnalysis, Category, CharacterDescription, Citation, Context, Document, Education, Experience, GetDateTime, Guide, Ingredient, Link, Message, MessageToUser, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, ReplyType, Resume, Role, Score, Spells, State, Tag, TodoItem, TodoList, TodoQuery, ToolCallResult, Tweet, Van, VanSideAnalysis, VehicleSide, VehicleSideResponse, Visibility, WordCount} from "./types"
+import type {AddItem, AdjustItem, Answer, BookAnalysis, Category, CharacterDescription, Citation, ClassWithBlockDone, ClassWithoutDone, Context, Document, Education, Experience, GetDateTime, Guide, Ingredient, Link, Message, MessageToUser, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, ReplyType, Resume, Role, Score, SemanticContainer, SmallThing, Spells, State, Tag, TodoItem, TodoList, TodoQuery, ToolCallResult, Tweet, Van, VanSideAnalysis, VehicleSide, VehicleSideResponse, Visibility, WordCount} from "./types"
 import type TypeBuilder from "./type_builder"
 import { HttpRequest, HttpStreamRequest } from "./sync_request"
 import { LlmResponseParser, LlmStreamParser } from "./parser"
@@ -379,6 +379,29 @@ export class BamlSyncClient {
         collector,
       )
       return raw.parsed(false) as boolean
+    } catch (error: any) {
+      throw toBamlError(error);
+    }
+  }
+  
+  MakeSemanticContainer(
+      
+      __baml_options__?: BamlCallOptions
+  ): SemanticContainer {
+    try {
+      const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
+      const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const raw = this.runtime.callFunctionSync(
+        "MakeSemanticContainer",
+        {
+          
+        },
+        this.ctxManager.cloneContext(),
+        options.tb?.__tb(),
+        options.clientRegistry,
+        collector,
+      )
+      return raw.parsed(false) as SemanticContainer
     } catch (error: any) {
       throw toBamlError(error);
     }

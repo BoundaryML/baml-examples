@@ -1,51 +1,61 @@
-"use client"
+'use client';
 
-import { analyzeBooks } from "@/app/actions/streamable_objects"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { StreamState } from "@/app/_hooks/useStream"
-import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Cog } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
-import { PopularityLineChart } from "./Charts"
-import { HexColorPicker } from "react-colorful"
-import { RankingChart } from "./RankingChart"
-import { WordCountChart } from "./WordCount"
-import examples from "./examples"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import JsonView from 'react18-json-view'
-import ErrorPreview from "../stream-object/ErrorPreview"
+import type { analyzeBooks } from '@/app/actions/streamable_objects';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Cog, Loader2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { HexColorPicker } from 'react-colorful';
+import JsonView from 'react18-json-view';
+import { PopularityLineChart } from './Charts';
+import { RankingChart } from './RankingChart';
+import { WordCountChart } from './WordCount';
+import examples from './examples';
 
 export const Content: React.FC<{
-  query: string
-  setQuery: (value: string) => void
-  answer: StreamState<typeof analyzeBooks>
+  query: string;
+  setQuery: (value: string) => void;
+  answer: StreamState<typeof analyzeBooks>;
 }> = ({ query, setQuery, answer }) => {
-  const [bookColors, setBookColors] = useState<Record<string, string>>({})
-  const [activeColorPicker, setActiveColorPicker] = useState<string | null>(null)
-  const data = useMemo(() => answer.isSuccess ? answer.data : answer.isLoading ? answer.streamingData : undefined, [answer])
-  const books = useMemo(() => data?.bookNames?.filter((book): book is string => !!book) ?? [], [data])
+  const [bookColors, setBookColors] = useState<Record<string, string>>({});
+  const [activeColorPicker, setActiveColorPicker] = useState<string | null>(
+    null,
+  );
+  const data = useMemo(
+    () =>
+      answer.isSuccess
+        ? answer.data
+        : answer.isLoading
+          ? answer.streamingData
+          : undefined,
+    [answer],
+  );
+  const books = useMemo(
+    () => data?.bookNames?.filter((book): book is string => !!book) ?? [],
+    [data],
+  );
 
   const handleAnalyze = (text: string) => {
-    answer.mutate(text)
-  }
+    answer.mutate(text);
+  };
 
   useEffect(() => {
-    const newBookColors: Record<string, string> = {}
+    const newBookColors: Record<string, string> = {};
     books.forEach((book, index) => {
       if (!bookColors[book]) {
-        newBookColors[book] = `hsl(${(index * 360) / books.length}, 70%, 50%)`
+        newBookColors[book] = `hsl(${(index * 360) / books.length}, 70%, 50%)`;
       }
-    })
-    setBookColors(prev => ({ ...prev, ...newBookColors }))
-  }, [books])
+    });
+    setBookColors((prev) => ({ ...prev, ...newBookColors }));
+  }, [books]);
 
   const handleColorChange = (color: string, book: string) => {
-    setBookColors(prev => ({ ...prev, [book]: color }))
-  }
+    setBookColors((prev) => ({ ...prev, [book]: color }));
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -73,8 +83,8 @@ export const Content: React.FC<{
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            setQuery(example.query)
-                            handleAnalyze(example.query)
+                            setQuery(example.query);
+                            handleAnalyze(example.query);
                           }}
                           className="text-xs"
                         >
@@ -97,7 +107,7 @@ export const Content: React.FC<{
                     {answer.isLoading ? (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     ) : (
-                      "Analyze Books"
+                      'Analyze Books'
                     )}
                   </Button>
                 </div>
@@ -126,55 +136,73 @@ export const Content: React.FC<{
                 >
                   <Card className="mb-8 shadow-lg">
                     <CardHeader>
-                      <CardTitle className="text-xl">Analysis Results</CardTitle>
+                      <CardTitle className="text-xl">
+                        Analysis Results
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex flex-col gap-6">
                         <div className="flex flex-col gap-2">
-                        <p className="text-xs text-gray-500">Click to change colors (even while streaming)!</p>
-                        <div className="flex flex-wrap gap-2">
-                          {books.map((book, index) => (
-                            <div key={index} className="relative">
-                              <button
-                                type="button"
-                                className="text-blue-900 dark:text-blue-100 p-2 rounded-md flex items-center gap-2 hover:bg-blue-100 transition-colors"
-                                onClick={() => setActiveColorPicker(activeColorPicker === book ? null : book)}
-                              >
-                                <div
-                                  className="w-4 h-4 rounded-full border border-gray-300"
-                                  style={{ backgroundColor: bookColors[book] }}
-                                />
-                                {book}
-                              </button>
-                              {activeColorPicker === book && (
-                                <div className="absolute z-10 mt-2">
-                                  <HexColorPicker
-                                    color={bookColors[book]}
-                                    onChange={(color) => handleColorChange(color, book)}
+                          <p className="text-xs text-gray-500">
+                            Click to change colors (even while streaming)!
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {books.map((book, index) => (
+                              <div key={index} className="relative">
+                                <button
+                                  type="button"
+                                  className="text-blue-900 dark:text-blue-100 p-2 rounded-md flex items-center gap-2 hover:bg-blue-100 transition-colors"
+                                  onClick={() =>
+                                    setActiveColorPicker(
+                                      activeColorPicker === book ? null : book,
+                                    )
+                                  }
+                                >
+                                  <div
+                                    className="w-4 h-4 rounded-full border border-gray-300"
+                                    style={{
+                                      backgroundColor: bookColors[book],
+                                    }}
                                   />
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
+                                  {book}
+                                </button>
+                                {activeColorPicker === book && (
+                                  <div className="absolute z-10 mt-2">
+                                    <HexColorPicker
+                                      color={bookColors[book]}
+                                      onChange={(color) =>
+                                        handleColorChange(color, book)
+                                      }
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                         <div className="space-y-8">
                           <div>
-                            <h3 className="text-lg font-semibold mb-2">Popularity Over Time</h3>
+                            <h3 className="text-lg font-semibold mb-2">
+                              Popularity Over Time
+                            </h3>
                             <PopularityLineChart
                               popularityData={data.popularityOverTime}
                               bookColors={bookColors}
                             />
                           </div>
                           <div>
-                            <h3 className="text-lg font-semibold mb-2">Popularity Rankings</h3>
+                            <h3 className="text-lg font-semibold mb-2">
+                              Popularity Rankings
+                            </h3>
                             <RankingChart
                               rankingData={data.popularityRankings}
                               bookColors={bookColors}
                             />
                           </div>
                           <div>
-                            <h3 className="text-lg font-semibold mb-2">Word Counts</h3>
+                            <h3 className="text-lg font-semibold mb-2">
+                              Word Counts
+                            </h3>
                             <WordCountChart
                               wordCountData={data.wordCounts}
                               bookColors={bookColors}
@@ -195,33 +223,34 @@ export const Content: React.FC<{
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 const DebugPanel: React.FC<{
-  answer: StreamState<typeof analyzeBooks>
+  answer: StreamState<typeof analyzeBooks>;
 }> = ({ answer }) => {
   const data = answer.isSuccess
     ? answer.data
     : answer.isLoading
-    ? answer.streamingData
-    : undefined
+      ? answer.streamingData
+      : undefined;
 
   const Status: React.FC<{ status: string }> = ({ status }) => {
     const statusConfig = {
-      idle: { color: "bg-gray-500", text: "Idle" },
-      loading: { color: "bg-blue-500", text: "Loading" },
-      success: { color: "bg-green-500", text: "Success" },
-      error: { color: "bg-red-500", text: "Error" },
-    }
-    const { color, text } = statusConfig[status as keyof typeof statusConfig] || statusConfig.idle
+      idle: { color: 'bg-gray-500', text: 'Idle' },
+      loading: { color: 'bg-blue-500', text: 'Loading' },
+      success: { color: 'bg-green-500', text: 'Success' },
+      error: { color: 'bg-red-500', text: 'Error' },
+    };
+    const { color, text } =
+      statusConfig[status as keyof typeof statusConfig] || statusConfig.idle;
 
     return (
       <Badge variant="outline" className={`${color} text-white`}>
         {text}
       </Badge>
-    )
-  }
+    );
+  };
 
   return (
     <Card className="w-full shadow-lg sticky top-4">
@@ -239,15 +268,11 @@ const DebugPanel: React.FC<{
       <CardContent className="p-4">
         {answer.error && <ErrorPreview error={answer.error} />}
         <ScrollArea className="h-[600px]">
-              <JsonView
-                src={data}
-                theme="atom"
-                collapseStringsAfterLength={50}
-              />
-            </ScrollArea>
+          <JsonView src={data} theme="atom" collapseStringsAfterLength={50} />
+        </ScrollArea>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default Content
+export default Content;

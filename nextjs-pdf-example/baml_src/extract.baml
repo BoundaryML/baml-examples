@@ -6,7 +6,7 @@ enum AssetType {
   Cash
   Other
 }
- 
+
 // Defining a data model.
 class Position {
   asset_type AssetType
@@ -25,7 +25,7 @@ class Position {
   current_price float? @description(#"
     The column for this element likely says the word "price"
   "#)
-  market_value float?  
+  market_value float?
   unit_cost float? @description(#"
     Only fill this out if the column says "cost" but it's not the cost basis. This would be the cost per unit.
   "#)
@@ -35,13 +35,13 @@ class Position {
 }
 
 
- 
- 
+
+
 // class Positions
- 
+
 
 // class
- 
+
 
 // Creating a function to extract the resume from a string.
 function ExtractStatement(statement: image) -> Position[] {
@@ -54,7 +54,7 @@ function ExtractStatement(statement: image) -> Position[] {
 
     {{ ctx.output_format }}
   "#
-}  
+}
 
 function ValidateStatement(positions: string, statement: image) -> Position[] {
   client GPT4o

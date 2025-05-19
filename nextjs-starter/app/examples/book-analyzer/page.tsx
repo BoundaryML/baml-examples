@@ -1,27 +1,7 @@
-"use client";
+import { Content } from './_components/Content';
 
-import React, { useState } from "react";
-import examples from "./examples";
-import { useStream } from "@/app/_hooks/useStream";
-import {
-  analyzeBooks
-} from "@/app/actions/streamable_objects";
-import { Content } from "./Shared";
-
-export const dynamic = "force-dynamic";
-export const maxDuration = 60;
-
-const Home: React.FC = () => {
-  const [query, setQuery] = useState<string>(examples[0].query);
-  const books = useStream(analyzeBooks);
-
-  return (
-    <Content
-      query={query}
-      setQuery={setQuery}
-      answer={books}
-    />
-  );
+const Home = () => {
+  return <Content />;
 };
 
 export default Home;

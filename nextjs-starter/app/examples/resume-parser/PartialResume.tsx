@@ -1,36 +1,30 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
+import type { HookOutput } from '@/baml_client/react/hooks';
+import { Alert, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Briefcase,
+  ChevronDown,
+  ChevronUp,
   GraduationCap,
   Link,
   Star,
   User,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-import { ErrorWrapper } from "../_components/ErrorWrapper";
-import type { partial_types } from "@/baml_client/partial_types";
+} from 'lucide-react';
+import { useState } from 'react';
+import { ErrorWrapper } from '../_components/ErrorWrapper';
 
 const PartialResume = ({
   resume,
 }: {
-  resume: partial_types.Resume;
+  resume: HookOutput<'ExtractResume'>['data'];
 }) => {
   const [isWhyHireOpen, setIsWhyHireOpen] = useState(false);
-  const prevResumeRef = useRef<partial_types.Resume>({});
-
-  useEffect(() => {
-    prevResumeRef.current = resume;
-  });
 
   const fadeInUp = {
     hidden: { opacity: 0, y: 10 },
@@ -40,7 +34,7 @@ const PartialResume = ({
   const renderSection = (
     title: string,
     icon: React.ReactNode,
-    content: React.ReactNode
+    content: React.ReactNode,
   ) => (
     <AnimatePresence>
       {content && (
@@ -67,7 +61,7 @@ const PartialResume = ({
     <CardContent className="p-6">
       <ScrollArea className="h-80 pr-4">
         <AnimatePresence>
-          {resume.why_hire && resume.why_hire.length > 0 && (
+          {resume?.why_hire && resume?.why_hire.length > 0 && (
             <motion.div
               key="why-hire"
               initial="hidden"
@@ -90,7 +84,7 @@ const PartialResume = ({
                     size="sm"
                     onClick={() => setIsWhyHireOpen(!isWhyHireOpen)}
                     aria-label={
-                      isWhyHireOpen ? "Close reasons" : "Open reasons"
+                      isWhyHireOpen ? 'Close reasons' : 'Open reasons'
                     }
                   >
                     {isWhyHireOpen ? (
@@ -104,14 +98,14 @@ const PartialResume = ({
                   {isWhyHireOpen && (
                     <motion.ul
                       initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
+                      animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
                       className="list-disc pl-5 mt-2 space-y-1"
                     >
-                      {resume.why_hire.map((reason, index) => (
+                      {resume.why_hire.map((reason) => (
                         <motion.li
-                          key={index}
+                          key={reason}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
@@ -130,9 +124,9 @@ const PartialResume = ({
         </AnimatePresence>
 
         {renderSection(
-          "Name",
+          'Name',
           <User className="h-5 w-5 text-primary" />,
-          resume.name && (
+          resume?.name && (
             <motion.h2
               key={resume.name}
               initial={{ opacity: 0 }}
@@ -141,17 +135,17 @@ const PartialResume = ({
             >
               {resume.name}
             </motion.h2>
-          )
+          ),
         )}
 
         {renderSection(
-          "Links",
+          'Links',
           <Link className="h-5 w-5 text-primary" />,
-          resume.links && resume.links.length > 0 && (
+          resume?.links && resume?.links.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <AnimatePresence>
-                {resume.links.map(
-                  (link, index) =>
+                {resume?.links.map(
+                  (link) =>
                     link?.url?.value && (
                       <motion.a
                         key={link.url.value}
@@ -164,26 +158,31 @@ const PartialResume = ({
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.2 }}
                       >
-                      <ErrorWrapper error={ link?.url?.checks?.valid_link?.status === "failed" ? "Invalid URL" : "" }>
-                        <Link className="h-4 w-4 mr-1" />
-                        {link.url.value}
-                      </ErrorWrapper>
-
+                        <ErrorWrapper
+                          error={
+                            link.url?.checks?.valid_link?.status === 'failed'
+                              ? 'Invalid URL'
+                              : undefined
+                          }
+                        >
+                          <Link className="h-4 w-4 mr-1" />
+                          {link.url.value}
+                        </ErrorWrapper>
                       </motion.a>
-                    )
+                    ),
                 )}
               </AnimatePresence>
             </div>
-          )
+          ),
         )}
 
         {renderSection(
-          "Skills",
+          'Skills',
           <Star className="h-5 w-5 text-primary" />,
-          resume.skills && resume.skills.length > 0 && (
+          resume?.skills && resume?.skills.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <AnimatePresence>
-                {resume.skills.map((skill, index) => (
+                {resume?.skills.map((skill, index) => (
                   <motion.div
                     key={skill}
                     initial={{ opacity: 0, scale: 0.8 }}
@@ -198,17 +197,17 @@ const PartialResume = ({
                 ))}
               </AnimatePresence>
             </div>
-          )
+          ),
         )}
 
         {renderSection(
-          "Experience",
+          'Experience',
           <Briefcase className="h-5 w-5 text-primary" />,
-          resume.experience && resume.experience.length > 0 && (
+          resume?.experience && resume?.experience.length > 0 && (
             <ul className="space-y-4">
               <AnimatePresence>
-                {resume.experience.map(
-                  (item, index) =>
+                {resume?.experience.map(
+                  (item) =>
                     item && (
                       <motion.li
                         key={`${item.company}-${item.title}`}
@@ -233,9 +232,9 @@ const PartialResume = ({
                         )}
                         <ul className="list-disc pl-5 mt-2 space-y-1">
                           <AnimatePresence>
-                            {(item.description ?? []).map((desc, num) => (
+                            {(item.description ?? []).map((desc) => (
                               <motion.li
-                                key={num}
+                                key={desc}
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
@@ -248,21 +247,21 @@ const PartialResume = ({
                           </AnimatePresence>
                         </ul>
                       </motion.li>
-                    )
+                    ),
                 )}
               </AnimatePresence>
             </ul>
-          )
+          ),
         )}
 
         {renderSection(
-          "Education",
+          'Education',
           <GraduationCap className="h-5 w-5 text-primary" />,
-          resume.education && resume.education.length > 0 && (
+          resume?.education && resume?.education.length > 0 && (
             <ul className="space-y-2">
               <AnimatePresence>
-                {resume.education.map(
-                  (item, index) =>
+                {resume?.education.map(
+                  (item) =>
                     item && (
                       <motion.li
                         key={`${item.school}-${item.degree}`}
@@ -282,11 +281,11 @@ const PartialResume = ({
                           {item.year}
                         </p>
                       </motion.li>
-                    )
+                    ),
                 )}
               </AnimatePresence>
             </ul>
-          )
+          ),
         )}
       </ScrollArea>
     </CardContent>

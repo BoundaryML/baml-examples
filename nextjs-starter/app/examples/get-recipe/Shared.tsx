@@ -1,42 +1,39 @@
-"use client"
+'use client';
 
-import { getRecipe } from "@/app/actions/streamable_objects"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { motion, AnimatePresence } from "framer-motion"
-import { Loader2, Cog, AlertCircle, CheckCircle } from "lucide-react"
-import { StreamState } from "@/app/_hooks/useStream"
-import preloadedExamples from "./examples"
-import { RecipeRender } from "./Recipe"
-import { useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
-import JsonView from 'react18-json-view'
-import { partial_types } from "@/baml_client"
+import { type HookOutput, useGetRecipe } from '@/baml_client/react/hooks';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Cog, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import JsonView from 'react18-json-view';
+import ErrorPreview from '../_components/ErrorPreview';
+import { Status } from '../_components/Status';
+import { RecipeRender } from './Recipe';
+import preloadedExamples from './examples';
+import examples from './examples';
 
-export const Content: React.FC<{
-  query: string
-  setQuery: (value: string) => void
-  answer: StreamState<typeof getRecipe>
-}> = ({ query, setQuery, answer }) => {
-  const [name, setName] = useState<string>("")
+export const Content: React.FC = () => {
+  const [query, setQuery] = useState<string>(examples[0].query);
+  const answer = useGetRecipe();
+  const [name, setName] = useState<string>('');
 
   const handleSubmit = async (text: string) => {
-    answer.mutate(text)
-    setName(text)
-  }
+    answer.mutate(text);
+    setName(text);
+  };
 
-  const data = answer.isSuccess
-    ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
-    : undefined
+  const data = answer.data;
 
-  const state = answer.isLoading ?
-    (answer.streamingData?.instructions?.length ? "instructions" : "ingredients") :
-    (answer.isSuccess || answer.isError) ? "done" : "idle"
+  const state = answer.isPending
+    ? answer.data?.instructions?.length
+      ? 'instructions'
+      : 'ingredients'
+    : answer.isSuccess || answer.isError
+      ? 'done'
+      : 'idle';
 
   return (
     <div className="bg-gradient-to-b from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
@@ -62,13 +59,13 @@ export const Content: React.FC<{
                     />
                     <Button
                       onClick={() => handleSubmit(query)}
-                      disabled={answer.isLoading}
+                      disabled={answer.isPending}
                       className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
                     >
-                      {answer.isLoading ? (
+                      {answer.isPending ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : (
-                        "Generate Recipe"
+                        'Generate Recipe'
                       )}
                     </Button>
                   </div>
@@ -77,9 +74,9 @@ export const Content: React.FC<{
                       Or try one of these:
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {preloadedExamples.map((example, index) => (
+                      {preloadedExamples.map((example) => (
                         <Button
-                          key={index}
+                          key={example.query}
                           variant="outline"
                           size="sm"
                           onClick={() => handleSubmit(example.query)}
@@ -94,53 +91,34 @@ export const Content: React.FC<{
               </CardContent>
             </Card>
             <DebugPanel answer={answer} />
-
           </div>
 
           <AnimatePresence>
-              {data && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <RecipeRender name={name} recipe={data as partial_types.Recipe} state={state} />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {data && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.5 }}
+              >
+                <RecipeRender name={name} recipe={data} state={state} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
-  )
-}
-
-const Status: React.FC<{ status: StreamState<any>["status"] }> = ({
-    status,
-  }) => {
-    const statusConfig = {
-      loading: { icon: Loader2, className: "animate-spin text-blue-500" },
-      error: { icon: AlertCircle, className: "text-red-500" },
-      success: { icon: CheckCircle, className: "text-green-500" },
-      idle: { icon: null, className: "" },
-    }
-  
-    const { icon: Icon, className } = statusConfig[status] || statusConfig.idle
-  
-    return Icon ? <Icon className={`h-5 w-5 ${className}`} /> : null
-  }
+  );
+};
 
 const DebugPanel: React.FC<{
-  answer: StreamState<typeof getRecipe>
+  answer: HookOutput<'GetRecipe'>;
 }> = ({ answer }) => {
   const data = answer.isSuccess
     ? answer.data
-    : answer.isLoading
-    ? answer.streamingData
-    : undefined
-
-
-      
+    : answer.isPending
+      ? answer.streamData
+      : undefined;
 
   return (
     <Card className="w-full shadow-lg h-fit">
@@ -155,17 +133,18 @@ const DebugPanel: React.FC<{
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 text-xs bg-muted">
-            <ScrollArea className="h-[300px]">
-              <JsonView
-                src={data || {}}
-                theme="atom"
-                collapseStringsAfterLength={50}
-              />
-            </ScrollArea>
+      <CardContent className="p-4">
+        {answer.error && <ErrorPreview error={answer.error} />}
+        <ScrollArea className="h-[300px] text-xs bg-muted">
+          <JsonView
+            src={data || {}}
+            theme="atom"
+            collapseStringsAfterLength={50}
+          />
+        </ScrollArea>
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
-export default Content
+export default Content;

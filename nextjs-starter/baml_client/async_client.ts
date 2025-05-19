@@ -20,7 +20,7 @@ import { toBamlError, BamlStream, type HTTPRequest } from "@boundaryml/baml"
 import type { Checked, Check, RecursivePartialNull as MovedRecursivePartialNull } from "./types"
 import type { partial_types } from "./partial_types"
 import type * as types from "./types"
-import type {AddItem, AdjustItem, Answer, BookAnalysis, Category, CharacterDescription, Citation, Context, Document, Education, Experience, GetDateTime, Guide, Ingredient, Link, Message, MessageToUser, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, ReplyType, Resume, Role, Score, Spells, State, Tag, TodoItem, TodoList, TodoQuery, ToolCallResult, Tweet, Van, VanSideAnalysis, VehicleSide, VehicleSideResponse, Visibility, WordCount} from "./types"
+import type {AddItem, AdjustItem, Answer, BookAnalysis, Category, CharacterDescription, Citation, ClassWithBlockDone, ClassWithoutDone, Context, Document, Education, Experience, GetDateTime, Guide, Ingredient, Link, Message, MessageToUser, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, ReplyType, Resume, Role, Score, SemanticContainer, SmallThing, Spells, State, Tag, TodoItem, TodoList, TodoQuery, ToolCallResult, Tweet, Van, VanSideAnalysis, VehicleSide, VehicleSideResponse, Visibility, WordCount} from "./types"
 import type TypeBuilder from "./type_builder"
 import { AsyncHttpRequest, AsyncHttpStreamRequest } from "./async_request"
 import { LlmResponseParser, LlmStreamParser } from "./parser"
@@ -377,6 +377,29 @@ export class BamlAsyncClient {
         collector,
       )
       return raw.parsed(false) as boolean
+    } catch (error) {
+      throw toBamlError(error);
+    }
+  }
+  
+  async MakeSemanticContainer(
+      
+      __baml_options__?: BamlCallOptions
+  ): Promise<SemanticContainer> {
+    try {
+      const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
+      const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const raw = await this.runtime.callFunction(
+        "MakeSemanticContainer",
+        {
+          
+        },
+        this.ctxManager.cloneContext(),
+        options.tb?.__tb(),
+        options.clientRegistry,
+        collector,
+      )
+      return raw.parsed(false) as SemanticContainer
     } catch (error) {
       throw toBamlError(error);
     }
@@ -789,6 +812,35 @@ class BamlStreamClient {
         raw,
         (a): boolean => a,
         (a): boolean => a,
+        this.ctxManager.cloneContext(),
+      )
+    } catch (error) {
+      throw toBamlError(error);
+    }
+  }
+  
+  MakeSemanticContainer(
+      
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry, collector?: Collector | Collector[] }
+  ): BamlStream<partial_types.SemanticContainer, SemanticContainer> {
+    try {
+      const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
+      const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const raw = this.runtime.streamFunction(
+        "MakeSemanticContainer",
+        {
+          
+        },
+        undefined,
+        this.ctxManager.cloneContext(),
+        options.tb?.__tb(),
+        options.clientRegistry,
+        collector,
+      )
+      return new BamlStream<partial_types.SemanticContainer, SemanticContainer>(
+        raw,
+        (a): partial_types.SemanticContainer => a,
+        (a): SemanticContainer => a,
         this.ctxManager.cloneContext(),
       )
     } catch (error) {

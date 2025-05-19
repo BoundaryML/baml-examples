@@ -34,6 +34,10 @@ export default class TypeBuilder {
     
     Citation: ClassViewer<'Citation', "number" | "documentTitle" | "sourceLink" | "relevantTextFromDocument">;
     
+    ClassWithBlockDone: ClassViewer<'ClassWithBlockDone', "i_16_digits" | "s_20_words">;
+    
+    ClassWithoutDone: ClassViewer<'ClassWithoutDone', "i_16_digits" | "s_20_words">;
+    
     Context: ClassViewer<'Context', "documents">;
     
     Document: ClassViewer<'Document', "title" | "text" | "link">;
@@ -74,6 +78,10 @@ export default class TypeBuilder {
     
     Score: ClassViewer<'Score', "year" | "score">;
     
+    SemanticContainer: ClassViewer<'SemanticContainer', "sixteen_digit_number" | "string_with_twenty_words" | "class_1" | "class_2" | "class_done_needed" | "class_needed" | "three_small_things" | "final_string">;
+    
+    SmallThing: ClassViewer<'SmallThing', "i_16_digits" | "i_8_digits">;
+    
     Spells: ClassViewer<'Spells', "name" | "description">;
     
     State: ClassViewer<'State', "tool_history" | "todo_list">;
@@ -113,7 +121,7 @@ export default class TypeBuilder {
     constructor() {
         this.tb = new _TypeBuilder({
           classes: new Set([
-            "AddItem","AdjustItem","Answer","BookAnalysis","CharacterDescription","Citation","Context","Document","Education","Experience","GetDateTime","Guide","Ingredient","Link","Message","MessageToUser","PartIngredient","PartSteps","Person","PopularityOverTime","Query","Ranking","Recipe","Reply","Resume","Score","Spells","State","TodoItem","TodoList","TodoQuery","ToolCallResult","Tweet","Van","VanSideAnalysis","VehicleSideResponse","Visibility","WordCount",
+            "AddItem","AdjustItem","Answer","BookAnalysis","CharacterDescription","Citation","ClassWithBlockDone","ClassWithoutDone","Context","Document","Education","Experience","GetDateTime","Guide","Ingredient","Link","Message","MessageToUser","PartIngredient","PartSteps","Person","PopularityOverTime","Query","Ranking","Recipe","Reply","Resume","Score","SemanticContainer","SmallThing","Spells","State","TodoItem","TodoList","TodoQuery","ToolCallResult","Tweet","Van","VanSideAnalysis","VehicleSideResponse","Visibility","WordCount",
           ]),
           enums: new Set([
             "Category","ReplyType","Role","Tag","VehicleSide",
@@ -143,6 +151,14 @@ export default class TypeBuilder {
         
         this.Citation = this.tb.classViewer("Citation", [
           "number","documentTitle","sourceLink","relevantTextFromDocument",
+        ]);
+        
+        this.ClassWithBlockDone = this.tb.classViewer("ClassWithBlockDone", [
+          "i_16_digits","s_20_words",
+        ]);
+        
+        this.ClassWithoutDone = this.tb.classViewer("ClassWithoutDone", [
+          "i_16_digits","s_20_words",
         ]);
         
         this.Context = this.tb.classViewer("Context", [
@@ -223,6 +239,14 @@ export default class TypeBuilder {
         
         this.Score = this.tb.classViewer("Score", [
           "year","score",
+        ]);
+        
+        this.SemanticContainer = this.tb.classViewer("SemanticContainer", [
+          "sixteen_digit_number","string_with_twenty_words","class_1","class_2","class_done_needed","class_needed","three_small_things","final_string",
+        ]);
+        
+        this.SmallThing = this.tb.classViewer("SmallThing", [
+          "i_16_digits","i_8_digits",
         ]);
         
         this.Spells = this.tb.classViewer("Spells", [

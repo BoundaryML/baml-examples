@@ -20,7 +20,7 @@ import { toBamlError } from "@boundaryml/baml"
 import type { Checked, Check } from "./types"
 import type { partial_types } from "./partial_types"
 import type * as types from "./types"
-import type {AddItem, AdjustItem, Answer, BookAnalysis, Category, CharacterDescription, Citation, Context, Document, Education, Experience, GetDateTime, Guide, Ingredient, Link, Message, MessageToUser, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, ReplyType, Resume, Role, Score, Spells, State, Tag, TodoItem, TodoList, TodoQuery, ToolCallResult, Tweet, Van, VanSideAnalysis, VehicleSide, VehicleSideResponse, Visibility, WordCount} from "./types"
+import type {AddItem, AdjustItem, Answer, BookAnalysis, Category, CharacterDescription, Citation, ClassWithBlockDone, ClassWithoutDone, Context, Document, Education, Experience, GetDateTime, Guide, Ingredient, Link, Message, MessageToUser, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, ReplyType, Resume, Role, Score, SemanticContainer, SmallThing, Spells, State, Tag, TodoItem, TodoList, TodoQuery, ToolCallResult, Tweet, Van, VanSideAnalysis, VehicleSide, VehicleSideResponse, Visibility, WordCount} from "./types"
 import type TypeBuilder from "./type_builder"
 
 export class LlmResponseParser {
@@ -256,6 +256,24 @@ export class LlmResponseParser {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       ) as boolean
+    } catch (error) {
+      throw toBamlError(error);
+    }
+  }
+  
+  MakeSemanticContainer(
+      llmResponse: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): SemanticContainer {
+    try {
+      return this.runtime.parseLlmResponse(
+        "MakeSemanticContainer",
+        llmResponse,
+        false,
+        this.ctxManager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      ) as SemanticContainer
     } catch (error) {
       throw toBamlError(error);
     }
@@ -514,6 +532,24 @@ export class LlmStreamParser {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
       ) as boolean
+    } catch (error) {
+      throw toBamlError(error);
+    }
+  }
+  
+  MakeSemanticContainer(
+      llmResponse: string,
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
+  ): partial_types.SemanticContainer {
+    try {
+      return this.runtime.parseLlmResponse(
+        "MakeSemanticContainer",
+        llmResponse,
+        true,
+        this.ctxManager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+      ) as partial_types.SemanticContainer
     } catch (error) {
       throw toBamlError(error);
     }

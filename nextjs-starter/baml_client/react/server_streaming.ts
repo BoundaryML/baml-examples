@@ -21,7 +21,7 @@ import { b } from '../index';
 import type { Check, Checked  } from "../types";
 import type { Image, Audio } from "@boundaryml/baml";
 
-import type {  AddItem,  AdjustItem,  Answer,  BookAnalysis,  Category,  CharacterDescription,  Citation,  Context,  Document,  Education,  Experience,  GetDateTime,  Guide,  Ingredient,  Link,  Message,  MessageToUser,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  ReplyType,  Resume,  Role,  Score,  Spells,  State,  Tag,  TodoItem,  TodoList,  TodoQuery,  ToolCallResult,  Tweet,  Van,  VanSideAnalysis,  VehicleSide,  VehicleSideResponse,  Visibility,  WordCount } from "../types"
+import type {  AddItem,  AdjustItem,  Answer,  BookAnalysis,  Category,  CharacterDescription,  Citation,  ClassWithBlockDone,  ClassWithoutDone,  Context,  Document,  Education,  Experience,  GetDateTime,  Guide,  Ingredient,  Link,  Message,  MessageToUser,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  ReplyType,  Resume,  Role,  Score,  SemanticContainer,  SmallThing,  Spells,  State,  Tag,  TodoItem,  TodoList,  TodoQuery,  ToolCallResult,  Tweet,  Van,  VanSideAnalysis,  VehicleSide,  VehicleSideResponse,  Visibility,  WordCount } from "../types"
 
 import type * as types from "../types"
 
@@ -275,6 +275,22 @@ export const IsResume = async (
 ): Promise<ReadableStream<Uint8Array>> => {
   const stream = b.stream.IsResume(
     raw_text,
+  );
+  return Promise.resolve(stream.toStreamable());
+};
+
+/**
+ * Executes the streaming variant of the "MakeSemanticContainer" BAML action.
+ *
+ * This action initiates a streaming response by calling the corresponding
+ * BAML stream function. The returned stream yields incremental updates.
+ *
+ *
+ * @returns {ReadableStream<Uint8Array>} A stream that yields incremental updates from the action.
+ */
+export const MakeSemanticContainer = async (
+): Promise<ReadableStream<Uint8Array>> => {
+  const stream = b.stream.MakeSemanticContainer(
   );
   return Promise.resolve(stream.toStreamable());
 };

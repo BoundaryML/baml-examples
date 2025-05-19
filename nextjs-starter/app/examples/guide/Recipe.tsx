@@ -1,35 +1,39 @@
-"use client";
+'use client';
 
-import type { Guide, Query } from "@/baml_client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { RecursivePartialNull } from "@/baml_client/async_client";
-import { type ReactNode, useState, useEffect } from "react";
-import { CheckCircle, Loader2, ChevronDown, ChevronRight } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { searchProsource, type SearchResult, type Classification, type NonNullableQuery } from "@/app/actions/prosource";
-import { Badge } from "@/components/ui/badge";
-import type { partial_types } from "@/baml_client/partial_types";
+import {
+  type NonNullableQuery,
+  type SearchResult,
+  searchProsource,
+} from '@/app/actions/prosource';
+import type { HookOutput, HookStatus } from '@/baml_client/react/hooks';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
 export const GuideRender = ({
   name,
   guide,
   state,
 }: {
   name: string;
-  guide: partial_types.Guide;
-  state: "idle" | "loading" | "success";
+  guide: HookOutput<'GenerateGuide'>['data'];
+  state: HookStatus;
 }) => {
-  const filterTopics = (category: "packaging" | "processing") => 
-    guide.related_topics?.filter((t): t is NonNullableQuery => 
-      t?.category === category && 
-      t.category !== null && 
-      t.category !== undefined && 
-      t.phrase !== null && 
-      t.phrase !== undefined
+  const filterTopics = (category: 'packaging' | 'processing') =>
+    guide?.related_topics?.filter(
+      (t): t is NonNullableQuery =>
+        t?.category === category &&
+        t.category !== null &&
+        t.category !== undefined &&
+        t.phrase !== null &&
+        t.phrase !== undefined,
     ) ?? [];
 
-  const packagingTopics = filterTopics("packaging");
-  const processingTopics = filterTopics("processing");
+  const packagingTopics = filterTopics('packaging');
+  const processingTopics = filterTopics('processing');
 
   return (
     <Card className="mb-8 shadow-lg">
@@ -41,38 +45,38 @@ export const GuideRender = ({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="processing">
               Processing
-              {state === "loading" && (
+              {state === 'pending' && (
                 <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
               )}
-              {state === "success" && (
+              {state === 'success' && (
                 <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
               )}
             </TabsTrigger>
             <TabsTrigger value="packaging">
               Packaging
-              {state === "loading" && (
+              {state === 'pending' && (
                 <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
               )}
-              {state === "success" && (
+              {state === 'success' && (
                 <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
               )}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="processing">
             <ScrollArea className="h-[400px]">
-              <InstructionsRender 
-                instructions={guide.processing_instructions}
+              <InstructionsRender
+                instructions={guide?.processing_instructions}
                 topics={processingTopics}
-                inProgress={state === "loading"}
+                inProgress={state === 'pending'}
               />
             </ScrollArea>
           </TabsContent>
           <TabsContent value="packaging">
             <ScrollArea className="h-[400px]">
-              <InstructionsRender 
-                instructions={guide.packaging_instructions} 
+              <InstructionsRender
+                instructions={guide?.packaging_instructions}
                 topics={packagingTopics}
-                inProgress={state === "loading"}
+                inProgress={state === 'pending'}
               />
             </ScrollArea>
           </TabsContent>
@@ -83,25 +87,30 @@ export const GuideRender = ({
 };
 
 const SearchResultCard = ({
-  searchResult
+  searchResult,
 }: {
   searchResult: SearchResult;
 }) => {
   return (
     <div className="flex flex-wrap gap-2">
-        {searchResult.classifications?.length > 0 && (
-          <div>
-            <div className="font-medium text-sm text-gray-700 mb-1">Equipment Categories:</div>
-            <div className="flex flex-wrap gap-2">
-              {searchResult.classifications.slice(0, 2).map((c) => (
-                <Badge key={c.selected_category_id} className="text-sm pl-2 py-1 rounded-full">
-                  {c.selected_category}
-                </Badge>
-              ))}
-            </div>
+      {searchResult.classifications?.length > 0 && (
+        <div>
+          <div className="font-medium text-sm text-gray-700 mb-1">
+            Equipment Categories:
           </div>
-        )}
-        {/* {searchResult.suggestions?.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {searchResult.classifications.slice(0, 2).map((c) => (
+              <Badge
+                key={c.selected_category_id}
+                className="text-sm pl-2 py-1 rounded-full"
+              >
+                {c.selected_category}
+              </Badge>
+            ))}
+          </div>
+        </div>
+      )}
+      {/* {searchResult.suggestions?.length > 0 && (
           <div>
             <div className="font-medium text-sm text-gray-700 mb-1">Related Searches:</div>
             <div className="flex flex-wrap gap-2">
@@ -121,7 +130,7 @@ const InstructionStep = ({
   instruction,
   index,
   totalSteps,
-  inProgress
+  inProgress,
 }: {
   instruction: string;
   index: number;
@@ -155,13 +164,13 @@ const InstructionStep = ({
   return (
     <div className="space-y-2">
       <div className="text-gray-700">
-        <span className="font-medium text-blue-800">Step {index + 1}:</span>{" "}
+        <span className="font-medium text-blue-800">Step {index + 1}:</span>{' '}
         {instruction}
-        {(inProgress && index === totalSteps - 1) && (
+        {inProgress && index === totalSteps - 1 && (
           <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500 inline" />
         )}
       </div>
-      
+
       {!inProgress && isLoading && (
         <div className="ml-6 text-sm text-gray-500">
           <Loader2 className="mr-2 h-4 w-4 animate-spin text-blue-500 inline" />
@@ -170,11 +179,9 @@ const InstructionStep = ({
       )}
 
       {!inProgress && error && (
-        <div className="ml-6 text-sm text-red-500">
-          {error}
-        </div>
+        <div className="ml-6 text-sm text-red-500">{error}</div>
       )}
-      
+
       {!inProgress && searchResult && (
         <div className="ml-6">
           <SearchResultCard searchResult={searchResult} />
@@ -187,10 +194,12 @@ const InstructionStep = ({
 const InstructionsRender = ({
   instructions,
   topics,
-  inProgress
+  inProgress,
 }: {
   instructions?: (string | null | undefined)[];
-  topics: NonNullableQuery[];
+  topics: NonNullable<
+    HookOutput<'GenerateGuide', { stream: true }>['streamData']
+  >['related_topics'];
   inProgress?: boolean;
 }) => {
   if (!instructions?.length) {
@@ -200,25 +209,26 @@ const InstructionsRender = ({
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        {instructions.map((instruction, index) => (
-          instruction && (
-            <InstructionStep
-              key={instruction}
-              instruction={instruction}
-              index={index}
-              totalSteps={instructions.length}
-              inProgress={inProgress}
-            />
-          )
-        ))}
+        {instructions.map(
+          (instruction, index) =>
+            instruction && (
+              <InstructionStep
+                key={instruction}
+                instruction={instruction}
+                index={index}
+                totalSteps={instructions.length}
+                inProgress={inProgress}
+              />
+            ),
+        )}
       </div>
-      {topics.length > 0 && (
+      {topics && topics.length > 0 && (
         <div className="mt-4">
           <h3 className="font-semibold text-lg mb-2">Related Topics:</h3>
           <ul className="space-y-1">
             {topics.map((topic) => (
-              <li key={topic.phrase} className="text-gray-600">
-                • {topic.phrase}
+              <li key={topic?.phrase} className="text-gray-600">
+                • {topic?.phrase}
               </li>
             ))}
           </ul>

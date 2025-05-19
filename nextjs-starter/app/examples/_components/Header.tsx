@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { ExternalLink, Github } from "lucide-react";
-import { useSelectedItem } from "@/components/AppSidebar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+import { useSelectedItem } from '@/components/AppSidebar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { Github } from 'lucide-react';
+import Link from 'next/link';
 
 const getRepoUrl = (path: string) => {
   // Remove leading slash and 'examples' from the path
@@ -45,7 +45,11 @@ export default function Header() {
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={getRepoUrl(selected.url)} target="_blank" rel="noopener noreferrer">
+            <Link
+              href={getRepoUrl(selected.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               <Github className="mr-2 h-4 w-4" />
               View Source
             </Link>

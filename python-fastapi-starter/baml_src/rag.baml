@@ -72,7 +72,7 @@ See also: List of Falcon 9 and Falcon Heavy launches
 
     "#
   }
-  
+
       ]
     }
   }

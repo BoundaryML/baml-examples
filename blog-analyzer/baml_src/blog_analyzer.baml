@@ -1,14 +1,14 @@
 class ContentAnalysis {
   technicalQuestionsAnswered Question[]
-  
+
   commercialElements CommercialElements
 
   valueRatio "mostly-educational" | "balanced" | "mostly-promotional" @description("The overall balance between educational and promotional content")
-  
+
   keyInsights string[] @description("Main educational takeaways from the content")
 
     primaryIntent "educational" | "advertisement" @description("The dominant purpose of the content")
-  
+
   educationalDepth "surface" | "intermediate" | "deep" @description("How thoroughly the content explains concepts")
 
 }
@@ -126,7 +126,7 @@ Don’t just take our word for it. Join us at Enterprise AI Agent Week (March 31
 Register now and be part of the transforming how businesses build their agentic future.
     "#
   }
-  
+
 }
 
 test PromotionalWithBasicsTest {

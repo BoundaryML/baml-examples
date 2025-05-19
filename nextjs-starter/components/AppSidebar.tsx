@@ -1,26 +1,21 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
 import {
   BarChart,
   CheckCheck,
-  ChevronLeft,
-  ChevronRight,
   ExternalLink,
   FileText,
-  Home,
   MessageCircle,
   Utensils,
-} from "lucide-react";
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useMemo } from 'react';
 
-import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from '@/components/ui/button';
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -28,16 +23,16 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from '@/components/ui/sidebar';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import Image from "next/image";
-import { Badge } from "./ui/badge";
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { Badge } from './ui/badge';
 
 // Function to generate a consistent color based on the tag string
 export function getTagColor(tag: string): string {
@@ -51,51 +46,51 @@ export function getTagColor(tag: string): string {
 
 export const items = [
   {
-    title: "Resume Parser",
-    description: "Efficiently parse and analyze resumes",
-    url: "/examples/stream-object",
-    tags: ["streaming", "structured outputs"],
+    title: 'Resume Parser',
+    description: 'Efficiently parse and analyze resumes',
+    url: '/examples/resume-parser',
+    tags: ['streaming', 'structured outputs'],
     icon: FileText,
   },
   {
-    title: "Q&A Engine",
-    description: "Intelligent Q&A system with RAG",
-    url: "/examples/rag",
-    tags: ["streaming", "RAG", "hallucination detection"],
+    title: 'Q&A Engine',
+    description: 'Intelligent Q&A system with RAG',
+    url: '/examples/rag',
+    tags: ['streaming', 'RAG', 'hallucination detection'],
     icon: MessageCircle,
   },
   {
-    title: "Book Analyzer",
-    description: "Analyze books with real-time streaming charts",
-    url: "/examples/book-analyzer",
-    tags: ["streaming", "graphs"],
+    title: 'Book Analyzer',
+    description: 'Analyze books with real-time streaming charts',
+    url: '/examples/book-analyzer',
+    tags: ['streaming', 'graphs'],
     icon: BarChart,
   },
   {
-    title: "Recipe Generator",
-    description: "",
-    url: "/examples/get-recipe",
-    tags: ["streaming", "generative UIs"],
+    title: 'Recipe Generator',
+    description: '',
+    url: '/examples/get-recipe',
+    tags: ['streaming', 'generative UIs'],
     icon: Utensils,
   },
   {
-    title: "Todo List",
-    description: "Collaborate on Todo Items with an LLM",
-    url: "/examples/todo-llm",
-    tags: ["streaming", "Generative UIs"],
-    icon: CheckCheck
-  }
+    title: 'Todo List',
+    description: 'Collaborate on Todo Items with an LLM',
+    url: '/examples/todo-llm',
+    tags: ['streaming', 'Generative UIs'],
+    icon: CheckCheck,
+  },
 ];
 
 export const useSelectedItem = () => {
   const pathname = usePathname();
-  
+
   const selected = useMemo(() => {
     return items.find((item) => item.url === pathname);
   }, [pathname]);
 
   return selected;
-}
+};
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -115,14 +110,14 @@ export function AppSidebar() {
               href="https://docs.boundaryml.com"
               target="_blank"
               rel="noopener noreferrer"
-              className={buttonVariants({ variant: "outline" })}
+              className={buttonVariants({ variant: 'outline' })}
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               BAML Documentation
             </Link>
           </SidebarHeader>
           <SidebarGroup>
-            <SidebarGroupLabel className={cn("px-4 py-2")}>
+            <SidebarGroupLabel className={cn('px-4 py-2')}>
               What is BAML?
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -130,13 +125,13 @@ export function AppSidebar() {
                 <div className="px-4 py-2 text-sm text-muted-foreground">
                   <p className="mb-2">
                     <strong>BAML</strong> is a prompting language that
-                    prioritizes <strong>type-safety</strong> and an exceptional{" "}
+                    prioritizes <strong>type-safety</strong> and an exceptional{' '}
                     <strong>developer experience</strong>.
                   </p>
                   <p>
-                    It simplifies making great UX (e.g. streaming) by reducing{" "}
-                    <strong>boilerplate</strong> code, while ensuring high{" "}
-                    <strong>accuracy</strong> and <strong>consistency</strong>{" "}
+                    It simplifies making great UX (e.g. streaming) by reducing{' '}
+                    <strong>boilerplate</strong> code, while ensuring high{' '}
+                    <strong>accuracy</strong> and <strong>consistency</strong>{' '}
                     with LLMs.
                   </p>
                 </div>
@@ -157,8 +152,8 @@ export function AppSidebar() {
                             asChild
                             isActive={isActive}
                             className={cn(
-                              "flex items-start space-x-4 rounded-lg px-4 py-2 hover:bg-muted group",
-                              isActive && "bg-muted"
+                              'flex items-start space-x-4 rounded-lg px-4 py-2 hover:bg-muted group',
+                              isActive && 'bg-muted',
                             )}
                           >
                             <Link
@@ -168,14 +163,14 @@ export function AppSidebar() {
                               <div className="flex flex-row items-center">
                                 <item.icon
                                   className={cn(
-                                    "h-5 w-5",
-                                    isActive && "text-primary"
+                                    'h-5 w-5',
+                                    isActive && 'text-primary',
                                   )}
                                 />
                                 <span
                                   className={cn(
-                                    "ml-3",
-                                    isActive && "font-medium"
+                                    'ml-3',
+                                    isActive && 'font-medium',
                                   )}
                                 >
                                   {item.title}
@@ -190,7 +185,7 @@ export function AppSidebar() {
                                       backgroundColor: getTagColor(tag),
                                       opacity: 0.5,
                                     }}
-                                    className={`text-xs font-medium capitalize py-0.5`}
+                                    className="text-xs font-medium capitalize py-0.5"
                                   >
                                     {tag}
                                   </Badge>

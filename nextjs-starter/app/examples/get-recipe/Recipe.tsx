@@ -1,12 +1,19 @@
-"use client";
+'use client';
 
-import type { Ingredient, partial_types, PartIngredient, PartSteps, Recipe, RecursivePartialNull } from "@/baml_client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Slider } from "@/components/ui/slider";
-import  { type ReactNode, useEffect, useState } from "react";
-import { CheckCircle, Loader2 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import type {
+  Ingredient,
+  PartIngredient,
+  PartSteps,
+  partial_types,
+} from '@/baml_client';
+import type { HookData, HookOutput } from '@/baml_client/react/hooks';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CheckCircle, Loader2 } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 export const RecipeRender = ({
   name,
@@ -14,18 +21,18 @@ export const RecipeRender = ({
   state,
 }: {
   name: string;
-  recipe: partial_types.Recipe;
-  state: "idle" | "instructions" | "ingredients" | "done";
+  recipe: HookData<'GetRecipe'>;
+  state: 'idle' | 'instructions' | 'ingredients' | 'done';
 }) => {
-  const [servings, setServings] = useState(recipe.number_of_servings);
+  const [servings, setServings] = useState(recipe?.number_of_servings);
   const servingRatio =
-    servings && recipe.number_of_servings && recipe.number_of_servings > 0
-      ? servings / recipe.number_of_servings
+    servings && recipe?.number_of_servings && recipe?.number_of_servings > 0
+      ? servings / recipe?.number_of_servings
       : 1;
 
   useEffect(() => {
-    setServings(recipe.number_of_servings);
-  }, [recipe.number_of_servings]);
+    setServings(recipe?.number_of_servings);
+  }, [recipe?.number_of_servings]);
 
   return (
     <Card className="mb-8 shadow-lg">
@@ -33,9 +40,9 @@ export const RecipeRender = ({
         <CardTitle className="text-2xl">{name}</CardTitle>
         <div className="flex flex-col gap-2">
           <p className="text-gray-500">
-            Servings: {servings}{" "}
-            {servingRatio != 1 && (
-              <>(scaled from {recipe.number_of_servings})</>
+            Servings: {servings}{' '}
+            {servingRatio !== 1 && (
+              <>(scaled from {recipe?.number_of_servings})</>
             )}
           </p>
           {servings && (
@@ -45,7 +52,7 @@ export const RecipeRender = ({
             <Slider
               value={[servings]}
               onValueChange={(value) => setServings(value[0])}
-              max={Math.max(20, (recipe.number_of_servings || 1) * 2)}
+              max={Math.max(20, (recipe?.number_of_servings || 1) * 2)}
               min={1}
               step={1}
               className="w-[200px]"
@@ -58,35 +65,35 @@ export const RecipeRender = ({
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="ingredients">
               Ingredients
-              {state === "ingredients" && (
+              {state === 'ingredients' && (
                 <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
               )}
-              {(state === "instructions" || state === "done") && (
+              {(state === 'instructions' || state === 'done') && (
                 <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
               )}
             </TabsTrigger>
             <TabsTrigger value="instructions">
               Instructions
-              {state === "instructions" && (
+              {state === 'instructions' && (
                 <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
               )}
-              {state === "done" && (
+              {state === 'done' && (
                 <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
               )}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="ingredients">
             <ScrollArea className="h-[400px]">
-            <IngredientListRender
-              ingredients={recipe.ingredients}
-              ratio={servingRatio}
-              inProgress={state === "ingredients"}
-            />
+              <IngredientListRender
+                ingredients={recipe?.ingredients}
+                ratio={servingRatio}
+                inProgress={state === 'ingredients'}
+              />
             </ScrollArea>
           </TabsContent>
           <TabsContent value="instructions">
             <ScrollArea className="h-[400px]">
-            <InstructionListRender instructions={recipe.instructions} />
+              <InstructionListRender instructions={recipe?.instructions} />
             </ScrollArea>
           </TabsContent>
         </Tabs>
@@ -98,9 +105,9 @@ export const RecipeRender = ({
 const IngredientListRender = ({
   ingredients,
   ratio,
-  inProgress
+  inProgress,
 }: {
-  ingredients: partial_types.Recipe["ingredients"];
+  ingredients: NonNullable<HookOutput<'GetRecipe'>['data']>['ingredients'];
   ratio: number;
   inProgress?: boolean;
 }) => {
@@ -108,32 +115,38 @@ const IngredientListRender = ({
     return <p className="text-gray-500">No ingredients found.</p>;
   }
 
-  if ("title" in ingredients[0]!) {
+  if (ingredients[0] && 'title' in ingredients[0]) {
     return (
       <div className="space-y-6">
-        {(ingredients as partial_types.PartIngredient[]).map(
+        {(ingredients as PartIngredient[]).map(
           (part, index) =>
             part && (
-              <div key={index}>
+              <div key={part.title}>
                 <h3 className="font-semibold text-lg mb-2 flex flex-row items-center">
-                {(inProgress && index === ingredients.length - 1) && <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />}
-                    {part.title}
-                    </h3>
+                  {inProgress && index === ingredients.length - 1 && (
+                    <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
+                  )}
+                  {part.title}
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {part.ingredients?.map(
                     (ingredient, idx) =>
                       ingredient && (
                         <IngredientRender
-                          key={idx}
+                          key={ingredient.name}
                           ingredient={ingredient}
                           ratio={ratio}
-                          isLast={inProgress && idx === part.ingredients!.length - 1 && index === ingredients.length - 1}
+                          isLast={
+                            inProgress &&
+                            idx === part.ingredients?.length - 1 &&
+                            index === ingredients.length - 1
+                          }
                         />
-                      )
+                      ),
                   )}
                 </div>
               </div>
-            )
+            ),
         )}
       </div>
     );
@@ -141,35 +154,39 @@ const IngredientListRender = ({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {(ingredients as partial_types.Ingredient[]).map((ingredient, index) => (
-        <IngredientRender key={index} ingredient={ingredient} ratio={ratio} />
+      {(ingredients as Ingredient[]).map((ingredient) => (
+        <IngredientRender
+          key={ingredient.name}
+          ingredient={ingredient}
+          ratio={ratio}
+        />
       ))}
     </div>
   );
 };
 
 const unicodeFractions: { [key: string]: string } = {
-  "1/4": "¼",
-  "1/2": "½",
-  "3/4": "¾",
-  "1/3": "⅓",
-  "2/3": "⅔",
-  "1/5": "⅕",
-  "2/5": "⅖",
-  "3/5": "⅗",
-  "4/5": "⅘",
-  "1/6": "⅙",
-  "5/6": "⅚",
-  "1/8": "⅛",
-  "3/8": "⅜",
-  "5/8": "⅝",
-  "7/8": "⅞",
+  '1/4': '¼',
+  '1/2': '½',
+  '3/4': '¾',
+  '1/3': '⅓',
+  '2/3': '⅔',
+  '1/5': '⅕',
+  '2/5': '⅖',
+  '3/5': '⅗',
+  '4/5': '⅘',
+  '1/6': '⅙',
+  '5/6': '⅚',
+  '1/8': '⅛',
+  '3/8': '⅜',
+  '5/8': '⅝',
+  '7/8': '⅞',
 };
 
 const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
 const formatFraction = (numerator: number, denominator: number): ReactNode => {
   if (numerator === denominator) {
-    return "1";
+    return '1';
   }
   const fraction = `${numerator}/${denominator}`;
   if (fraction in unicodeFractions) {
@@ -184,10 +201,10 @@ const formatFraction = (numerator: number, denominator: number): ReactNode => {
 
 const formatAmount = (value: number): ReactNode => {
   const tolerance = 1.0e-6;
-  let h1 = 1,
-    h2 = 0,
-    k1 = 0,
-    k2 = 1;
+  let h1 = 1;
+  let h2 = 0;
+  let k1 = 0;
+  let k2 = 1;
   let b = value;
   do {
     const a = Math.floor(b);
@@ -205,7 +222,7 @@ const formatAmount = (value: number): ReactNode => {
   const denominator = k1 / factor;
 
   if (numerator === denominator) {
-    return "1";
+    return '1';
   }
 
   if (numerator > denominator) {
@@ -227,9 +244,9 @@ const formatAmount = (value: number): ReactNode => {
 const IngredientRender = ({
   ingredient,
   ratio,
-  isLast
+  isLast,
 }: {
-  ingredient: partial_types.Ingredient;
+  ingredient: Ingredient;
   ratio: number;
   isLast?: boolean;
 }) => {
@@ -240,7 +257,9 @@ const IngredientRender = ({
       <span className="font-medium">{ingredient.name}</span>
       <span className="text-gray-600 flex items-center">
         {amount} {ingredient.unit}
-        {isLast && <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />}
+        {isLast && (
+          <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
+        )}
       </span>
     </div>
   );
@@ -249,7 +268,7 @@ const IngredientRender = ({
 const InstructionListRender = ({
   instructions,
 }: {
-  instructions: partial_types.Recipe["instructions"];
+  instructions: NonNullable<HookOutput<'GetRecipe'>['data']>['instructions'];
 }) => {
   if (!instructions || instructions.length === 0) {
     return <p className="text-gray-500">No instructions found.</p>;
@@ -258,10 +277,10 @@ const InstructionListRender = ({
   return (
     <ol className="space-y-4">
       {instructions.map((instruction, index) => {
-        if (typeof instruction === "object") {
+        if (typeof instruction === 'object') {
           return (
             instruction && (
-              <li key={index}>
+              <li key={instruction.title}>
                 <h3 className="font-semibold text-lg mb-2">
                   {instruction.title}
                 </h3>
@@ -272,7 +291,11 @@ const InstructionListRender = ({
         }
         return (
           instruction && (
-            <SingleStepRender key={index} step={instruction} index={index} />
+            <SingleStepRender
+              key={instruction}
+              step={instruction}
+              index={index}
+            />
           )
         );
       })}
@@ -283,13 +306,13 @@ const InstructionListRender = ({
 const InstructionRender = ({
   instruction,
 }: {
-  instruction: partial_types.PartSteps["steps"];
+  instruction: PartSteps['steps'] | partial_types.PartSteps['steps'];
 }) => {
   return (
     <ol className="list-decimal list-inside space-y-2">
       {instruction?.map(
         (step, index) =>
-          step && <SingleStepRender key={index} step={step} index={index} />
+          step && <SingleStepRender key={step} step={step} index={index} />,
       )}
     </ol>
   );
@@ -298,7 +321,7 @@ const InstructionRender = ({
 const SingleStepRender = ({ step, index }: { step: string; index: number }) => {
   return (
     <li className="text-gray-700">
-      <span className="font-medium text-blue-800">Step {index + 1}:</span>{" "}
+      <span className="font-medium text-blue-800">Step {index + 1}:</span>{' '}
       {step}
     </li>
   );

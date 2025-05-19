@@ -19,7 +19,7 @@ import type { BamlRuntime, BamlCtxManager, ClientRegistry, Image, Audio } from "
 import { toBamlError, HTTPRequest } from "@boundaryml/baml"
 import type { Checked, Check } from "./types"
 import type * as types from "./types"
-import type {AddItem, AdjustItem, Answer, BookAnalysis, Category, CharacterDescription, Citation, Context, Document, Education, Experience, GetDateTime, Guide, Ingredient, Link, Message, MessageToUser, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, ReplyType, Resume, Role, Score, Spells, State, Tag, TodoItem, TodoList, TodoQuery, ToolCallResult, Tweet, Van, VanSideAnalysis, VehicleSide, VehicleSideResponse, Visibility, WordCount} from "./types"
+import type {AddItem, AdjustItem, Answer, BookAnalysis, Category, CharacterDescription, Citation, ClassWithBlockDone, ClassWithoutDone, Context, Document, Education, Experience, GetDateTime, Guide, Ingredient, Link, Message, MessageToUser, PartIngredient, PartSteps, Person, PopularityOverTime, Query, Ranking, Recipe, Reply, ReplyType, Resume, Role, Score, SemanticContainer, SmallThing, Spells, State, Tag, TodoItem, TodoList, TodoQuery, ToolCallResult, Tweet, Van, VanSideAnalysis, VehicleSide, VehicleSideResponse, Visibility, WordCount} from "./types"
 import type TypeBuilder from "./type_builder"
 
 type BamlCallOptions = {
@@ -280,6 +280,26 @@ export class HttpRequest {
         "IsResume",
         {
           "raw_text": raw_text
+        },
+        this.ctxManager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+        false,
+      )
+    } catch (error) {
+      throw toBamlError(error);
+    }
+  }
+  
+  MakeSemanticContainer(
+      
+      __baml_options__?: BamlCallOptions
+  ): HTTPRequest {
+    try {
+      return this.runtime.buildRequestSync(
+        "MakeSemanticContainer",
+        {
+          
         },
         this.ctxManager.cloneContext(),
         __baml_options__?.tb?.__tb(),
@@ -566,6 +586,26 @@ export class HttpStreamRequest {
         "IsResume",
         {
           "raw_text": raw_text
+        },
+        this.ctxManager.cloneContext(),
+        __baml_options__?.tb?.__tb(),
+        __baml_options__?.clientRegistry,
+        true,
+      )
+    } catch (error) {
+      throw toBamlError(error);
+    }
+  }
+  
+  MakeSemanticContainer(
+      
+      __baml_options__?: BamlCallOptions
+  ): HTTPRequest {
+    try {
+      return this.runtime.buildRequestSync(
+        "MakeSemanticContainer",
+        {
+          
         },
         this.ctxManager.cloneContext(),
         __baml_options__?.tb?.__tb(),

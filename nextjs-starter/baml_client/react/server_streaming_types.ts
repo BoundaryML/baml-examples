@@ -18,7 +18,7 @@ $ pnpm add @boundaryml/baml
 import type { Check, Checked  } from "../types";
 import type { Image, Audio } from "@boundaryml/baml";
 
-import type {  AddItem,  AdjustItem,  Answer,  BookAnalysis,  Category,  CharacterDescription,  Citation,  Context,  Document,  Education,  Experience,  GetDateTime,  Guide,  Ingredient,  Link,  Message,  MessageToUser,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  ReplyType,  Resume,  Role,  Score,  Spells,  State,  Tag,  TodoItem,  TodoList,  TodoQuery,  ToolCallResult,  Tweet,  Van,  VanSideAnalysis,  VehicleSide,  VehicleSideResponse,  Visibility,  WordCount } from "../types"
+import type {  AddItem,  AdjustItem,  Answer,  BookAnalysis,  Category,  CharacterDescription,  Citation,  ClassWithBlockDone,  ClassWithoutDone,  Context,  Document,  Education,  Experience,  GetDateTime,  Guide,  Ingredient,  Link,  Message,  MessageToUser,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  ReplyType,  Resume,  Role,  Score,  SemanticContainer,  SmallThing,  Spells,  State,  Tag,  TodoItem,  TodoList,  TodoQuery,  ToolCallResult,  Tweet,  Van,  VanSideAnalysis,  VehicleSide,  VehicleSideResponse,  Visibility,  WordCount } from "../types"
 
 import type * as types from "../types"
 import type { partial_types }from "../partial_types";
@@ -37,5 +37,6 @@ export type StreamingServerTypes = {
   GetRecipe: partial_types.Recipe,
   IdentifyVehicleSide: partial_types.VehicleSideResponse,
   IsResume: boolean,
+  MakeSemanticContainer: partial_types.SemanticContainer,
   SelectTools: ((partial_types.MessageToUser | null) | (types.AddItem | null) | (types.AdjustItem | null) | null)[],
 }

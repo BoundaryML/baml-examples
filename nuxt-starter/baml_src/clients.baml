@@ -46,6 +46,6 @@ client<llm> Openai {
   options {
     // This will try the clients in order until one succeeds
     // Learn more at https://docs.boundaryml.com/docs/snippets/clients/fallback
-    strategy [GPT4, FastOpenAI]
+    strategy [GPT4o, FastOpenAI]
   }
 }
