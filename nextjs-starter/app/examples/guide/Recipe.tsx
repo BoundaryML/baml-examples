@@ -1,7 +1,7 @@
 'use client';
 
 import { type NonNullableQuery, type SearchResult, searchProsource } from '@/app/actions/prosource';
-import { HookResultPartialData } from '@/baml_client/react/types';
+import type { HookOutput, HookStatus } from '@/baml_client/react/hooks';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -15,11 +15,11 @@ export const GuideRender = ({
   state,
 }: {
   name: string;
-  guide: HookResultPartialData<'GenerateGuide'>;
-  state: 'idle' | 'loading' | 'success';
+  guide: HookOutput<'GenerateGuide'>['data'];
+  state: HookStatus
 }) => {
   const filterTopics = (category: 'packaging' | 'processing') =>
-    guide.related_topics?.filter(
+    guide?.related_topics?.filter(
       (t): t is NonNullableQuery =>
         t?.category === category &&
         t.category !== null &&
@@ -41,30 +41,30 @@ export const GuideRender = ({
           <TabsList className='grid w-full grid-cols-2'>
             <TabsTrigger value='processing'>
               Processing
-              {state === 'loading' && <Loader2 className='ml-2 h-4 w-4 animate-spin text-blue-500' />}
+              {state === 'pending' && <Loader2 className='ml-2 h-4 w-4 animate-spin text-blue-500' />}
               {state === 'success' && <CheckCircle className='ml-2 h-4 w-4 text-green-500' />}
             </TabsTrigger>
             <TabsTrigger value='packaging'>
               Packaging
-              {state === 'loading' && <Loader2 className='ml-2 h-4 w-4 animate-spin text-blue-500' />}
+              {state === 'pending' && <Loader2 className='ml-2 h-4 w-4 animate-spin text-blue-500' />}
               {state === 'success' && <CheckCircle className='ml-2 h-4 w-4 text-green-500' />}
             </TabsTrigger>
           </TabsList>
           <TabsContent value='processing'>
             <ScrollArea className='h-[400px]'>
               <InstructionsRender
-                instructions={guide.processing_instructions}
+                instructions={guide?.processing_instructions}
                 topics={processingTopics}
-                inProgress={state === 'loading'}
+                inProgress={state === 'pending'}
               />
             </ScrollArea>
           </TabsContent>
           <TabsContent value='packaging'>
             <ScrollArea className='h-[400px]'>
               <InstructionsRender
-                instructions={guide.packaging_instructions}
+                instructions={guide?.packaging_instructions}
                 topics={packagingTopics}
-                inProgress={state === 'loading'}
+                inProgress={state === 'pending'}
               />
             </ScrollArea>
           </TabsContent>
@@ -177,7 +177,7 @@ const InstructionsRender = ({
   inProgress,
 }: {
   instructions?: (string | null | undefined)[];
-  topics: NonNullableQuery[];
+  topics: NonNullable<HookOutput<'GenerateGuide', { stream: true }>['streamData']>['related_topics'];
   inProgress?: boolean;
 }) => {
   if (!instructions?.length) {
@@ -200,13 +200,13 @@ const InstructionsRender = ({
             ),
         )}
       </div>
-      {topics.length > 0 && (
+      {topics && topics.length > 0 && (
         <div className='mt-4'>
           <h3 className='font-semibold text-lg mb-2'>Related Topics:</h3>
           <ul className='space-y-1'>
             {topics.map((topic) => (
-              <li key={topic.phrase} className='text-gray-600'>
-                • {topic.phrase}
+              <li key={topic?.phrase} className='text-gray-600'>
+                • {topic?.phrase}
               </li>
             ))}
           </ul>

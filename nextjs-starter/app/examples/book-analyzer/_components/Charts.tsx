@@ -1,6 +1,6 @@
 'use client';
 
-import type { HookResultPartialData } from '@/baml_client/react/types';
+import type { HookData } from '@/baml_client/react/hooks';
 import { useMemo } from 'react';
 import { PopularityLineChart as InternalPopularityLineChart } from './PopularityChart';
 
@@ -8,7 +8,7 @@ export const PopularityLineChart = ({
   popularityData,
   bookColors,
 }: {
-  popularityData: HookResultPartialData<'AnalyzeBooks'>['popularityOverTime'];
+  popularityData: HookData<'AnalyzeBooks'>['popularityOverTime'];
   bookColors: Record<string, string>;
 }) => {
   // Transform into {date: year, [book]: score}[]
@@ -27,10 +27,10 @@ export const PopularityLineChart = ({
       ) ?? [];
 
     for (const item of validData) {
-      const name = item.bookName;
+      const name = item?.bookName;
       if (bookColors[name ?? ''] === undefined) continue;
 
-      for (const score of item.scores ?? []) {
+      for (const score of item?.scores ?? []) {
         if (score?.year != null && score.score != null) {
           const year = score.year;
           const yearData = transformedData.find((entry) => entry.date === year);
@@ -47,5 +47,10 @@ export const PopularityLineChart = ({
     return transformedData.sort((a, b) => a.date - b.date);
   }, [popularityData, bookColors]);
 
-  return <InternalPopularityLineChart popularityData={data} bookColors={bookColors} />;
+  return (
+    <InternalPopularityLineChart
+      popularityData={data}
+      bookColors={bookColors}
+    />
+  );
 };

@@ -1,10 +1,10 @@
-import { Document } from "@/baml_client";
+import type { Document } from "@/baml_client";
 
 export const documents: Document[] = [
-  {
-    title: "SpaceX Overview",
-    link: "https://en.wikipedia.org/wiki/SpaceX",
-    text: `
+	{
+		title: "SpaceX Overview",
+		link: "https://en.wikipedia.org/wiki/SpaceX",
+		text: `
 Space Exploration Technologies Corporation, commonly referred to as SpaceX, is an American spacecraft manufacturer, launch service provider and satellite communications company headquartered in Hawthorne, California. The company was founded in 2002 by Elon Musk with the goal of reducing space transportation costs and ultimately developing a sustainable colony on Mars. The company currently produces and operates the Falcon 9 and Falcon Heavy rockets along with the Dragon and Starship spacecraft.
 
 The company offers internet service via its Starlink subsidiary, which became the largest-ever satellite constellation in January 2020 and, as of April 2024, comprised more than 6,000 small satellites in orbit.[8]
@@ -17,11 +17,11 @@ Main article: History of SpaceX
 See also: List of Falcon 9 and Falcon Heavy launches
 
     `,
-  },
-  {
-    title: "Spacex Founding",
-    link: "https://en.wikipedia.org/wiki/SpaceX",
-    text: `
+	},
+	{
+		title: "Spacex Founding",
+		link: "https://en.wikipedia.org/wiki/SpaceX",
+		text: `
 2001–2004: Founding
 
 In early 2001, Elon Musk met Robert Zubrin and donated US$100,000 to his Mars Society, joining its board of directors for a short time.[12]: 30–31  He gave a plenary talk at their fourth convention where he announced Mars Oasis, a project to land a greenhouse and grow plants on Mars.[13][14] Musk initially attempted to acquire a Dnepr intercontinental ballistic missile for the project through Russian contacts from Jim Cantrell.[15]
@@ -32,11 +32,11 @@ In early 2002, Elon Musk started to look for staff for his company, soon to be n
 
 Musk has stated that one of his goals with SpaceX is to decrease the cost and improve the reliability of access to space, ultimately by a factor of ten.[23]
 `,
-  },
-  {
-    title: "Spacex History",
-    link: "https://en.wikipedia.org/wiki/SpaceX",
-    text: `
+	},
+	{
+		title: "Spacex History",
+		link: "https://en.wikipedia.org/wiki/SpaceX",
+		text: `
 2005–2009: Falcon 1 and first orbital launches
 Main article: Falcon 1
 The first successful Falcon 1 launch in September 2008
@@ -121,7 +121,7 @@ In May 2019, SpaceX launched the first large batch of 60 Starlink satellites, be
 
 On 16 July 2021 SpaceX entered an agreement to acquire Swarm Technologies, a private company building a low Earth orbit satellite constellation for communications with Internet of things (IoT) devices, for $524 million.[122][4]
 
-In December 2022, the U.S. Federal Communications Commission (FCC) approved the launch up to 7,500 of SpaceX's next-generation satellites in its Starlink internet network.[123] 
+In December 2022, the U.S. Federal Communications Commission (FCC) approved the launch up to 7,500 of SpaceX's next-generation satellites in its Starlink internet network.[123]
 `,
-  },
+	},
 ];

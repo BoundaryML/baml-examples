@@ -1,0 +1,62 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "globalEnv": ["NODE_ENV"],
+  "tasks": {
+    "//#clean": {
+      "cache": false
+    },
+    "build": {
+      "dependsOn": ["^topo", "^build"],
+      "outputs": [
+        ".open-next/**",
+        "!.open-next/cache/**",
+        "next-env.d.ts",
+        ".output/**",
+        ".dist/**"
+      ]
+    },
+    "clean": {
+      "cache": false,
+      "dependsOn": ["^clean"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "format": {
+      "outputLogs": "new-only"
+    },
+    "gen-migration": {
+      "cache": false,
+      "interactive": true
+    },
+    "lint": {
+      "dependsOn": ["^topo", "^build"]
+    },
+    "migrate": {
+      "cache": false,
+      "interactive": true
+    },
+    "push": {
+      "cache": false,
+      "interactive": true
+    },
+    "seed": {
+      "cache": false,
+      "interactive": true
+    },
+    "studio": {
+      "cache": false,
+      "persistent": true
+    },
+    "topo": {
+      "dependsOn": ["^topo"]
+    },
+    "typecheck": {
+      "dependsOn": ["^topo", "^build"],
+      "outputs": ["node_modules/.cache/tsbuildinfo.json"]
+    }
+  },
+  "ui": "tui"
+}

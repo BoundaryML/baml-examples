@@ -18,24 +18,24 @@ $ pnpm add @boundaryml/baml
 import type { Check, Checked  } from "../types";
 import type { Image, Audio } from "@boundaryml/baml";
 
-import type {  Answer,  BookAnalysis,  CharacterDescription,  Citation,  ClassWithBlockDone,  ClassWithoutDone,  Context,  Document,  Education,  Experience,  Guide,  Ingredient,  Link,  Message,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  Resume,  Score,  SemanticContainer,  SmallThing,  Spells,  Tweet,  Van,  VanSideAnalysis,  VehicleSideResponse,  Visibility,  WordCount,  Category,  ReplyType,  Role,  VehicleSide } from "../types"
+import type {  Answer,  BookAnalysis,  Category,  CharacterDescription,  Citation,  ClassWithBlockDone,  ClassWithoutDone,  Context,  Document,  Education,  Experience,  Guide,  Ingredient,  Link,  Message,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  ReplyType,  Resume,  Role,  Score,  SemanticContainer,  SmallThing,  Spells,  Tweet,  Van,  VanSideAnalysis,  VehicleSide,  VehicleSideResponse,  Visibility,  WordCount } from "../types"
 
 import type * as types from "../types"
 import type { partial_types }from "../partial_types";
 
 export type StreamingServerTypes = {
+  AnalyzeBooks: partial_types.BookAnalysis,
+  AnalyzeVanSide: partial_types.VanSideAnalysis,
   AnswerQuestion: partial_types.Answer,
+  ClassifyMessage: (Category | null)[],
+  DescribeCharacter: partial_types.CharacterDescription,
+  ExtractPerson: partial_types.Person,
+  ExtractResume: partial_types.Resume,
   ExtractResumeNoStructure: string,
   GenerateGuide: partial_types.Guide,
-  IsResume: boolean,
-  ExtractResume: partial_types.Resume,
-  AnalyzeBooks: partial_types.BookAnalysis,
-  ClassifyMessage: (Category | null)[],
   GenerateReplies: (partial_types.Reply | null)[],
-  ExtractPerson: partial_types.Person,
-  DescribeCharacter: partial_types.CharacterDescription,
   GetRecipe: partial_types.Recipe,
   IdentifyVehicleSide: partial_types.VehicleSideResponse,
+  IsResume: boolean,
   MakeSemanticContainer: partial_types.SemanticContainer,
-  AnalyzeVanSide: partial_types.VanSideAnalysis,
 }

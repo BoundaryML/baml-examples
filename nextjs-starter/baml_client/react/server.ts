@@ -21,7 +21,7 @@ import { b } from '../index';
 import type { Check, Checked  } from "../types";
 import type { Image, Audio } from "@boundaryml/baml";
 
-import type {  Answer,  BookAnalysis,  CharacterDescription,  Citation,  ClassWithBlockDone,  ClassWithoutDone,  Context,  Document,  Education,  Experience,  Guide,  Ingredient,  Link,  Message,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  Resume,  Score,  SemanticContainer,  SmallThing,  Spells,  Tweet,  Van,  VanSideAnalysis,  VehicleSideResponse,  Visibility,  WordCount,  Category,  ReplyType,  Role,  VehicleSide } from "../types"
+import type {  Answer,  BookAnalysis,  Category,  CharacterDescription,  Citation,  ClassWithBlockDone,  ClassWithoutDone,  Context,  Document,  Education,  Experience,  Guide,  Ingredient,  Link,  Message,  PartIngredient,  PartSteps,  Person,  PopularityOverTime,  Query,  Ranking,  Recipe,  Reply,  ReplyType,  Resume,  Role,  Score,  SemanticContainer,  SmallThing,  Spells,  Tweet,  Van,  VanSideAnalysis,  VehicleSide,  VehicleSideResponse,  Visibility,  WordCount } from "../types"
 
 import type * as types from "../types"
 

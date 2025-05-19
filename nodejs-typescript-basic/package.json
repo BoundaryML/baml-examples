@@ -1,16 +1,16 @@
 {
-  "scripts": {
-    "baml-generate": "baml-cli generate",
-    "build": "npm run baml-generate && tsc --build",
-    "start": "npx ts-node-dev src/index.ts"
-  },
-  "dependencies": {
-    "@boundaryml/baml": "^0.56.1",
-    "dotenv": "^16.4.5"
-  },
-  "devDependencies": {
-    "@types/node": "^22.5.5",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
-  }
+	"scripts": {
+		"baml-generate": "baml-cli generate",
+		"build": "npm run baml-generate && tsc --build",
+		"start": "npx ts-node-dev src/index.ts"
+	},
+	"dependencies": {
+		"@boundaryml/baml": "0.87.2",
+		"dotenv": "^16.4.5"
+	},
+	"devDependencies": {
+		"@types/node": "^22.5.5",
+		"ts-node-dev": "^2.0.0",
+		"typescript": "^5.3.3"
+	}
 }

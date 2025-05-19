@@ -15,7 +15,7 @@ class Answer {
     An answer to the user's question that MUST cite sources from the relevantSentencesFromText. Like [0]. If multiple citations are needed, write them like [0][1][2].
   "#)
 }
- 
+
 
 class Document {
   title string
@@ -27,7 +27,7 @@ class Context {
 }
 
 function AnswerQuestion(question: string, context: Context) -> Answer {
-  client GPT4
+  client GPT4o
   prompt #"
     Answer the following question using the given context below.
     CONTEXT:
@@ -74,7 +74,7 @@ See also: List of Falcon 9 and Falcon Heavy launches
 
     "#
   }
-  
+
       ]
     }
   }

@@ -1,7 +1,12 @@
 'use client';
 
-import type { Ingredient, PartIngredient, PartSteps, partial_types } from '@/baml_client';
-import { HookResultData, HookResultPartialData } from '@/baml_client/react/types';
+import type {
+  Ingredient,
+  PartIngredient,
+  PartSteps,
+  partial_types,
+} from '@/baml_client';
+import type { HookData, HookOutput } from '@/baml_client/react/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Slider } from '@/components/ui/slider';
@@ -16,66 +21,79 @@ export const RecipeRender = ({
   state,
 }: {
   name: string;
-  recipe: HookResultData<'GetRecipe'> | HookResultPartialData<'GetRecipe'>;
+  recipe: HookData<'GetRecipe'>;
   state: 'idle' | 'instructions' | 'ingredients' | 'done';
 }) => {
-  const [servings, setServings] = useState(recipe.number_of_servings);
+  const [servings, setServings] = useState(recipe?.number_of_servings);
   const servingRatio =
-    servings && recipe.number_of_servings && recipe.number_of_servings > 0 ? servings / recipe.number_of_servings : 1;
+    servings && recipe?.number_of_servings && recipe?.number_of_servings > 0
+      ? servings / recipe?.number_of_servings
+      : 1;
 
   useEffect(() => {
-    setServings(recipe.number_of_servings);
-  }, [recipe.number_of_servings]);
+    setServings(recipe?.number_of_servings);
+  }, [recipe?.number_of_servings]);
 
   return (
-    <Card className='mb-8 shadow-lg'>
+    <Card className="mb-8 shadow-lg">
       <CardHeader>
-        <CardTitle className='text-2xl'>{name}</CardTitle>
-        <div className='flex flex-col gap-2'>
-          <p className='text-gray-500'>
-            Servings: {servings} {servingRatio !== 1 && <>(scaled from {recipe.number_of_servings})</>}
+        <CardTitle className="text-2xl">{name}</CardTitle>
+        <div className="flex flex-col gap-2">
+          <p className="text-gray-500">
+            Servings: {servings}{' '}
+            {servingRatio !== 1 && (
+              <>(scaled from {recipe?.number_of_servings})</>
+            )}
           </p>
-          {servings && <p className='italic text-xs'>Modifying this won't use the LLM!</p>}
+          {servings && (
+            <p className="italic text-xs">Modifying this won't use the LLM!</p>
+          )}
           {servings && (
             <Slider
               value={[servings]}
               onValueChange={(value) => setServings(value[0])}
-              max={Math.max(20, (recipe.number_of_servings || 1) * 2)}
+              max={Math.max(20, (recipe?.number_of_servings || 1) * 2)}
               min={1}
               step={1}
-              className='w-[200px]'
+              className="w-[200px]"
             />
           )}
         </div>
       </CardHeader>
       <CardContent>
-        <Tabs defaultValue='ingredients' className='w-full'>
-          <TabsList className='grid w-full grid-cols-2'>
-            <TabsTrigger value='ingredients'>
+        <Tabs defaultValue="ingredients" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="ingredients">
               Ingredients
-              {state === 'ingredients' && <Loader2 className='ml-2 h-4 w-4 animate-spin text-blue-500' />}
+              {state === 'ingredients' && (
+                <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
+              )}
               {(state === 'instructions' || state === 'done') && (
-                <CheckCircle className='ml-2 h-4 w-4 text-green-500' />
+                <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
               )}
             </TabsTrigger>
-            <TabsTrigger value='instructions'>
+            <TabsTrigger value="instructions">
               Instructions
-              {state === 'instructions' && <Loader2 className='ml-2 h-4 w-4 animate-spin text-blue-500' />}
-              {state === 'done' && <CheckCircle className='ml-2 h-4 w-4 text-green-500' />}
+              {state === 'instructions' && (
+                <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
+              )}
+              {state === 'done' && (
+                <CheckCircle className="ml-2 h-4 w-4 text-green-500" />
+              )}
             </TabsTrigger>
           </TabsList>
-          <TabsContent value='ingredients'>
-            <ScrollArea className='h-[400px]'>
+          <TabsContent value="ingredients">
+            <ScrollArea className="h-[400px]">
               <IngredientListRender
-                ingredients={recipe.ingredients}
+                ingredients={recipe?.ingredients}
                 ratio={servingRatio}
                 inProgress={state === 'ingredients'}
               />
             </ScrollArea>
           </TabsContent>
-          <TabsContent value='instructions'>
-            <ScrollArea className='h-[400px]'>
-              <InstructionListRender instructions={recipe.instructions} />
+          <TabsContent value="instructions">
+            <ScrollArea className="h-[400px]">
+              <InstructionListRender instructions={recipe?.instructions} />
             </ScrollArea>
           </TabsContent>
         </Tabs>
@@ -89,28 +107,28 @@ const IngredientListRender = ({
   ratio,
   inProgress,
 }: {
-  ingredients: HookResultData<'GetRecipe'>['ingredients'] | HookResultPartialData<'GetRecipe'>['ingredients'];
+  ingredients: NonNullable<HookOutput<'GetRecipe'>['data']>['ingredients'];
   ratio: number;
   inProgress?: boolean;
 }) => {
   if (!ingredients || ingredients.length === 0) {
-    return <p className='text-gray-500'>No ingredients found.</p>;
+    return <p className="text-gray-500">No ingredients found.</p>;
   }
 
-  if ('title' in ingredients[0]!) {
+  if (ingredients[0] && 'title' in ingredients[0]) {
     return (
-      <div className='space-y-6'>
+      <div className="space-y-6">
         {(ingredients as PartIngredient[]).map(
           (part, index) =>
             part && (
               <div key={part.title}>
-                <h3 className='font-semibold text-lg mb-2 flex flex-row items-center'>
+                <h3 className="font-semibold text-lg mb-2 flex flex-row items-center">
                   {inProgress && index === ingredients.length - 1 && (
-                    <Loader2 className='ml-2 h-4 w-4 animate-spin text-blue-500' />
+                    <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
                   )}
                   {part.title}
                 </h3>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {part.ingredients?.map(
                     (ingredient, idx) =>
                       ingredient && (
@@ -119,7 +137,9 @@ const IngredientListRender = ({
                           ingredient={ingredient}
                           ratio={ratio}
                           isLast={
-                            inProgress && idx === part.ingredients!.length - 1 && index === ingredients.length - 1
+                            inProgress &&
+                            idx === part.ingredients?.length - 1 &&
+                            index === ingredients.length - 1
                           }
                         />
                       ),
@@ -133,9 +153,13 @@ const IngredientListRender = ({
   }
 
   return (
-    <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
       {(ingredients as Ingredient[]).map((ingredient) => (
-        <IngredientRender key={ingredient.name} ingredient={ingredient} ratio={ratio} />
+        <IngredientRender
+          key={ingredient.name}
+          ingredient={ingredient}
+          ratio={ratio}
+        />
       ))}
     </div>
   );
@@ -229,11 +253,13 @@ const IngredientRender = ({
   const amount = !!ingredient.amount && formatAmount(ingredient.amount * ratio);
 
   return (
-    <div className='flex justify-between items-center p-2 bg-blue-50 rounded-md'>
-      <span className='font-medium'>{ingredient.name}</span>
-      <span className='text-gray-600 flex items-center'>
+    <div className="flex justify-between items-center p-2 bg-blue-50 rounded-md">
+      <span className="font-medium">{ingredient.name}</span>
+      <span className="text-gray-600 flex items-center">
         {amount} {ingredient.unit}
-        {isLast && <Loader2 className='ml-2 h-4 w-4 animate-spin text-blue-500' />}
+        {isLast && (
+          <Loader2 className="ml-2 h-4 w-4 animate-spin text-blue-500" />
+        )}
       </span>
     </div>
   );
@@ -242,26 +268,36 @@ const IngredientRender = ({
 const InstructionListRender = ({
   instructions,
 }: {
-  instructions: HookResultPartialData<'GetRecipe'>['instructions'];
+  instructions: NonNullable<HookOutput<'GetRecipe'>['data']>['instructions'];
 }) => {
   if (!instructions || instructions.length === 0) {
-    return <p className='text-gray-500'>No instructions found.</p>;
+    return <p className="text-gray-500">No instructions found.</p>;
   }
 
   return (
-    <ol className='space-y-4'>
+    <ol className="space-y-4">
       {instructions.map((instruction, index) => {
         if (typeof instruction === 'object') {
           return (
             instruction && (
               <li key={instruction.title}>
-                <h3 className='font-semibold text-lg mb-2'>{instruction.title}</h3>
+                <h3 className="font-semibold text-lg mb-2">
+                  {instruction.title}
+                </h3>
                 <InstructionRender instruction={instruction.steps} />
               </li>
             )
           );
         }
-        return instruction && <SingleStepRender key={instruction} step={instruction} index={index} />;
+        return (
+          instruction && (
+            <SingleStepRender
+              key={instruction}
+              step={instruction}
+              index={index}
+            />
+          )
+        );
       })}
     </ol>
   );
@@ -273,16 +309,20 @@ const InstructionRender = ({
   instruction: PartSteps['steps'] | partial_types.PartSteps['steps'];
 }) => {
   return (
-    <ol className='list-decimal list-inside space-y-2'>
-      {instruction?.map((step, index) => step && <SingleStepRender key={step} step={step} index={index} />)}
+    <ol className="list-decimal list-inside space-y-2">
+      {instruction?.map(
+        (step, index) =>
+          step && <SingleStepRender key={step} step={step} index={index} />,
+      )}
     </ol>
   );
 };
 
 const SingleStepRender = ({ step, index }: { step: string; index: number }) => {
   return (
-    <li className='text-gray-700'>
-      <span className='font-medium text-blue-800'>Step {index + 1}:</span> {step}
+    <li className="text-gray-700">
+      <span className="font-medium text-blue-800">Step {index + 1}:</span>{' '}
+      {step}
     </li>
   );
 };

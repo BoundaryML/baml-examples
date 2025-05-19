@@ -2,7 +2,7 @@
 #
 #  Welcome to Baml! To use this generated code, please run the following:
 #
-#  $ pip install baml
+#  $ pip install baml-py
 #
 ###############################################################################
 
@@ -15,7 +15,9 @@
 # fmt: off
 import typing
 from baml_py.baml_py import FieldType, EnumValueBuilder, EnumBuilder, ClassBuilder
-from baml_py.type_builder import TypeBuilder as _TypeBuilder, ClassPropertyBuilder
+from baml_py.type_builder import TypeBuilder as _TypeBuilder, ClassPropertyBuilder, ClassPropertyViewer, EnumValueViewer
+from .globals import DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME
+
 
 class TypeBuilder(_TypeBuilder):
     def __init__(self):
@@ -23,54 +25,880 @@ class TypeBuilder(_TypeBuilder):
           ["Answer","BookAnalysis","CharacterDescription","Citation","Context","Document","DynamicOutput","Education","Message","PopularityOverTime","Ranking","Resume","Score","Spells","WordCount",]
         ), enums=set(
           ["Category","MyEnum","Role",]
-        ))
+        ), runtime=DO_NOT_USE_DIRECTLY_UNLESS_YOU_KNOW_WHAT_YOURE_DOING_RUNTIME)
 
+
+    @property
+    def Answer(self) -> "AnswerAst":
+        return AnswerAst(self)
+
+    @property
+    def BookAnalysis(self) -> "BookAnalysisAst":
+        return BookAnalysisAst(self)
+
+    @property
+    def CharacterDescription(self) -> "CharacterDescriptionAst":
+        return CharacterDescriptionAst(self)
+
+    @property
+    def Citation(self) -> "CitationAst":
+        return CitationAst(self)
+
+    @property
+    def Context(self) -> "ContextAst":
+        return ContextAst(self)
+
+    @property
+    def Document(self) -> "DocumentAst":
+        return DocumentAst(self)
 
     
     @property
     def DynamicOutput(self) -> "DynamicOutputBuilder":
         return DynamicOutputBuilder(self)
 
-
-
-
-
-class DynamicOutputBuilder:
-    def __init__(self, tb: _TypeBuilder):
-        _tb = tb._tb # type: ignore (we know how to use this private attribute)
-        self.__bldr = _tb.class_("DynamicOutput")
-        self.__properties: typing.Set[str] = set([])
-        self.__props = DynamicOutputProperties(self.__bldr, self.__properties)
-
-    def type(self) -> FieldType:
-        return self.__bldr.field()
+    @property
+    def Education(self) -> "EducationAst":
+        return EducationAst(self)
 
     @property
-    def props(self) -> "DynamicOutputProperties":
-        return self.__props
+    def Message(self) -> "MessageAst":
+        return MessageAst(self)
+
+    @property
+    def PopularityOverTime(self) -> "PopularityOverTimeAst":
+        return PopularityOverTimeAst(self)
+
+    @property
+    def Ranking(self) -> "RankingAst":
+        return RankingAst(self)
+
+    @property
+    def Resume(self) -> "ResumeAst":
+        return ResumeAst(self)
+
+    @property
+    def Score(self) -> "ScoreAst":
+        return ScoreAst(self)
+
+    @property
+    def Spells(self) -> "SpellsAst":
+        return SpellsAst(self)
+
+    @property
+    def WordCount(self) -> "WordCountAst":
+        return WordCountAst(self)
+
+
+
+
+
+class AnswerAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Answer")
+        self._properties: typing.Set[str] = set([ "answersInText",  "answer", ])
+        self._props = AnswerProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "AnswerProperties":
+        return self._props
+
+
+class AnswerViewer(AnswerAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
     
-    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
-        return [(name, ClassPropertyBuilder(self.__bldr.property(name))) for name in self.__properties]
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
 
-    def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
-        if name in self.__properties:
-            raise ValueError(f"Property {name} already exists.")
-        return ClassPropertyBuilder(self.__bldr.property(name).type(type))
 
-class DynamicOutputProperties:
-    def __init__(self, cls_bldr: ClassBuilder, properties: typing.Set[str]):
-        self.__bldr = cls_bldr
+
+class AnswerProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
         self.__properties = properties
 
     
 
+    @property
+    def answersInText(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("answersInText"))
+
+    @property
+    def answer(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("answer"))
+
+    
+
+class BookAnalysisAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("BookAnalysis")
+        self._properties: typing.Set[str] = set([ "bookNames",  "popularityOverTime", ])
+        self._props = BookAnalysisProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "BookAnalysisProperties":
+        return self._props
+
+
+class BookAnalysisViewer(BookAnalysisAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class BookAnalysisProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def bookNames(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("bookNames"))
+
+    @property
+    def popularityOverTime(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("popularityOverTime"))
+
+    
+
+class CharacterDescriptionAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("CharacterDescription")
+        self._properties: typing.Set[str] = set([ "name",  "clothingItems",  "hairColor",  "smellDescription",  "spells", ])
+        self._props = CharacterDescriptionProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "CharacterDescriptionProperties":
+        return self._props
+
+
+class CharacterDescriptionViewer(CharacterDescriptionAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class CharacterDescriptionProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def name(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("name"))
+
+    @property
+    def clothingItems(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("clothingItems"))
+
+    @property
+    def hairColor(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("hairColor"))
+
+    @property
+    def smellDescription(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("smellDescription"))
+
+    @property
+    def spells(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("spells"))
+
+    
+
+class CitationAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Citation")
+        self._properties: typing.Set[str] = set([ "documentTitle",  "sourceLink",  "relevantTextFromDocument",  "number", ])
+        self._props = CitationProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "CitationProperties":
+        return self._props
+
+
+class CitationViewer(CitationAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class CitationProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def documentTitle(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("documentTitle"))
+
+    @property
+    def sourceLink(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("sourceLink"))
+
+    @property
+    def relevantTextFromDocument(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("relevantTextFromDocument"))
+
+    @property
+    def number(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("number"))
+
+    
+
+class ContextAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Context")
+        self._properties: typing.Set[str] = set([ "documents", ])
+        self._props = ContextProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "ContextProperties":
+        return self._props
+
+
+class ContextViewer(ContextAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class ContextProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def documents(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("documents"))
+
+    
+
+class DocumentAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Document")
+        self._properties: typing.Set[str] = set([ "title",  "text",  "link", ])
+        self._props = DocumentProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "DocumentProperties":
+        return self._props
+
+
+class DocumentViewer(DocumentAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class DocumentProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def title(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("title"))
+
+    @property
+    def text(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("text"))
+
+    @property
+    def link(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("link"))
+
+    
+
+class DynamicOutputAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("DynamicOutput")
+        self._properties: typing.Set[str] = set([])
+        self._props = DynamicOutputProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "DynamicOutputProperties":
+        return self._props
+
+
+class DynamicOutputBuilder(DynamicOutputAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    def add_property(self, name: str, type: FieldType) -> ClassPropertyBuilder:
+        if name in self._properties:
+            raise ValueError(f"Property {name} already exists.")
+        return ClassPropertyBuilder(self._bldr.property(name).type(type))
+
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyBuilder]]:
+        return [(name, ClassPropertyBuilder(self._bldr.property(name))) for name in self._properties]
+
+
+
+class DynamicOutputProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    
     def __getattr__(self, name: str) -> ClassPropertyBuilder:
         if name not in self.__properties:
             raise AttributeError(f"Property {name} not found.")
         return ClassPropertyBuilder(self.__bldr.property(name))
+    
+
+class EducationAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Education")
+        self._properties: typing.Set[str] = set([ "school",  "degree",  "year", ])
+        self._props = EducationProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "EducationProperties":
+        return self._props
+
+
+class EducationViewer(EducationAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
 
 
 
+class EducationProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def school(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("school"))
+
+    @property
+    def degree(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("degree"))
+
+    @property
+    def year(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("year"))
+
+    
+
+class MessageAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Message")
+        self._properties: typing.Set[str] = set([ "role",  "content", ])
+        self._props = MessageProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "MessageProperties":
+        return self._props
+
+
+class MessageViewer(MessageAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class MessageProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def role(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("role"))
+
+    @property
+    def content(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("content"))
+
+    
+
+class PopularityOverTimeAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("PopularityOverTime")
+        self._properties: typing.Set[str] = set([ "bookName",  "scores", ])
+        self._props = PopularityOverTimeProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "PopularityOverTimeProperties":
+        return self._props
+
+
+class PopularityOverTimeViewer(PopularityOverTimeAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class PopularityOverTimeProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def bookName(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("bookName"))
+
+    @property
+    def scores(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("scores"))
+
+    
+
+class RankingAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Ranking")
+        self._properties: typing.Set[str] = set([ "bookName",  "score", ])
+        self._props = RankingProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "RankingProperties":
+        return self._props
+
+
+class RankingViewer(RankingAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class RankingProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def bookName(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("bookName"))
+
+    @property
+    def score(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("score"))
+
+    
+
+class ResumeAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Resume")
+        self._properties: typing.Set[str] = set([ "name",  "education",  "skills", ])
+        self._props = ResumeProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "ResumeProperties":
+        return self._props
+
+
+class ResumeViewer(ResumeAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class ResumeProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def name(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("name"))
+
+    @property
+    def education(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("education"))
+
+    @property
+    def skills(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("skills"))
+
+    
+
+class ScoreAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Score")
+        self._properties: typing.Set[str] = set([ "year",  "score", ])
+        self._props = ScoreProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "ScoreProperties":
+        return self._props
+
+
+class ScoreViewer(ScoreAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class ScoreProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def year(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("year"))
+
+    @property
+    def score(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("score"))
+
+    
+
+class SpellsAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("Spells")
+        self._properties: typing.Set[str] = set([ "name",  "description", ])
+        self._props = SpellsProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "SpellsProperties":
+        return self._props
+
+
+class SpellsViewer(SpellsAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class SpellsProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def name(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("name"))
+
+    @property
+    def description(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("description"))
+
+    
+
+class WordCountAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.class_("WordCount")
+        self._properties: typing.Set[str] = set([ "bookName",  "count", ])
+        self._props = WordCountProperties(self._bldr, self._properties)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def props(self) -> "WordCountProperties":
+        return self._props
+
+
+class WordCountViewer(WordCountAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    
+    def list_properties(self) -> typing.List[typing.Tuple[str, ClassPropertyViewer]]:
+        return [(name, ClassPropertyViewer(self._bldr.property(name))) for name in self._properties]
+
+
+
+class WordCountProperties:
+    def __init__(self, bldr: ClassBuilder, properties: typing.Set[str]):
+        self.__bldr = bldr
+        self.__properties = properties
+
+    
+
+    @property
+    def bookName(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("bookName"))
+
+    @property
+    def count(self) -> ClassPropertyViewer:
+        return ClassPropertyViewer(self.__bldr.property("count"))
+
+    
+
+
+
+class CategoryAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.enum("Category")
+        self._values: typing.Set[str] = set([ "Refund",  "CancelOrder",  "TechnicalSupport",  "AccountIssue",  "Question", ])
+        self._vals = CategoryValues(self._bldr, self._values)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def values(self) -> "CategoryValues":
+        return self._vals
+
+
+class CategoryViewer(CategoryAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    def list_values(self) -> typing.List[typing.Tuple[str, EnumValueViewer]]:
+        return [(name, EnumValueViewer(self._bldr.value(name))) for name in self._values]
+
+
+class CategoryValues:
+    def __init__(self, enum_bldr: EnumBuilder, values: typing.Set[str]):
+        self.__bldr = enum_bldr
+        self.__values = values
+
+    
+
+    @property
+    def Refund(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("Refund"))
+    
+
+    @property
+    def CancelOrder(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("CancelOrder"))
+    
+
+    @property
+    def TechnicalSupport(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("TechnicalSupport"))
+    
+
+    @property
+    def AccountIssue(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("AccountIssue"))
+    
+
+    @property
+    def Question(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("Question"))
+    
+
+    
+
+class MyEnumAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.enum("MyEnum")
+        self._values: typing.Set[str] = set([ "VALUE1",  "VALUE2",  "VALUE3", ])
+        self._vals = MyEnumValues(self._bldr, self._values)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def values(self) -> "MyEnumValues":
+        return self._vals
+
+
+class MyEnumViewer(MyEnumAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    def list_values(self) -> typing.List[typing.Tuple[str, EnumValueViewer]]:
+        return [(name, EnumValueViewer(self._bldr.value(name))) for name in self._values]
+
+
+class MyEnumValues:
+    def __init__(self, enum_bldr: EnumBuilder, values: typing.Set[str]):
+        self.__bldr = enum_bldr
+        self.__values = values
+
+    
+
+    @property
+    def VALUE1(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("VALUE1"))
+    
+
+    @property
+    def VALUE2(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("VALUE2"))
+    
+
+    @property
+    def VALUE3(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("VALUE3"))
+    
+
+    
+
+class RoleAst:
+    def __init__(self, tb: _TypeBuilder):
+        _tb = tb._tb # type: ignore (we know how to use this private attribute)
+        self._bldr = _tb.enum("Role")
+        self._values: typing.Set[str] = set([ "Customer",  "Assistant", ])
+        self._vals = RoleValues(self._bldr, self._values)
+
+    def type(self) -> FieldType:
+        return self._bldr.field()
+
+    @property
+    def values(self) -> "RoleValues":
+        return self._vals
+
+
+class RoleViewer(RoleAst):
+    def __init__(self, tb: _TypeBuilder):
+        super().__init__(tb)
+
+    def list_values(self) -> typing.List[typing.Tuple[str, EnumValueViewer]]:
+        return [(name, EnumValueViewer(self._bldr.value(name))) for name in self._values]
+
+
+class RoleValues:
+    def __init__(self, enum_bldr: EnumBuilder, values: typing.Set[str]):
+        self.__bldr = enum_bldr
+        self.__values = values
+
+    
+
+    @property
+    def Customer(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("Customer"))
+    
+
+    @property
+    def Assistant(self) -> EnumValueViewer:
+        return EnumValueViewer(self.__bldr.value("Assistant"))
+    
+
+    
 
 
 __all__ = ["TypeBuilder"]

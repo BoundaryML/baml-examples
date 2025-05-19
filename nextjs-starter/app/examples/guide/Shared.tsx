@@ -1,5 +1,5 @@
 'use client';
-import type { HookResult, StreamingHookResult } from '@/baml_client/react/types';
+import type { HookOutput } from '@/baml_client/react/hooks';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,13 +10,14 @@ import { AlertCircle, CheckCircle, Cog, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import JsonView from 'react18-json-view';
 import ErrorPreview from '../_components/ErrorPreview';
+import { Status } from '../_components/Status';
 import { GuideRender } from './Recipe';
 import preloadedExamples from './examples';
 
 export const Content: React.FC<{
   query: string;
   setQuery: (value: string) => void;
-  answer: StreamingHookResult<'GenerateGuide'>;
+  answer: HookOutput<'GenerateGuide'>;
 }> = ({ query, setQuery, answer }) => {
   const [name, setName] = useState<string>('');
 
@@ -24,10 +25,6 @@ export const Content: React.FC<{
     answer.mutate(text);
     setName(text);
   };
-
-  const data = answer.isSuccess ? answer.data : answer.isPending ? answer.partialData : undefined;
-
-  const state = answer.isPending ? 'loading' : answer.isSuccess ? 'success' : 'idle';
 
   return (
     <div className='bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8'>
@@ -80,14 +77,14 @@ export const Content: React.FC<{
           </div>
 
           <AnimatePresence>
-            {data && (
+            {answer.data && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
               >
-                <GuideRender name={name} guide={data} state={state} />
+                <GuideRender name={name} guide={answer.data} state={answer.status} />
               </motion.div>
             )}
           </AnimatePresence>
@@ -97,23 +94,9 @@ export const Content: React.FC<{
   );
 };
 
-const Status: React.FC<{ status: HookResult['status'] }> = ({ status }) => {
-  const statusConfig = {
-    pending: { icon: Loader2, className: 'animate-spin text-gray-500' },
-    error: { icon: AlertCircle, className: 'text-red-500' },
-    success: { icon: CheckCircle, className: 'text-green-500' },
-    idle: { icon: null, className: '' },
-  };
-
-  const { icon: Icon, className } = statusConfig[status] || statusConfig.idle;
-
-  return Icon ? <Icon className={`h-5 w-5 ${className}`} /> : null;
-};
-
 const DebugPanel: React.FC<{
-  answer: HookResult<'GenerateGuide'>;
+  answer: HookOutput<'GenerateGuide'>;
 }> = ({ answer }) => {
-  const data = answer.isSuccess ? answer.data : answer.isPending ? answer.partialData : undefined;
 
   return (
     <Card className='w-full shadow-lg h-fit'>
@@ -131,7 +114,7 @@ const DebugPanel: React.FC<{
       <CardContent className='p-4'>
         {answer.error && <ErrorPreview error={answer.error} />}
         <ScrollArea className='h-[300px] text-xs bg-muted'>
-          <JsonView src={data || {}} theme='atom' collapseStringsAfterLength={50} />
+          <JsonView src={answer.data} theme='atom' collapseStringsAfterLength={50} />
         </ScrollArea>
       </CardContent>
     </Card>
