@@ -4,6 +4,7 @@ packages:
   - svelte-starter
   - nuxt-starter
   - nextjs-pdf-example
+  - nodejs-mcp-server
   - form-filler
   - json-schema-to-baml
   - node-aws-lambda-sst
