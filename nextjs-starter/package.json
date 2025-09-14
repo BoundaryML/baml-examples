@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@boundaryml/baml": "0.88.0",
+    "@boundaryml/baml": "^0.207.1",
     "@boundaryml/baml-nextjs-plugin": "0.1.0",
     "@headlessui/react": "2.2.2",
     "@headlessui/tailwindcss": "0.2.2",

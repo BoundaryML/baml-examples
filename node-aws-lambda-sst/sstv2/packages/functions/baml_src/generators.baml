@@ -7,5 +7,5 @@ generator target {
     output_type "typescript"
     // Where the generated code will be saved (relative to baml_src/)
     output_dir "../"
-    version "0.88.0"
+    version "0.207.1"
 }

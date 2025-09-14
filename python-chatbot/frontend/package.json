@@ -21,7 +21,7 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
-    "@boundaryml/baml": "^0.87.2",
+    "@boundaryml/baml": "^0.207.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
