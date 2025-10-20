@@ -1,6 +1,6 @@
 from typing import Dict
 from datetime import datetime
-from baml_client.types import State, Role
+from baml_client.types import State, Role, Message
 
 
 class SessionStore:
@@ -29,9 +29,5 @@ session_store = SessionStore()
 def initial_state() -> State:
     return State(
         weather_report=None,
-        recent_messages=[{
-            "role": Role.Assistant,
-            "content": "Hello! I'm a chatbot. How can I help you today?",
-            "timestamp": int(datetime.now().timestamp())
-        }],
+        recent_messages=[],
     )
