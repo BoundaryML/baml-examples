@@ -1,98 +1,111 @@
 /**
- * This script force installs the linux version of the baml binary (in case the script is not running in a linux env we still download that linux binary), copies the deps into a layer, directory and then removes the dependency.
+ * This script creates a package.json file with the required BAML dependencies,
+ * installs them in a layer directory, and creates a zip file for deployment.
  */
 
+import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { execSync } from "child_process";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const layersDir = path.join(__dirname, "layers");
-const layerDir = path.join(layersDir, "baml-layer");
-const layerNodeModulesDir = path.join(layerDir, "nodejs", "node_modules");
-const functionsDir = path.join(__dirname, "packages", "functions");
-const functionsPackageJsonPath = path.join(functionsDir, "package.json");
-
-function cleanup() {
-  console.log("Cleaning up...");
-  try {
-    execSync("npm uninstall @boundaryml/baml-linux-x64-gnu", {
-      cwd: functionsDir,
-      stdio: "inherit",
-    });
-    console.log(
-      "Removed @boundaryml/baml-linux-x64-gnu from package.json and node_modules"
-    );
-  } catch (error) {
-    console.error("Error during cleanup:", error);
-  }
-}
-
-// Set up cleanup on process exit
-process.on("exit", cleanup);
-process.on("SIGINT", () => {
-  console.log("Caught interrupt signal");
-  cleanup();
-  process.exit();
-});
+const layerDir = path.join(layersDir, "baml");
+const layerNodeJsDir = path.join(layerDir, "nodejs");
+const rootDir = path.join(__dirname);
+const packageJsonPath = path.join(rootDir, "package.json");
 
 // Function to read package.json
 function readPackageJson(path) {
   return JSON.parse(fs.readFileSync(path, "utf8"));
 }
 
-// Read the functions package.json
-let packageJson = readPackageJson(functionsPackageJsonPath);
-
-// Get the version of @boundaryml/baml
-const bamlVersion = packageJson.dependencies["@boundaryml/baml"];
-
-// Install @boundaryml/baml-linux-x64-gnu with the same version
-console.log("Installing @boundaryml/baml-linux-x64-gnu");
-execSync(`npm install @boundaryml/baml-linux-x64-gnu@${bamlVersion} --force`, {
-  cwd: functionsDir,
-  stdio: "inherit",
-});
-
-console.log("Ran npm install for @boundaryml/baml-linux-x64-gnu");
-
-// Create directory structure
-fs.mkdirSync(layerNodeModulesDir, { recursive: true });
-
-// Function to copy a package
-function copyPackage(packageName) {
-  const srcDir = path.join(
-    __dirname,
-    "node_modules",
-    "@boundaryml",
-    packageName
-  );
-  const destDir = path.join(layerNodeModulesDir, "@boundaryml", packageName);
-  fs.cpSync(srcDir, destDir, { recursive: true });
-  console.log(`Copied ${packageName} to layer`);
+// Function to recursively remove directory
+function removeDirectory(dirPath) {
+  if (fs.existsSync(dirPath)) {
+    fs.readdirSync(dirPath).forEach((file) => {
+      const curPath = path.join(dirPath, file);
+      if (fs.lstatSync(curPath).isDirectory()) {
+        removeDirectory(curPath);
+      } else {
+        fs.unlinkSync(curPath);
+      }
+    });
+    fs.rmdirSync(dirPath);
+  }
 }
 
-// Copy the dependencies
-copyPackage("baml-linux-x64-gnu");
-copyPackage("baml");
+// Clean up existing layer directory
+if (fs.existsSync(layerDir)) {
+  console.log("Cleaning up existing layer directory...");
+  removeDirectory(layerDir);
+}
 
-// Create zip file
-const zipFileName = "baml-layer.zip";
-execSync(`cd ${layerDir} && zip -r ${path.join("..", zipFileName)} .`);
+// Read the functions package.json
+const packageJson = readPackageJson(packageJsonPath);
 
-console.log(`Layer prepared successfully in ${layersDir}`);
-console.log(`Zip file created: ${path.join(layersDir, zipFileName)}`);
+// Get the version of @boundaryml/baml
+const bamlVersion =
+  packageJson.dependencies?.["@boundaryml/baml"] ||
+  packageJson.devDependencies?.["@boundaryml/baml"];
 
-// Uninstall @boundaryml/baml-linux-x64-gnu
-console.log("Uninstalling @boundaryml/baml-linux-x64-gnu");
-execSync("npm uninstall @boundaryml/baml-linux-x64-gnu", {
-  cwd: functionsDir,
+if (!bamlVersion) {
+  console.log(
+    "@boundaryml/baml not found in dependencies. Installing latest version...",
+  );
+  execSync("pnpm add -D @boundaryml/baml@latest", { stdio: "inherit" });
+  packageJson = readPackageJson(packageJsonPath);
+  bamlVersion =
+    packageJson.dependencies?.["@boundaryml/baml"] ||
+    packageJson.devDependencies?.["@boundaryml/baml"];
+  if (!bamlVersion) {
+    throw new Error("Failed to install @boundaryml/baml");
+  }
+}
+
+console.log(`Using @boundaryml/baml version: ${bamlVersion}`);
+
+// Create directory structure
+fs.mkdirSync(layerNodeJsDir, { recursive: true });
+
+// Create package.json for the layer
+const layerPackageJson = {
+  name: "baml-layer",
+  version: "1.0.0",
+  private: true,
+  dependencies: {
+    "@boundaryml/baml": bamlVersion,
+    "@boundaryml/baml-linux-x64-gnu": bamlVersion,
+  },
+};
+
+// Write the package.json file
+fs.writeFileSync(
+  path.join(layerNodeJsDir, "package.json"),
+  JSON.stringify(layerPackageJson, null, 2),
+);
+
+console.log("Created package.json in the layer directory");
+
+// Install dependencies in isolation
+console.log("Installing dependencies in the layer directory");
+execSync("pnpm install --ignore-workspace", {
+  cwd: layerNodeJsDir,
   stdio: "inherit",
 });
 
-console.log(
-  "Removed @boundaryml/baml-linux-x64-gnu from package.json and node_modules"
+console.log("Installed dependencies in the layer directory");
+
+// Create zip file, excluding specific paths
+const zipFileName = "baml-layer.zip";
+execSync(
+  `cd ${layerDir} && zip -r ${zipFileName} nodejs -x "nodejs/node_modules/.pnpm/*" "nodejs/node_modules/.bin/*" "nodejs/node_modules/.modules.yaml" "nodejs/pnpm-lock.yaml" "nodejs/package-lock.json" "nodejs/yarn.lock" "nodejs/node_modules/@boundaryml/baml/node_modules/*"`,
+  {
+    stdio: "inherit",
+  }
 );
+
+console.log(`Layer prepared successfully in ${layersDir}`);
+console.log(`Zip file created: ${layerDir}/${zipFileName}`);
