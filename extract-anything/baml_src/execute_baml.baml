@@ -3,7 +3,7 @@ class Response {
   @@dynamic
 }
 
-function ExecuteBAML(content: string | image | audio | image[]) -> Response {
+function ExecuteBAML(content: string | image | audio | pdf) -> Response {
   client "openai/gpt-4o"
   prompt #"
     Extract the data from the given content.
@@ -22,11 +22,11 @@ test vaibhav_resume {
     class Person {
       name string @description("The full name of the individual")
       email string @description("The email address of the individual")
-      
+
       experience Experience[]
       skills string[]
     }
-    
+
     class Experience {
       position string @description("The role held by the individual")
       company string @description("The company where the experience was gained")

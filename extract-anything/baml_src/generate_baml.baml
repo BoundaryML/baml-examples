@@ -15,14 +15,14 @@ class Schema {
   other_code string
 }
 
-function GenerateBAML(content: string | image | audio | image[]) -> Schema @stream.not_null {
-  client CustomSonnet
+function GenerateBAML(content: string | image | audio | pdf) -> Schema @stream.not_null {
+  client CustomGPT4o
   prompt #"
     Generate BAML schema for the given content.
 
     {{ BAMLBackground() }}
 
-    {{ ctx.output_format(prefix="Answer with this format:\n") }}
+    {{ ctx.output_format }}
 
     {{ _.role('user') }}
     {{ content }}
@@ -41,17 +41,17 @@ template_string BAMLBackground() ##"
       // Optional string fields use ?
       // @description is optional, but if you include it, it goes after the field.
       name string? @description("The name of the object")
-      
+
       // Arrays of primitives
       // arrays cannot be optional.
       tags string[]
-      
+
       // Enums must be declared separately and are optional
       status MyEnum?
-      
+
       // Union types
       type "success" | "error"
-      
+
       // Primitive types
       count int
       enabled bool

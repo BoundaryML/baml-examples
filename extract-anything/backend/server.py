@@ -2,7 +2,7 @@ import asyncio
 import json
 import base64
 from typing import Any, Callable, Optional, TypeVar
-from baml_py import BamlStream, Image
+from baml_py import BamlStream, Image, Pdf
 
 import httpx
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
@@ -13,9 +13,6 @@ from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from baml_client.types import Schema
 from baml_py.errors import BamlError
-from pdf2image import convert_from_bytes
-from PIL import Image as PILImage
-import io
 
 app = FastAPI()
 
@@ -90,7 +87,7 @@ async def execute_baml(
     url: str = Form(None),
     baml_code: str = Form(...),
     return_type: str = Form(...),
-):   
+):
     final_content = await read_input_content(file, content, url)
     tb = TypeBuilder()
     try:
@@ -130,16 +127,11 @@ def handle_stream(stream: BamlStream[StreamTypeVar, FinalTypeVar], to_data: Call
             yield json.dumps({ "error": str(e) }) + "\n\n"
     return StreamingResponse(stream_baml(), media_type="text/event-stream")
 
-def convert_to_base64(img: PILImage):
-    buffered = io.BytesIO()
-    img.save(buffered, format="JPEG")
-    return Image.from_base64(base64=base64.b64encode(buffered.getvalue()).decode("utf-8"), media_type="image/jpeg")
-
 async def read_input_content(
     file: Optional[UploadFile] = None,
     content: Optional[str] = None,
     url: Optional[str] = None
-) -> str | Image | list[Image]:
+) -> str | Image | Pdf:
     """
     Processes the input from one of the following:
     - file: an uploaded file (image, audio, PDF or text)
@@ -156,10 +148,9 @@ async def read_input_content(
             file_content = await file.read()
             return file_content.decode("utf-8")
         elif file.content_type == "application/pdf":
-            # Convert PDF to images
             file_content = await file.read()
-            images = convert_from_bytes(file_content)
-            return [convert_to_base64(img) for img in images]
+            file_content_base64 = base64.b64encode(file_content).decode("utf-8")
+            return Pdf.from_base64(file_content_base64)
         else:
             file_content = await file.read()
             file_content_base64 = base64.b64encode(file_content).decode("utf-8")

@@ -7,7 +7,7 @@ interface ErrorMessageProps {
 export function ErrorMessage({ error }: ErrorMessageProps) {
   if (!error) return null
 
-  return <div className="mt-6 p-4 bg-foreground text-white rounded-md">
+  return <div className="mt-6 p-4 bg-red-500 text-white rounded-md">
     {/* {JSON.stringify(error)} */}
     <pre>
       <AnsiColorText text={error} />
